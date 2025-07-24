@@ -19,7 +19,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -37,22 +41,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.remote.shutdown.common.StopWatch
-import com.example.remote.shutdown.common.UserPreferences
+import com.example.remote.shutdown.common.UserDevices
+import com.example.remote.shutdown.model.Device
 import com.example.remote.shutdown.network.NetworkScanner
 import com.example.remote.shutdown.ui.composable.NetworkScannerScreen
 import com.example.remote.shutdown.ui.theme.RemoteShutdownTheme
 import com.example.remote.shutdown.viewmodel.MainViewModel
-import com.example.remote.shutdown.viewmodel.MainViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var userPreferences: UserPreferences
+    // private lateinit var userPreferences: UserPreferences
 
     private val scanner = NetworkScanner()
 
@@ -64,8 +72,7 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
-        userPreferences = UserPreferences(applicationContext)
-        val viewModel = ViewModelProvider(this, MainViewModelFactory(userPreferences))[MainViewModel::class.java]
+        val userDevices: List<Device> = UserDevices().loadDeviceList(applicationContext)
 
         // Optional: keep splash longer if loading something
         splashScreen.setKeepOnScreenCondition {
@@ -74,10 +81,29 @@ class MainActivity : ComponentActivity() {
 
         val watch = StopWatch.createStarted()
 
+        val strings = scanner.readOuiFile(applicationContext)
+        strings.forEach { s -> Log.i("ReadLines", s) }
+
         enableEdgeToEdge()
         setContent {
             RemoteShutdownTheme {
-                MainScreen(viewModel = viewModel, scanner = scanner)
+                val navController = rememberNavController()
+
+                NavHost(navController = navController, startDestination = "main") {
+                    composable("main") {
+                        MainScreen(
+                            scanner = scanner,
+                            devices = userDevices,
+                            navController = navController
+                        )
+                    }
+                    composable("scanner") {
+                        NetworkScannerScreen(
+                            scanner = scanner,
+                            navController = navController
+                        )
+                    }
+                }
             }
         }
 
@@ -93,11 +119,55 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: MainViewModel, scanner: NetworkScanner) {
+fun MainScreen(
+    scanner: NetworkScanner,
+    devices: List<Device> = ArrayList(),
+    navController: NavHostController
+) {
+    Log.d("MainScreen", "scanner instance: ${scanner.toString().substringAfterLast(".")}," +
+            " loaded devices: $devices")
+
+    val padding = Modifier
+        .fillMaxSize()
+        .padding(16.dp)
+        .offset(y = 120.dp)
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.devices_title)) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White
+                )
+            )
+        },
+        content = {
+            paddingValues -> Greeting("hello", Modifier.padding(paddingValues))
+        },
+        bottomBar = {},
+        floatingActionButton = {
+            AddDeviceButton(onClick = {
+                navController.navigate("scanner")
+            })
+        }
+    )
+}
+
+@Composable
+fun AddDeviceButton(onClick: () -> Unit) {
+    FloatingActionButton(onClick = onClick) {
+        Icon(Icons.Default.Add, contentDescription = "Add Device")
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreenOld(viewModel: MainViewModel, scanner: NetworkScanner) {
     Log.d(null, "Hey, networkScanner $scanner")
 
     val ip by viewModel.computerIp.collectAsState()
-    val hasIp: Boolean = ip.isNotEmpty()
+    val hasIp: Boolean = true // ip.isNotEmpty()
 
     val padding = Modifier
         .fillMaxSize()

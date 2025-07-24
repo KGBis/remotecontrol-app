@@ -3,6 +3,7 @@ package com.example.remote.shutdown.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.remote.shutdown.common.UserPreferences
+import com.example.remote.shutdown.model.Device
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 

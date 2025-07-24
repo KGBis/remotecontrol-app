@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">Wake on LAN/Remote Shutdown</string>
+    <string name="app_name" translatable="false">Wake on LAN/Remote Shutdown</string>
+    <string name="devices_title">Devices</string>
+    <string name="scan_devices">Scan for Devices</string>
 </resources>

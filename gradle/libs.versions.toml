@@ -3,6 +3,7 @@ activityComposeVersion = "1.8.2"
 agp = "8.11.1"
 coreSplashscreen = "1.0.1"
 datastorePreferences = "1.1.7"
+gson = "2.10.1"
 kotlin = "2.0.21"
 coreKtx = "1.10.1"
 junit = "4.13.2"
@@ -14,6 +15,7 @@ composeBom = "2024.09.00"
 lifecycleRuntimeKtxVersion = "2.7.0"
 lifecycleViewmodelCompose = "2.9.2"
 material = "1.6.5"
+navigationCompose = "2.7.3"
 ui = "1.6.5"
 uiToolingPreview = "1.6.5"
 
@@ -25,6 +27,8 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 androidx-lifecycle-runtime-ktx-v270 = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtxVersion" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 androidx-material = { module = "androidx.compose.material:material", version.ref = "material" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
