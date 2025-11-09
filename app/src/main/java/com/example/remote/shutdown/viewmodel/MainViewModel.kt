@@ -1,36 +1,53 @@
 package com.example.remote.shutdown.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.remote.shutdown.common.UserPreferences
-import com.example.remote.shutdown.model.Device
-import kotlinx.coroutines.flow.*
+import com.example.remote.shutdown.data.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-class MainViewModel(private val prefs: UserPreferences) : ViewModel() {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
 
-    // StateFlow para exponer el estado a la UI
-    private val _switchState = MutableStateFlow(false)
-    val switchState: StateFlow<Boolean> = _switchState.asStateFlow()
+    private val repository = DeviceRepository(application)
 
-    private val _computerIp = MutableStateFlow("")
-    val computerIp: StateFlow<String> = _computerIp.asStateFlow()
+    val devices: MutableStateFlow<List<Device>> = MutableStateFlow(emptyList())
 
     init {
-        // Escucha cambios desde DataStore
+        loadDevices()
+    }
+
+    fun loadDevices() {
         viewModelScope.launch {
-            prefs.switchFlow.collect { value ->
-                _switchState.value = value
-            }
-            prefs.computerIp.collect { value ->
-                _computerIp.value = value
-            }
+            devices.value = repository.getDevices()
         }
     }
 
-    fun onSwitchChanged(checked: Boolean) {
+    fun addDevice(device: Device) {
         viewModelScope.launch {
-            prefs.saveSwitchState(checked)
+            repository.addDevice(device)
+            loadDevices()
+        }
+    }
+
+    fun removeDevice(device: Device) {
+        viewModelScope.launch {
+            repository.removeDevice(device)
+            loadDevices()
+        }
+    }
+
+    fun sendShutdownCommand(device: Device, delay: Int, unit: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val success = repository.sendShutdown(device, delay, unit)
+            onResult(success)
+        }
+    }
+
+    fun wakeOnLan(device: Device, mac: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val success = repository.sendWOL(device, mac)
+            onResult(success)
         }
     }
 }
