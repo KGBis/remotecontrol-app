@@ -3,8 +3,6 @@
 
     <style name="Theme.RemoteShutdown" parent="android:Theme.Material.Light.NoActionBar">
         <!-- Set your splash screen theme -->
-       <!--<item name="android:windowSplashScreenBackground">@color/splash_icon_background</item>-->
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/computer_foreground</item>
-        <!--<item name="android:windowSplashScreenIconBackgroundColor">@color/computer_background</item>-->
     </style>
 </resources>

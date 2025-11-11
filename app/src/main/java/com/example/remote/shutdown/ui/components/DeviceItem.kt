@@ -17,12 +17,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.remote.shutdown.data.Device
-import com.example.remote.shutdown.network.NetworkUtils.isPcOnline
+import com.example.remote.shutdown.network.NetworkUtils
 
 @Composable
 fun DeviceItem(
@@ -37,12 +39,11 @@ fun DeviceItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                var color = Color.Red
-                if(isPcOnline(device.ip, 6800)) {
-                    color = Color.Green
+                val status by produceState(initialValue = Color.Red, device.ip) {
+                    value = NetworkUtils.getColorPcOnline(device.ip, 6800)
                 }
-
-                Icon(Icons.Default.Circle, tint = color, contentDescription = "Estado")
+                // val color = NetworkUtils.getColorPcOnline(device.ip, 6800)
+                Icon(Icons.Default.Circle, tint = status, contentDescription = "Estado")
             }
 
             // Name & IP
