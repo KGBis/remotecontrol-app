@@ -28,7 +28,7 @@ object NetworkScanner {
                         Device(
                             name = NetworkUtils.getDeviceName(ip),
                             ip = ip,
-                            mac = NetworkUtils.discoverMacAddress(ip)?: "" //getMac(ip)
+                            mac = ""
                         )
                     } else null
                 }

@@ -46,7 +46,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun wakeOnLan(device: Device, mac: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            val success = repository.sendWOL(device, mac)
+            val success = repository.sendWoL(device, mac)
             onResult(success)
         }
     }

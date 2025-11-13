@@ -57,7 +57,12 @@ object NetworkUtils {
                 Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) INIT")
                 val process = Runtime.getRuntime()
                     .exec("/system/bin/ping -c $count -W $timeoutSec $ip")
+
+                val output = process.inputStream.bufferedReader().use { it.readText() }
+                val error  = process.errorStream.bufferedReader().use { it.readText() }
+
                 val exitCode = process.waitFor()
+
                 Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) EXITCODE=$exitCode")
                 exitCode == 0
             } catch (e: Exception) {
@@ -117,6 +122,7 @@ object NetworkUtils {
         }
     }
 
+    @Deprecated(message = "arp scan not working sinde API level 30", level = DeprecationLevel.WARNING)
     private fun getMacFromArpTable(ipAddress: String): String? {
         return try {
             val arpTable = File("/proc/net/arp").readText()

@@ -1,11 +1,8 @@
 package com.example.remote.shutdown.data
 
 import android.content.Context
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -73,7 +70,7 @@ class DeviceRepository(context: Context) {
             }
         }
 
-    suspend fun sendWOL(device: Device, mac: String): Boolean =
+    suspend fun sendWoL(device: Device, mac: String): Boolean =
         withContext(Dispatchers.IO) {
             try {
                 val macBytes = mac.split(":").map { it.toInt(16).toByte() }.toByteArray()
