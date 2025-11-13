@@ -42,7 +42,6 @@ fun DeviceItem(
                 val status by produceState(initialValue = Color.Red, device.ip) {
                     value = NetworkUtils.getColorPcOnline(device.ip, 6800)
                 }
-                // val color = NetworkUtils.getColorPcOnline(device.ip, 6800)
                 Icon(Icons.Default.Circle, tint = status, contentDescription = "Estado")
             }
 

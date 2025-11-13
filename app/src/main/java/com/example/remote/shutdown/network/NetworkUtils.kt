@@ -10,72 +10,90 @@ import java.net.InetSocketAddress
 import java.net.Socket
 
 object NetworkUtils {
-    suspend fun isHostReachable(ip: String, port: Int, timeoutMs: Int = 300): Boolean =
-        withContext(Dispatchers.IO) {
+    fun isHostReachable(ip: String, port: Int, timeoutMs: Int = 300): Boolean /*=
+        withContext(Dispatchers.IO)*/ {
             try {
-                Log.d("NetworkUtils", "isHostReachable(ip: $ip, port: $port, timeoutMs: $timeoutMs) INIT")
+                // Log.d("NetworkUtils", "isHostReachable(ip: $ip, port: $port, timeoutMs: $timeoutMs) INIT")
                 Socket().use { socket ->
                     socket.connect(InetSocketAddress(ip, port), timeoutMs)
 
                     val writer = socket.getOutputStream().bufferedWriter()
                     val reader = socket.getInputStream().bufferedReader()
 
-                    Log.i("NET", "got Socket reader/writter")
+                    // Log.i("NET", "got Socket reader/writter")
 
                     writer.write("CONN")
                     writer.flush() // Muy importante para que se envíe
 
-                    Log.i("NET", "wrote msg to writter")
+                    // Log.i("NET", "wrote msg to writter")
 
                     // Leer respuesta (ACK)
                     val response = reader.readLine() // Bloquea hasta que llegue dato o timeout
-                    Log.d("NET", "isHostReachable(ip: $ip, port: $port, timeoutMs: $timeoutMs) -> true, response: $response")
-                    true
+                    // Log.d("NET", "isHostReachable(ip: $ip, port: $port, timeoutMs: $timeoutMs) -> true, response: $response")
+                    return true
                 }
             } catch (e: Exception) {
                 Log.d("NetworkUtils", "isHostReachable(ip: $ip, port: $port, timeoutMs: $timeoutMs) -> false ($e)")
-                false
+                return false
             }
         }
 
-    suspend fun pingInetAddress(ip: String, timeoutMs: Int = 500): Boolean =
-        withContext(Dispatchers.IO) {
+    suspend fun pingInetAddress(ip: String, timeoutMs: Int = 500): Boolean /*=
+        withContext(Dispatchers.IO)*/ {
             try {
-                Log.d("NetworkUtils", "pingInetAddress(ip: $ip, timeoutMs: $timeoutMs) INIT")
+                // Log.d("NetworkUtils", "pingInetAddress(ip: $ip, timeoutMs: $timeoutMs) INIT")
                 val isReachable = InetAddress.getByName(ip).isReachable(timeoutMs)
-                Log.d("NetworkUtils", "pingInetAddress(ip: $ip, timeoutMs: $timeoutMs) RESULT = $isReachable")
-                return@withContext isReachable
+                // Log.d("NetworkUtils", "pingInetAddress(ip: $ip, timeoutMs: $timeoutMs) RESULT = $isReachable")
+                return isReachable
             } catch (e: Exception) {
-                Log.d("NetworkUtils", "pingInetAddress(ip: $ip, timeoutMs: $timeoutMs) RESULT = false ($e)")
-                false
+                Log.w("NetworkUtils", "pingInetAddress(ip: $ip, timeoutMs: $timeoutMs) EXCP -> $e")
+                return false
             }
         }
 
-    suspend fun pingCommand(ip: String, count: Int = 1, timeoutSec: Int = 1): Boolean =
-        withContext(Dispatchers.IO) {
+    suspend fun pingCommand(ip: String, count: Int = 1, timeoutSec: Int = 1): Boolean /*=
+        withContext(Dispatchers.IO)*/ {
             try {
-                Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) INIT")
+               // Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) INIT")
                 val process = Runtime.getRuntime()
-                    .exec("/system/bin/ping -c $count -W $timeoutSec $ip")
+                    .exec("ping -c $count -W $timeoutSec $ip")
 
-                val output = process.inputStream.bufferedReader().use { it.readText() }
-                val error  = process.errorStream.bufferedReader().use { it.readText() }
+                // val output = process.inputStream.bufferedReader().use { it.readText() }
+                // val error  = process.errorStream.bufferedReader().use { it.readText() }
 
                 val exitCode = process.waitFor()
 
-                Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) EXITCODE=$exitCode")
-                exitCode == 0
+                // Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) EXITCODE=$exitCode")
+                return exitCode == 0
             } catch (e: Exception) {
-                Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) false ($e)")
-                false
+                Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) EXCP -> $e")
+                return false
             }
         }
 
     suspend fun isPcOnline(ip: String, port: Int = 5000): Boolean =
         withContext(Dispatchers.IO) {
-            if (isHostReachable(ip, port)) return@withContext true
-            if (pingCommand(ip)) return@withContext true
-            pingInetAddress(ip)
+            val init = System.currentTimeMillis()
+            // Log.i("isPcOnline", "==> $ip START")
+
+            if(pingInetAddress(ip)) {
+                Log.i("isPcOnline", "$ip <== STOP pingInetAddress in ${System.currentTimeMillis() - init} ms"
+                )
+                return@withContext true
+            }
+
+            if (isHostReachable(ip, port)) {
+                Log.i("isPcOnline", "$ip <== STOP isHostReachable in ${System.currentTimeMillis() - init} ms")
+                return@withContext true
+            }
+
+            if (pingCommand(ip)) {
+                Log.i("isPcOnline", "$ip <== STOP pingCommand in ${System.currentTimeMillis() - init} ms")
+                return@withContext true
+            }
+
+            // Log.i("isPcOnline", "$ip <== NOTHiNG FOuND in ${System.currentTimeMillis() - init} ms")
+            return@withContext false
         }
 
     suspend fun getColorPcOnline(ip: String, port: Int = 5000): Color {
@@ -86,7 +104,7 @@ object NetworkUtils {
     fun getDeviceName(ip: String): String {
         return try {
             val hostName = InetAddress.getByName(ip).hostName
-            if (hostName == ip) "<unknown>" else hostName
+            hostName?:"<unknown>"
         } catch (e: Exception) {
             "<unknown>"
         }
