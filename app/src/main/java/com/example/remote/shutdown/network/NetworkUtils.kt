@@ -123,15 +123,15 @@ object NetworkUtils {
                 )
                 return@withContext true
             } else {
-                Log.i(
+                /*Log.i(
                     "isPcOnline",
                     "$ip <== NOTHiNG FOuND in ${System.currentTimeMillis() - init} ms"
-                )
+                )*/
                 return@withContext false
             }
         }
 
-    suspend fun checkPcStatus(ip: String, timeout: Int = 300): Boolean {
+    suspend fun checkPcStatus(ip: String, timeout: Int = 500): Boolean {
         return portsToScan.any { port ->
             withContext(Dispatchers.IO) {
                 try {
@@ -139,7 +139,6 @@ object NetworkUtils {
                     Log.i("checkPcStatus", "for ip $ip:$port connected")
                     true
                 } catch (e: Exception) {
-                    Log.i("checkPcStatus", "for ip $ip:$port NOT connected. Reason = $e")
                     false
                 }
             }

@@ -21,6 +21,7 @@ navigationCompose = "2.9.6"
 roomRuntime = "2.8.3"
 ui = "1.9.4"
 uiToolingPreview = "1.9.4"
+foundationLayout = "1.9.4"
 
 [libraries]
 accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefresh" }
@@ -53,6 +54,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "uiToolingPreview" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -4,7 +4,9 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -12,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -88,7 +91,6 @@ fun AddDeviceScreen(navController: NavController, viewModel: MainViewModel, cont
                         val b = System.currentTimeMillis()
                         val networkRange = networkRangeDetector.getLocalNetworkRange()
                         results = NetworkScanner.scanLocalNetwork(baseIp = networkRange?:"192.168.1", maxConcurrent = 30)
-                        // val scanNetworkRange = fastNetworkScan()
                         Log.i("Scan", "Time to scan subnet -> ${System.currentTimeMillis() - b} millis")
                         scanning = false
                     }
@@ -96,6 +98,9 @@ fun AddDeviceScreen(navController: NavController, viewModel: MainViewModel, cont
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(if (scanning) "Escaneando..." else "Escanear red local")
+                if(scanning) CircularProgressIndicator(modifier = Modifier
+                    .height(IntrinsicSize.Min) // toma la altura mínima del contenido
+                    .aspectRatio(1f))
             }
 
             Spacer(Modifier.height(16.dp))

@@ -3,6 +3,7 @@ package com.example.remote.shutdown.network
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.Inet4Address
@@ -17,18 +18,29 @@ class NetworkRangeDetector(private val context: Context) {
         return@withContext try {
             // Intentar diferentes métodos, ordenados por fiabilidad
             val methods = listOf(
+                { getNetworkRangeFromNetworkInterfaces() },
                 { getNetworkRangeFromConnectivityManager() },
-                { getNetworkRangeFromNetworkInterfaces() }/*,
-                { getNetworkRangeFromCommonRanges() }*/
+                /*{ getNetworkRangeFromCommonRanges() }*/
             )
 
+            var theRange: String? = null
             for (method in methods) {
-                val range = method()
-                if (range != null) return@withContext range
+                Log.i("getLocalNetworkRange", "Detecting with $method")
+                val range = method.invoke()
+                if (range != null) {
+                    theRange = range
+                    break
+                    // return@withContext range
+                }
             }
 
-            null
-        } catch (e: Exception) {
+            if(theRange != null && theRange.contains("10.0")) {
+                Log.i("getLocalNetworkRange", "Detected local address range $theRange")
+                theRange = "192.168.1"
+            }
+
+            theRange
+        } catch (_: Exception) {
             null
         }
     }
@@ -49,6 +61,8 @@ class NetworkRangeDetector(private val context: Context) {
             if (networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true ||
                 networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) == true) {
 
+                // linkProperties?.linkAddresses?.forEach { address -> Log.i("link", "Having address ${address.address}") }
+
                 linkProperties?.linkAddresses?.firstOrNull { address ->
                     address.address is Inet4Address && address.address.isSiteLocalAddress
                 }?.let { linkAddress ->
@@ -57,7 +71,7 @@ class NetworkRangeDetector(private val context: Context) {
             } else {
                 null
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -79,7 +93,7 @@ class NetworkRangeDetector(private val context: Context) {
                 }
             }
             null
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -87,7 +101,7 @@ class NetworkRangeDetector(private val context: Context) {
     /**
      * Método 3: Rangos comunes como fallback
      */
-    private suspend fun getNetworkRangeFromCommonRanges(): String? = withContext(Dispatchers.IO) {
+    /*private suspend fun getNetworkRangeFromCommonRanges(): String? = withContext(Dispatchers.IO) {
         // Probar rangos comunes localmente
         val commonRanges = listOf("192.168.1", "192.168.0", "10.0.0", "172.16.0")
 
@@ -97,7 +111,7 @@ class NetworkRangeDetector(private val context: Context) {
             }
         }
         return@withContext null
-    }
+    }*/
 
     /**
      * Extrae el prefijo de red de una IP (192.168.1.100 → 192.168.1)
@@ -110,7 +124,7 @@ class NetworkRangeDetector(private val context: Context) {
             } else {
                 null
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -118,21 +132,22 @@ class NetworkRangeDetector(private val context: Context) {
     /**
      * Verifica si un rango de red está activo haciendo ping al router común
      */
-    private suspend fun isNetworkRangeReachable(range: String): Boolean = withContext(Dispatchers.IO) {
+    /*private suspend fun isNetworkRangeReachable(range: String): Boolean = withContext(Dispatchers.IO) {
         val commonRouterIPs = listOf("$range.1", "$range.254", "$range.100")
 
         return@withContext commonRouterIPs.any { routerIP ->
             try {
                 Runtime.getRuntime().exec("ping -c 1 -W 1000 $routerIP").waitFor() == 0
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 false
             }
         }
-    }
+    }*/
 
     /**
      * Obtiene la IP local del dispositivo
      */
+    /*
     suspend fun getLocalIP(): String? = withContext(Dispatchers.IO) {
         return@withContext try {
             // Método 1: ConnectivityManager
@@ -153,4 +168,5 @@ class NetworkRangeDetector(private val context: Context) {
             null
         }
     }
+    */
 }
