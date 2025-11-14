@@ -1,5 +1,6 @@
 package com.example.remote.shutdown.ui.screens
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -32,18 +33,21 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.NetworkScanner
+import com.example.remote.shutdown.network.NetworkRangeDetector
 import com.example.remote.shutdown.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddDeviceScreen(navController: NavController, viewModel: MainViewModel) {
+fun AddDeviceScreen(navController: NavController, viewModel: MainViewModel, context: Context) {
     var name by remember { mutableStateOf("") }
     var ip by remember { mutableStateOf("") }
     var scanning by remember { mutableStateOf(false) }
     var results by remember { mutableStateOf(listOf<Device>()) }
 
     val scope = rememberCoroutineScope()
+
+    val networkRangeDetector = NetworkRangeDetector(context)
 
     Scaffold(
         topBar = {
@@ -82,7 +86,9 @@ fun AddDeviceScreen(navController: NavController, viewModel: MainViewModel) {
                     scanning = true
                     scope.launch {
                         val b = System.currentTimeMillis()
-                        results = NetworkScanner.scanLocalNetwork(maxConcurrent = 30)
+                        val networkRange = networkRangeDetector.getLocalNetworkRange()
+                        results = NetworkScanner.scanLocalNetwork(baseIp = networkRange?:"192.168.1", maxConcurrent = 30)
+                        // val scanNetworkRange = fastNetworkScan()
                         Log.i("Scan", "Time to scan subnet -> ${System.currentTimeMillis() - b} millis")
                         scanning = false
                     }

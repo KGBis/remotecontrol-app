@@ -24,9 +24,19 @@ object NetworkScanner {
 
                 // Limitar la concurrencia
                 semaphore.withPermit {
+                    /*val host = scanHostWithTimeout(ip)
+                    if(host is NetworkScanner.ScanResult.Success && host.isOnline) {
+                        Device(
+                            name = host.ip,
+                            ip = host.ip,
+                            mac = ""
+                        )
+                    } else {
+                        null
+                    }*/
                     if (NetworkUtils.isPcOnline(ip, DEFAULT_PORT)) {
                         Device(
-                            name = NetworkUtils.getDeviceName(ip),
+                            name = ip,
                             ip = ip,
                             mac = ""
                         )

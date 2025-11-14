@@ -1,5 +1,6 @@
 package com.example.remote.shutdown.navigation
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -10,7 +11,7 @@ import com.example.remote.shutdown.ui.screens.AddDeviceScreen
 import com.example.remote.shutdown.viewmodel.MainViewModel
 
 @Composable
-fun NavGraph() {
+fun NavGraph(context: Context) {
     val navController = rememberNavController()
     // Creamos un ViewModel compartido para toda la NavGraph
     val mainViewModel: MainViewModel = viewModel()
@@ -20,7 +21,7 @@ fun NavGraph() {
             MainScreen(navController, mainViewModel)
         }
         composable("add_device") {
-            AddDeviceScreen(navController, mainViewModel)
+            AddDeviceScreen(navController, mainViewModel, context)
         }
     }
 }
