@@ -4,12 +4,12 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -84,23 +84,25 @@ fun AddDeviceScreen(navController: NavController, viewModel: MainViewModel, cont
 
             Spacer(Modifier.height(24.dp))
 
-            OutlinedButton(
+            OutlinedButton(enabled = !scanning,
                 onClick = {
                     scanning = true
                     scope.launch {
-                        val b = System.currentTimeMillis()
-                        val networkRange = networkRangeDetector.getLocalNetworkRange()
-                        results = NetworkScanner.scanLocalNetwork(baseIp = networkRange?:"192.168.1", maxConcurrent = 30)
-                        Log.i("Scan", "Time to scan subnet -> ${System.currentTimeMillis() - b} millis")
-                        scanning = false
+                        val pair = startScan(networkRangeDetector)
+                        results = pair.first
+                        scanning = pair.second
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (scanning) "Escaneando..." else "Escanear red local")
-                if(scanning) CircularProgressIndicator(modifier = Modifier
-                    .height(IntrinsicSize.Min) // toma la altura mínima del contenido
-                    .aspectRatio(1f))
+                if (scanning) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(Modifier.width(8.dp))   // separa texto e icono
+                }
+                Text(if (scanning) "Escaneando... puede tomar algún tiempo" else "Escanear red local")
             }
 
             Spacer(Modifier.height(16.dp))
@@ -123,4 +125,14 @@ fun AddDeviceScreen(navController: NavController, viewModel: MainViewModel, cont
             }
         }
     }
+}
+
+private suspend fun startScan(
+    networkRangeDetector: NetworkRangeDetector
+): Pair<List<Device>, Boolean> {
+    val b = System.currentTimeMillis()
+    val networkRange = networkRangeDetector.getLocalNetworkRange()
+    val results = NetworkScanner.scanLocalNetwork(baseIp = networkRange ?: "192.168.1", maxConcurrent = 30)
+    Log.i("Scan", "Time to scan subnet -> ${System.currentTimeMillis() - b} millis")
+    return Pair(results, false)
 }

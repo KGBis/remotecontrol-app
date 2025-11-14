@@ -11,6 +11,7 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.Socket
 import androidx.core.content.edit
+import com.example.remote.shutdown.data.NetworkScanner.SHUTDOWN_PORT
 
 class DeviceRepository(context: Context) {
 
@@ -19,13 +20,40 @@ class DeviceRepository(context: Context) {
     suspend fun getDevices(): List<Device> = withContext(Dispatchers.IO) {
         val json = prefs.getString("devices", "[]") ?: "[]"
         val arr = JSONArray(json)
-        val list = mutableListOf<Device>()
+
+        val list: MutableList<Device> = mutableListOf()
+
         for (i in 0 until arr.length()) {
             val obj = arr.getJSONObject(i)
-            list.add(Device(name = obj.getString("name"), ip = obj.getString("ip")))
+            list.add(
+                Device(
+                    name = obj.getString("name"),
+                    ip = obj.getString("ip"),
+                    mac = obj.optString("mac")
+                )
+            )
         }
-        list
+
+        // Ordenar por IP convertida a Long
+        list.sortedBy { it.ip.toIpLong() }
     }
+
+
+    private fun String.toIpLong(): Long {
+        val parts = this.split(".")
+        if (parts.size != 4) return 0L
+        return try {
+            val a = parts[0].toLong()
+            val b = parts[1].toLong()
+            val c = parts[2].toLong()
+            val d = parts[3].toLong()
+            (a shl 24) or (b shl 16) or (c shl 8) or d
+        } catch (e: NumberFormatException) {
+            0L
+        }
+    }
+
+
 
     private fun saveDevices(devices: List<Device>) {
         val arr = JSONArray()
@@ -55,7 +83,7 @@ class DeviceRepository(context: Context) {
     suspend fun sendShutdown(device: Device, delay: Int, unit: String): Boolean =
         withContext(Dispatchers.IO) {
             try {
-                Socket(device.ip, 9999).use { socket ->
+                Socket(device.ip, SHUTDOWN_PORT).use { socket ->
                     val msg = "SHUTDOWN $delay $unit"
                     Log.d("sendShutdown", msg)
                     socket.getOutputStream().apply {

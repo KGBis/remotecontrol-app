@@ -91,31 +91,12 @@ object NetworkUtils {
         }
     }
 
-    suspend fun isPcOnline(ip: String, port: Int = 5000): Boolean =
+    /**
+     * Por defecto escanea la lista de puertos de [portsToScan]
+     */
+    suspend fun isPcOnline(ip: String, port: Int?): Boolean =
         withContext(Dispatchers.IO) {
             val init = System.currentTimeMillis()
-
-            /*
-            if(pingInetAddress(ip)) {
-                Log.i("isPcOnline", "$ip <== STOP pingInetAddress in ${System.currentTimeMillis() - init} ms"
-                )
-                return@withContext true
-            }
-
-            if (isHostReachable(ip, port)) {
-                Log.i("isPcOnline", "$ip <== STOP isHostReachable in ${System.currentTimeMillis() - init} ms")
-                return@withContext true
-            }
-
-            if (pingCommand(ip)) {
-                Log.i("isPcOnline", "$ip <== STOP pingCommand in ${System.currentTimeMillis() - init} ms")
-                return@withContext true
-            }
-
-            // Log.i("isPcOnline", "$ip <== NOTHiNG FOuND in ${System.currentTimeMillis() - init} ms")
-            return@withContext false
-             */
-
             if (checkPcStatus(ip)) {
                 Log.i(
                     "isPcOnline",
@@ -123,10 +104,6 @@ object NetworkUtils {
                 )
                 return@withContext true
             } else {
-                /*Log.i(
-                    "isPcOnline",
-                    "$ip <== NOTHiNG FOuND in ${System.currentTimeMillis() - init} ms"
-                )*/
                 return@withContext false
             }
         }
@@ -135,10 +112,12 @@ object NetworkUtils {
         return portsToScan.any { port ->
             withContext(Dispatchers.IO) {
                 try {
-                    Socket().connect(InetSocketAddress(ip, port), timeout)
-                    Log.i("checkPcStatus", "for ip $ip:$port connected")
+                    Socket().use { socket ->
+                        socket.connect(InetSocketAddress(ip, port), timeout)
+                        Log.i("checkPcStatus", "for ip $ip:$port connected")
+                    }
                     true
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     false
                 }
             }

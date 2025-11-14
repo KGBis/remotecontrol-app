@@ -10,7 +10,7 @@ import kotlinx.coroutines.sync.withPermit
 
 object NetworkScanner {
 
-    const val DEFAULT_PORT = 6800
+    const val SHUTDOWN_PORT = 6800
 
     /**
      * Escanea la red local (por ejemplo, 192.168.1.1..254) de forma concurrente.
@@ -24,17 +24,7 @@ object NetworkScanner {
 
                 // Limitar la concurrencia
                 semaphore.withPermit {
-                    /*val host = scanHostWithTimeout(ip)
-                    if(host is NetworkScanner.ScanResult.Success && host.isOnline) {
-                        Device(
-                            name = host.ip,
-                            ip = host.ip,
-                            mac = ""
-                        )
-                    } else {
-                        null
-                    }*/
-                    if (NetworkUtils.isPcOnline(ip, DEFAULT_PORT)) {
+                    if (NetworkUtils.isPcOnline(ip, SHUTDOWN_PORT)) {
                         Device(
                             name = ip,
                             ip = ip,
