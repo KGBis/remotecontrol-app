@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.ui.tooling.preview)
     implementation(libs.gson)
     implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.compose.foundation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -49,8 +49,8 @@ object NetworkUtils {
             }
         }
 
-    suspend fun pingInetAddress(ip: String, timeoutMs: Int = 500): Boolean /*=
-        withContext(Dispatchers.IO)*/ {
+    /*suspend fun pingInetAddress(ip: String, timeoutMs: Int = 500): Boolean =
+        withContext(Dispatchers.IO) {
         try {
             // Log.d("NetworkUtils", "pingInetAddress(ip: $ip, timeoutMs: $timeoutMs) INIT")
             val isReachable = InetAddress.getByName(ip).isReachable(timeoutMs)
@@ -61,15 +61,15 @@ object NetworkUtils {
                     "InetAddress.getByName($ip).isReachable($timeoutMs) = $isReachable"
                 )
             }
-            return isReachable
+            return@withContext isReachable
         } catch (e: Exception) {
             Log.w("NetworkUtils", "pingInetAddress(ip: $ip, timeoutMs: $timeoutMs) EXCP -> $e")
-            return false
+            return@withContext false
         }
-    }
+    }*/
 
-    suspend fun pingCommand(ip: String, count: Int = 1, timeoutSec: Int = 1): Boolean /*=
-        withContext(Dispatchers.IO)*/ {
+    /*suspend fun pingCommand(ip: String, count: Int = 1, timeoutSec: Int = 1): Boolean =
+        withContext(Dispatchers.IO) {
         try {
             // Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) INIT")
             val process = Runtime.getRuntime()
@@ -81,20 +81,21 @@ object NetworkUtils {
             val exitCode = process.waitFor()
 
             // Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) EXITCODE=$exitCode")
-            return exitCode == 0
+            return@withContext exitCode == 0
         } catch (e: Exception) {
             Log.d(
                 "NetworkUtils",
                 "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) EXCP -> $e"
             )
-            return false
+            return@withContext false
         }
-    }
+    }*/
 
     /**
-     * Por defecto escanea la lista de puertos de [portsToScan]
+     * Returns `true` if an IP address can be reached connecting to any of the [portsToScan].
+     * If none of the ports connect, `false` is returned
      */
-    suspend fun isPcOnline(ip: String, port: Int?): Boolean =
+    suspend fun isPcOnline(ip: String): Boolean =
         withContext(Dispatchers.IO) {
             val init = System.currentTimeMillis()
             if (checkPcStatus(ip)) {
@@ -139,7 +140,7 @@ object NetworkUtils {
     }
 
     suspend fun getColorPcOnline(ip: String, port: Int = 5000): Color {
-        return if (isPcOnline(ip, port)) {
+        return if (isPcOnline(ip)) {
             Color.Green
         } else {
             Color.Red

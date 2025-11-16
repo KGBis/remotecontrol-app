@@ -13,8 +13,8 @@ object NetworkScanner {
     const val SHUTDOWN_PORT = 6800
 
     /**
-     * Escanea la red local (por ejemplo, 192.168.1.1..254) de forma concurrente.
-     * Retorna la lista de IPs que están online.
+     * Scans local network (i.e. 192.168.1.1 to 254 range) concurrently.
+     * @return Device list of reachable (online) devices
      */
     suspend fun scanLocalNetwork(baseIp: String = "192.168.1", maxConcurrent: Int = 20): List<Device> = coroutineScope {
         val semaphore = Semaphore(maxConcurrent)
@@ -24,7 +24,7 @@ object NetworkScanner {
 
                 // Limitar la concurrencia
                 semaphore.withPermit {
-                    if (NetworkUtils.isPcOnline(ip, SHUTDOWN_PORT)) {
+                    if (NetworkUtils.isPcOnline(ip)) {
                         Device(
                             name = ip,
                             ip = ip,

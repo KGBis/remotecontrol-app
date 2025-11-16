@@ -1,8 +1,11 @@
 package com.example.remote.shutdown.data
 
 data class Device(
-    val name: String,
+    var name: String,
     val ip: String,
-    val mac: String = ""
+    var mac: String? = null,
+    var isOnline: Boolean?  = null,
+    var canWakeup: Boolean? = null,
+    var canShutdown: Boolean? = null,
 )
 

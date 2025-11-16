@@ -17,6 +17,9 @@ class DeviceRepository(context: Context) {
 
     private val prefs = context.getSharedPreferences("devices_prefs", Context.MODE_PRIVATE)
 
+    /**
+     * Get all devices stored
+     */
     suspend fun getDevices(): List<Device> = withContext(Dispatchers.IO) {
         val json = prefs.getString("devices", "[]") ?: "[]"
         val arr = JSONArray(json)
@@ -29,12 +32,12 @@ class DeviceRepository(context: Context) {
                 Device(
                     name = obj.getString("name"),
                     ip = obj.getString("ip"),
-                    mac = obj.optString("mac")
+                    mac = obj.optString("mac"),
                 )
             )
         }
 
-        // Ordenar por IP convertida a Long
+        // sort by IP (converted to Long for proper sorting)
         list.sortedBy { it.ip.toIpLong() }
     }
 
@@ -48,12 +51,10 @@ class DeviceRepository(context: Context) {
             val c = parts[2].toLong()
             val d = parts[3].toLong()
             (a shl 24) or (b shl 16) or (c shl 8) or d
-        } catch (e: NumberFormatException) {
+        } catch (_: NumberFormatException) {
             0L
         }
     }
-
-
 
     private fun saveDevices(devices: List<Device>) {
         val arr = JSONArray()
@@ -61,6 +62,7 @@ class DeviceRepository(context: Context) {
             val obj = JSONObject()
             obj.put("name", d.name)
             obj.put("ip", d.ip)
+            obj.put("mac", d.mac)
             arr.put(obj)
         }
         prefs.edit { putString("devices", arr.toString()) }

@@ -1,5 +1,54 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="devices_title">Dispositivos</string>
-    <string name="scan_devices">Buscar dispositivos</string>
+
+    <!-- Nombre de la app -->
+    <!--<string name="app_name">Wake &amp; Shutdown</string>-->
+
+    <!-- Common -->
+    <string name="back">Atrás</string>
+
+    <!-- Pantalla principal -->
+    <string name="scan_network">🔍 Escanear red local</string>
+    <string name="refresh">⟳ Actualizar</string>
+    <string name="time">Tiempo</string>
+    <string name="unit">Unidad</string>
+    <string name="shutdown_delay">Apagar después de</string>
+    <string name="no_devices_yet">No hay dispositivos aún, use ➕ Añadir dispositivo</string>
+
+    <!-- Delay Options -->
+    <string name="delay_now">Ahora (inmediatamente)</string>
+    <string name="delay_15s">15 segundos</string>
+    <string name="delay_1m">1 minuto</string>
+    <string name="delay_30m">30 minutos</string>
+    <string name="delay_1h">1 hora</string>
+
+    <!-- Estado de dispositivos -->
+    <string name="status_online">🟢 En línea</string>
+    <string name="status_offline">🔴 Desconectado</string>
+    <string name="status_unknown">⚪ Desconocido</string>
+
+    <!-- Acciones sobre un dispositivo -->
+    <string name="shutdown_action">🛑 Apagar PC</string>
+    <string name="delete_action">Eliminar</string>
+    <string name="edit_action">⚙️ Configurar</string>
+
+    <!-- Añadir dispositivo -->
+    <string name="add_device">➕ Añadir dispositivo</string>
+    <string name="device_name">Nombre del dispositivo</string>
+    <string name="device_ip">Dirección IP</string>
+    <string name="device_mac">Dirección MAC (opcional)</string>
+    <string name="save_device">💾 Guardar</string>
+
+    <!-- Mensajes / Snackbars -->
+    <string name="device_added">Dispositivo añadido</string>
+    <string name="device_removed">Dispositivo eliminado</string>
+    <string name="device_wol_sent">Paquete WoL enviado a %1$s</string>
+    <string name="device_wol_sent_error">Error enviando paquete Wake-on-LAN a %1$s</string>
+    <string name="device_shutdown_sent">Comando de apagado enviado a %1$s</string>
+    <string name="device_shutdown_sent_error">Error al envíar comando de apagado a %1$s</string>
+    <string name="error_invalid_ip">❌ IP no válida</string>
+    <string name="error_empty_fields">⚠️ Todos los campos obligatorios deben estar completos</string>
+    <string name="network_scan_running">🔍 Escaneando red…</string>
+    <string name="network_scan_done">✔ Escaneo completado</string>
+    <string name="no_devices_found">Ningún dispositivo encontrado</string>
+
 </resources>

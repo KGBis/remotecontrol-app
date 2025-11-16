@@ -1,5 +1,56 @@
 <resources>
-    <string name="app_name" translatable="false">Wake on LAN/Remote Shutdown</string>
-    <string name="devices_title">Devices</string>
-    <string name="scan_devices">Scan for Devices</string>
+
+    <!-- App name -->
+    <!--<string name="app_name">Wake &amp; Shutdown</string>-->
+    <string name="app_name" translatable="false">⚡ Remote PC Control</string>
+
+    <!-- Common -->
+    <string name="back">Back</string>
+
+    <!-- Main screen -->
+    <string name="scan_network">🔍 Scan local network</string>
+    <string name="refresh">⟳ Refresh</string>
+    <string name="time">Time</string>
+    <string name="unit">Unit</string>
+    <string name="shutdown_delay">Shutdown after</string>
+    <string name="no_devices_yet">No devices yet, use ➕ Add device</string>
+
+    <!-- Delay Options -->
+    <string name="delay_now">Now (inmediately)</string>
+    <string name="delay_15s">15 seconds</string>
+    <string name="delay_1m">1 minute</string>
+    <string name="delay_30m">30 minutes</string>
+    <string name="delay_1h">1 hour</string>
+
+    <!-- Device status -->
+    <string name="status_online">🟢 Online</string>
+    <string name="status_offline">🔴 Offline</string>
+    <string name="status_unknown">⚪ Unknown</string>
+
+    <!-- Device actions -->
+    <string name="wol_action" translatable="false">Wake-on-LAN</string>
+    <string name="shutdown_action">🛑 Shutdown PC</string>
+    <string name="delete_action">Delete</string>
+    <string name="edit_action">⚙️ Configure</string>
+
+    <!-- Add device -->
+    <string name="add_device">➕ Add device</string>
+    <string name="device_name">Device name</string>
+    <string name="device_ip">IP address</string>
+    <string name="device_mac">MAC address (optional)</string>
+    <string name="save_device">💾 Save</string>
+
+    <!-- Messages / Snackbars -->
+    <string name="device_added">Device added</string>
+    <string name="device_removed">Device removed</string>
+    <string name="device_wol_sent">Wake-on-LAN packet sent to %1$s</string>
+    <string name="device_wol_sent_error">Error sending Wake-on-LAN packet to %1$s</string>
+    <string name="device_shutdown_sent">Shutdown command sent to %1$s</string>
+    <string name="device_shutdown_sent_error">Error while sending shutdown command to %1$s</string>
+    <string name="error_invalid_ip">❌ Invalid IP address</string>
+    <string name="error_empty_fields">⚠️ All required fields must be filled</string>
+    <string name="network_scan_running">🔍 Scanning network…</string>
+    <string name="network_scan_done">✔ Scan completed</string>
+    <string name="no_devices_found">No devices found</string>
+
 </resources>

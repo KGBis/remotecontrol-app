@@ -32,8 +32,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.NetworkScanner
 import com.example.remote.shutdown.network.NetworkRangeDetector
@@ -55,12 +57,12 @@ fun AddDeviceScreen(navController: NavController, viewModel: MainViewModel, cont
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Añadir dispositivo") },
+                title = { Text(stringResource(R.string.add_device)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 }
@@ -75,7 +77,7 @@ fun AddDeviceScreen(navController: NavController, viewModel: MainViewModel, cont
 
             Button(onClick = {
                 if (ip.isNotBlank() && name.isNotBlank()) {
-                    viewModel.addDevice(Device(name = name, ip = ip))
+                    viewModel.addDevice(Device(name = name, ip = ip,))
                     navController.popBackStack()
                 }
             }, modifier = Modifier.fillMaxWidth()) {
@@ -88,7 +90,7 @@ fun AddDeviceScreen(navController: NavController, viewModel: MainViewModel, cont
                 onClick = {
                     scanning = true
                     scope.launch {
-                        val pair = startScan(networkRangeDetector)
+                        val pair = startScan(networkRangeDetector, viewModel)
                         results = pair.first
                         scanning = pair.second
                     }
@@ -127,12 +129,24 @@ fun AddDeviceScreen(navController: NavController, viewModel: MainViewModel, cont
     }
 }
 
-private suspend fun startScan(
-    networkRangeDetector: NetworkRangeDetector
-): Pair<List<Device>, Boolean> {
+private suspend fun startScan(networkRangeDetector: NetworkRangeDetector, viewModel: MainViewModel): Pair<List<Device>, Boolean> {
+    // list of router IPs
+    val knownRouters = viewModel.routerIps
+
+    // for time lapse calc
     val b = System.currentTimeMillis()
+
+    // detect local netwotrk and scan it
     val networkRange = networkRangeDetector.getLocalNetworkRange()
     val results = NetworkScanner.scanLocalNetwork(baseIp = networkRange ?: "192.168.1", maxConcurrent = 30)
+
+    // Try to find router(s) among the results
+    results.forEach {
+        device -> if (knownRouters.contains(device.ip)) {
+            device.name = "Router"
+        }
+    }
+
     Log.i("Scan", "Time to scan subnet -> ${System.currentTimeMillis() - b} millis")
     return Pair(results, false)
 }
