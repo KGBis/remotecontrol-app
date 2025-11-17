@@ -12,13 +12,15 @@
     <string name="refresh">⟳ Refresh</string>
     <string name="time">Time</string>
     <string name="unit">Unit</string>
-    <string name="shutdown_delay">Shutdown after</string>
+    <string name="shutdown_delay">Shutdown device after</string>
     <string name="no_devices_yet">No devices yet, use ➕ Add device</string>
 
     <!-- Delay Options -->
-    <string name="delay_now">Now (inmediately)</string>
+    <string name="delay_now">No delay</string>
     <string name="delay_15s">15 seconds</string>
+    <string name="delay_30s">30 seconds</string>
     <string name="delay_1m">1 minute</string>
+    <string name="delay_15m">15 minutes</string>
     <string name="delay_30m">30 minutes</string>
     <string name="delay_1h">1 hour</string>
 

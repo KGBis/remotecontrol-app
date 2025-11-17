@@ -1,10 +1,12 @@
 package com.example.remote.shutdown.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.remote.shutdown.data.*
-import com.example.remote.shutdown.network.NetworkUtils
+import com.example.remote.shutdown.network.NetworkActions
+import com.example.remote.shutdown.network.NetworkScanner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -69,35 +71,40 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             val current = _devices.value
             val newStatuses = current.associate { device ->
-                device.ip to NetworkUtils.isPcOnline(device.ip)
+                device.ip to NetworkScanner.isPcOnline(device.ip)
             }
+            Log.i("refresh", "$newStatuses")
             _statusMap.emit(newStatuses)
         }
     }
 
     fun sendShutdownCommand(device: Device, delay: Int, unit: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            val success = repository.sendShutdown(device, delay, unit)
+            val success = NetworkActions.sendShutdown(device, delay, unit)
             onResult(success)
         }
     }
 
     fun wakeOnLan(device: Device, mac: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            val success = repository.sendWoL(device, mac)
+            val success = NetworkActions.sendWoL(device, mac)
             onResult(success)
         }
     }
 
-    // Shutdown settings
+    // Shutdown settings (quantity and time unit)
 
     private val settingsRepo = SettingsRepository(application)
 
-    val shutdownDelay = settingsRepo.shutdownDelayFlow.stateIn(viewModelScope,
-        SharingStarted.WhileSubscribed(5_000), 15)
+    val shutdownDelay = settingsRepo.shutdownDelayFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000), 15
+    )
 
-    val shutdownUnit = settingsRepo.shutdownUnitFlow.stateIn(viewModelScope,
-        SharingStarted.WhileSubscribed(5_000), TimeUnit.SECONDS)
+    val shutdownUnit = settingsRepo.shutdownUnitFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000), TimeUnit.SECONDS
+    )
 
     fun changeDelay(newDelay: Int) {
         viewModelScope.launch {

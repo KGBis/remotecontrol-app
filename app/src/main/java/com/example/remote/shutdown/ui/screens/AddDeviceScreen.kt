@@ -37,8 +37,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.Device
-import com.example.remote.shutdown.data.NetworkScanner
 import com.example.remote.shutdown.network.NetworkRangeDetector
+import com.example.remote.shutdown.network.NetworkScanner
+import com.example.remote.shutdown.network.NetworkScanner.scanLocalNetwork
 import com.example.remote.shutdown.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
@@ -138,7 +139,7 @@ private suspend fun startScan(networkRangeDetector: NetworkRangeDetector, viewMo
 
     // detect local netwotrk and scan it
     val networkRange = networkRangeDetector.getLocalNetworkRange()
-    val results = NetworkScanner.scanLocalNetwork(baseIp = networkRange ?: "192.168.1", maxConcurrent = 30)
+    val results = scanLocalNetwork(baseIp = networkRange ?: "192.168.1", maxConcurrent = 30)
 
     // Try to find router(s) among the results
     results.forEach {

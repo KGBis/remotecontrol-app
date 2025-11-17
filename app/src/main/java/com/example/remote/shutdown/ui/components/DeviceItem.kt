@@ -18,6 +18,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
@@ -27,11 +28,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.Device
-import com.example.remote.shutdown.network.NetworkUtils
+import com.example.remote.shutdown.network.NetworkScanner
+import com.example.remote.shutdown.viewmodel.MainViewModel
 
 @Composable
 fun DeviceItem(
     device: Device,
+    viewModel: MainViewModel,
     onShutdown: () -> Unit,
     onWake: () -> Unit,
     onDelete: () -> Unit
@@ -43,15 +46,16 @@ fun DeviceItem(
     Log.i("Device Item", "Can wake up? ${device.canWakeup}")
     val wolColor = if (device.canWakeup == true) Color.Unspecified else Color.Gray
 
+    val statusMap by viewModel.statusMap.collectAsState()
+
     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(4.dp)) {
         Row(Modifier.fillMaxWidth().padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                val status by produceState(initialValue = Color.Red, device.ip) {
-                    value = NetworkUtils.getColorPcOnline(device.ip, 6800)
-                }
+                Log.i("DeviceItem", "Status Map -> $statusMap")
+                val status = if (statusMap[device.ip] == true) Color.Green else Color.Red
                 Icon(Icons.Default.Circle, tint = status, contentDescription = "Estado")
             }
 

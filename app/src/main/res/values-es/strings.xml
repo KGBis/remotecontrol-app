@@ -11,13 +11,15 @@
     <string name="refresh">⟳ Actualizar</string>
     <string name="time">Tiempo</string>
     <string name="unit">Unidad</string>
-    <string name="shutdown_delay">Apagar después de</string>
+    <string name="shutdown_delay">Apagar el dispositivo tras</string>
     <string name="no_devices_yet">No hay dispositivos aún, use ➕ Añadir dispositivo</string>
 
     <!-- Delay Options -->
-    <string name="delay_now">Ahora (inmediatamente)</string>
+    <string name="delay_now">Sin espera</string>
     <string name="delay_15s">15 segundos</string>
+    <string name="delay_30s">30 minutos</string>
     <string name="delay_1m">1 minuto</string>
+    <string name="delay_15m">15 minutos</string>
     <string name="delay_30m">30 minutos</string>
     <string name="delay_1h">1 hora</string>
 

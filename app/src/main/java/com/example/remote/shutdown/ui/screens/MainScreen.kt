@@ -46,9 +46,6 @@ import com.example.remote.shutdown.viewmodel.MainViewModel
 fun MainScreen(navController: NavController, viewModel: MainViewModel) {
     val devices by viewModel.devices.collectAsState()
 
-    /*var delay by remember { mutableStateOf("60") }
-    var unit by remember { mutableStateOf("s") }*/
-
     var showSnackbar by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -73,6 +70,13 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
             }*/
 
             showSnackbar = null
+        }
+    }
+
+    // to refresh status and so on automatically
+    LaunchedEffect(devices) {
+        if (devices.isNotEmpty()) {
+            viewModel.refreshStatuses()
         }
     }
 
@@ -108,19 +112,12 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                 isRefreshing = false
             }
         ) {
-            Column(Modifier.padding(16.dp)) {
-                /*Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-
-
-                }*/
-
+            Column(Modifier.padding(16.dp).fillMaxWidth()) {
                 Text(
                     stringResource(R.string.shutdown_delay),
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
                 ShutdownDelayDropdown(viewModel = viewModel, options = shutdownDelayOptions)
 
@@ -137,6 +134,7 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                             val device = devices[index]
                             DeviceItem(
                                 device = device,
+                                viewModel = viewModel,
                                 onShutdown = {
                                     viewModel.sendShutdownCommand(
                                         device,
@@ -145,9 +143,15 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                                     ) { success ->
                                         showSnackbar =
                                             if (success)
-                                                context.getString(R.string.device_shutdown_sent, device.name)
+                                                context.getString(
+                                                    R.string.device_shutdown_sent,
+                                                    device.name
+                                                )
                                             else
-                                                context.getString(R.string.device_shutdown_sent_error, device.name)
+                                                context.getString(
+                                                    R.string.device_shutdown_sent_error,
+                                                    device.name
+                                                )
                                     }
                                 },
                                 onWake = {
@@ -157,9 +161,15 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                                     ) { success ->
                                         showSnackbar =
                                             if (success)
-                                                context.getString(R.string.device_wol_sent, device.name)
+                                                context.getString(
+                                                    R.string.device_wol_sent,
+                                                    device.name
+                                                )
                                             else
-                                                context.getString(R.string.device_wol_sent_error, device.name)
+                                                context.getString(
+                                                    R.string.device_wol_sent_error,
+                                                    device.name
+                                                )
                                     }
                                 },
                                 onDelete = {

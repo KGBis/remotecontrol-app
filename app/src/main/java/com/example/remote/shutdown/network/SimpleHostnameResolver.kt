@@ -6,6 +6,7 @@ import java.io.File
 import java.net.Socket
 import kotlin.coroutines.CoroutineContext
 
+@Deprecated(message = "Not working in modern Android")
 class SimpleHostnameResolver(private val context: CoroutineContext = Dispatchers.IO) {
 
     /**

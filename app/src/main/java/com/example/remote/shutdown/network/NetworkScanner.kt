@@ -1,18 +1,51 @@
 package com.example.remote.shutdown.network
 
 import android.util.Log
-import androidx.compose.ui.graphics.Color
+import com.example.remote.shutdown.data.Device
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
-import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
 
-object NetworkUtils {
+object NetworkScanner {
 
     private val portsToScan = listOf(445, 135, 22, 80, 443, 139, 3389, 6800)
 
-    suspend fun isHostReachable(ip: String, port: Int, timeoutMs: Int = 300): Boolean =
+    /**
+     * Scans local network (i.e. 192.168.1.1 to 254 range) concurrently.
+     * @return Device list of reachable (online) devices
+     */
+    suspend fun scanLocalNetwork(
+        baseIp: String = "192.168.1",
+        maxConcurrent: Int = 20
+    ): List<Device> = coroutineScope {
+        val semaphore = Semaphore(maxConcurrent)
+        val jobs = (1..254).map { i ->
+            async(Dispatchers.IO) {
+                val ip = "$baseIp.$i"
+
+                // Limitar la concurrencia
+                semaphore.withPermit {
+                    if (/*isPcOnline(ip)*/checkPcStatus(ip)) {
+                        Device(
+                            name = ip,
+                            ip = ip,
+                            mac = ""
+                        )
+                    } else null
+                }
+            }
+        }
+
+        jobs.awaitAll().filterNotNull()
+    }
+
+    /*suspend fun isHostReachable(ip: String, port: Int, timeoutMs: Int = 300): Boolean =
         withContext(Dispatchers.IO) {
             try {
                 // Log.d("NetworkUtils", "isHostReachable(ip: $ip, port: $port, timeoutMs: $timeoutMs) INIT")
@@ -47,7 +80,7 @@ object NetworkUtils {
                 }
                 return@withContext false
             }
-        }
+        }*/
 
     /*suspend fun pingInetAddress(ip: String, timeoutMs: Int = 500): Boolean =
         withContext(Dispatchers.IO) {
@@ -109,6 +142,10 @@ object NetworkUtils {
             }
         }
 
+    /**
+     * Returns `true` if an IP address can be reached connecting to any of the [portsToScan].
+     * If none of the ports connect, `false` is returned
+     */
     suspend fun checkPcStatus(ip: String, timeout: Int = 500): Boolean {
         return portsToScan.any { port ->
             withContext(Dispatchers.IO) {
@@ -122,28 +159,6 @@ object NetworkUtils {
                     false
                 }
             }
-        }
-
-        /*if (portResponse) return true
-
-        // 2. Si no responde a puertos, intentar ping
-        return withContext(Dispatchers.IO) {
-            try {
-                Log.i("checkPcStatus", "for ip $ip trying PING")
-                val process = ProcessBuilder("ping", "-c", "1", "-W", "$timeout", ip).start()
-                process.waitFor() == 0
-            } catch (e: Exception) {
-                Log.i("checkPcStatus", "for ip $ip trying PING. Exception $e")
-                false
-            }
-        }*/
-    }
-
-    suspend fun getColorPcOnline(ip: String, port: Int = 5000): Color {
-        return if (isPcOnline(ip)) {
-            Color.Green
-        } else {
-            Color.Red
         }
     }
 
