@@ -1,17 +1,12 @@
-package com.example.remote.shutdown.data
+package com.example.remote.shutdown.repository
 
 import android.content.Context
-import android.util.Log
+import androidx.core.content.edit
+import com.example.remote.shutdown.data.Device
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
-import java.net.Socket
-import androidx.core.content.edit
-import com.example.remote.shutdown.network.NetworkStatus.SHUTDOWN_PORT
 
 class DeviceRepository(context: Context) {
 

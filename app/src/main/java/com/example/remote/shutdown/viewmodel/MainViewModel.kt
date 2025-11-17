@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.remote.shutdown.data.*
 import com.example.remote.shutdown.network.NetworkActions
 import com.example.remote.shutdown.network.NetworkScanner
+import com.example.remote.shutdown.repository.DeviceRepository
+import com.example.remote.shutdown.repository.SettingsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,11 +22,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Device Repository and actions
     private val repository = DeviceRepository(application)
 
+    // Device list
     private val _devices = MutableStateFlow<List<Device>>(emptyList())
     val devices = _devices.asStateFlow()
 
     private val _statusMap = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val statusMap = _statusMap.asStateFlow()
+
+    // Device status
+    private val _deviceStatusMap = MutableStateFlow<Map<String, DeviceStatus>>(emptyMap())
+    val deviceStatusMap = _deviceStatusMap.asStateFlow()
 
     val routerIps: List<String> by lazy {
         loadRouterIps()

@@ -1,5 +1,7 @@
 package com.example.remote.shutdown.network
 
+import com.example.remote.shutdown.data.DeviceStatus
+
 object NetworkStatus {
     const val SHUTDOWN_PORT = 6800
 
@@ -8,4 +10,8 @@ object NetworkStatus {
 
     suspend fun isShutdownPortOpen(ip: String, timeout: Int = 1000): Boolean =
         NetworkUtils.canConnect(ip, SHUTDOWN_PORT, timeout)*/
+
+    suspend fun deviceStatus(ip: String, timeout: Int = 500): DeviceStatus {
+        return DeviceStatus()
+    }
 }

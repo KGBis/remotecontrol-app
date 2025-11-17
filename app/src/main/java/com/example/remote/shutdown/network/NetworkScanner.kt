@@ -2,6 +2,7 @@ package com.example.remote.shutdown.network
 
 import android.util.Log
 import com.example.remote.shutdown.data.Device
+import com.example.remote.shutdown.data.DeviceStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -31,7 +32,7 @@ object NetworkScanner {
 
                 // Limitar la concurrencia
                 semaphore.withPermit {
-                    if (/*isPcOnline(ip)*/checkPcStatus(ip)) {
+                    if (checkPcStatus(ip)) {
                         Device(
                             name = ip,
                             ip = ip,
@@ -45,84 +46,16 @@ object NetworkScanner {
         jobs.awaitAll().filterNotNull()
     }
 
-    /*suspend fun isHostReachable(ip: String, port: Int, timeoutMs: Int = 300): Boolean =
+    /**
+     * Returns a [DeviceStatus] filled with info about:
+     * 1. Device is online/offline
+     * 2. Device can be shut down
+     * 3. Device can be woken up
+     */
+    suspend fun deviceStatus(ip: String, timeout: Int = 500): DeviceStatus =
         withContext(Dispatchers.IO) {
-            try {
-                // Log.d("NetworkUtils", "isHostReachable(ip: $ip, port: $port, timeoutMs: $timeoutMs) INIT")
-                Socket().use { socket ->
-                    socket.connect(InetSocketAddress(ip, port), timeoutMs)
-
-                    val writer = socket.getOutputStream().bufferedWriter()
-                    val reader = socket.getInputStream().bufferedReader()
-
-                    // Log.i("NET", "got Socket reader/writter")
-
-                    writer.write("CONN")
-                    writer.flush() // Muy importante para que se envíe
-
-                    // Log.i("NET", "wrote msg to writter")
-
-                    // Leer respuesta (ACK)
-                    val response = reader.readLine() // Bloquea hasta que llegue dato o timeout
-                    // Log.d("NET", "isHostReachable(ip: $ip, port: $port, timeoutMs: $timeoutMs) -> true, response: $response")
-                    return@use true
-                }
-            } catch (e: Exception) {
-                Log.d(
-                    "NetworkUtils",
-                    "isHostReachable(ip: $ip, port: $port, timeoutMs: $timeoutMs) -> false ($e)"
-                )
-                if (ip.contains("1.43")) {
-                    Log.i(
-                        "pingInetAddress",
-                        "socket.connect(InetSocketAddress($ip, $port), $timeoutMs) = false"
-                    )
-                }
-                return@withContext false
-            }
-        }*/
-
-    /*suspend fun pingInetAddress(ip: String, timeoutMs: Int = 500): Boolean =
-        withContext(Dispatchers.IO) {
-        try {
-            // Log.d("NetworkUtils", "pingInetAddress(ip: $ip, timeoutMs: $timeoutMs) INIT")
-            val isReachable = InetAddress.getByName(ip).isReachable(timeoutMs)
-            // Log.d("NetworkUtils", "pingInetAddress(ip: $ip, timeoutMs: $timeoutMs) RESULT = $isReachable")
-            if (ip.contains("1.43")) {
-                Log.i(
-                    "pingInetAddress",
-                    "InetAddress.getByName($ip).isReachable($timeoutMs) = $isReachable"
-                )
-            }
-            return@withContext isReachable
-        } catch (e: Exception) {
-            Log.w("NetworkUtils", "pingInetAddress(ip: $ip, timeoutMs: $timeoutMs) EXCP -> $e")
-            return@withContext false
-        }
-    }*/
-
-    /*suspend fun pingCommand(ip: String, count: Int = 1, timeoutSec: Int = 1): Boolean =
-        withContext(Dispatchers.IO) {
-        try {
-            // Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) INIT")
-            val process = Runtime.getRuntime()
-                .exec("ping -c $count -W $timeoutSec $ip")
-
-            // val output = process.inputStream.bufferedReader().use { it.readText() }
-            // val error  = process.errorStream.bufferedReader().use { it.readText() }
-
-            val exitCode = process.waitFor()
-
-            // Log.d("NetworkUtils", "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) EXITCODE=$exitCode")
-            return@withContext exitCode == 0
-        } catch (e: Exception) {
-            Log.d(
-                "NetworkUtils",
-                "pingCommand(ip: $ip, count: $count timeoutSec: $timeoutSec) EXCP -> $e"
-            )
-            return@withContext false
-        }
-    }*/
+            return@withContext DeviceStatus()
+    }
 
     /**
      * Returns `true` if an IP address can be reached connecting to any of the [portsToScan].

@@ -1,4 +1,4 @@
-package com.example.remote.shutdown.data
+package com.example.remote.shutdown.repository
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
