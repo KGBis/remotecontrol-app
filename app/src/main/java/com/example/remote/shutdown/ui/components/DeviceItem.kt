@@ -1,11 +1,14 @@
 package com.example.remote.shutdown.ui.components
 
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Delete
@@ -20,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,7 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.Device
-import com.example.remote.shutdown.network.NetworkScanner
+import com.example.remote.shutdown.data.DeviceStatus
 import com.example.remote.shutdown.viewmodel.MainViewModel
 
 @Composable
@@ -37,55 +39,103 @@ fun DeviceItem(
     viewModel: MainViewModel,
     onShutdown: () -> Unit,
     onWake: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
 ) {
-    // Wake-on-LAN flags and colors
-    if(device.mac.isNullOrBlank()) {
-        device.canWakeup = false
-    }
-    Log.i("Device Item", "Can wake up? ${device.canWakeup}")
-    val wolColor = if (device.canWakeup == true) Color.Unspecified else Color.Gray
+    // get device status from viewmodel
+    val deviceStatusMap by viewModel.deviceStatusMap.collectAsState()
+    val deviceStatus = deviceStatusMap.getOrDefault(device.ip, DeviceStatus())
 
-    val statusMap by viewModel.statusMap.collectAsState()
+    Log.i("DeviceItem", "Status Map -> $deviceStatusMap")
 
-    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(4.dp)) {
-        Row(Modifier.fillMaxWidth().padding(12.dp),
+    // Online dot
+    val online = deviceStatus.isOnline
+    val onlineColor = if (online == true) Color.Green else Color.Red
+    val onlineText =
+        if (online == true) stringResource(R.string.status_online) else stringResource(R.string.status_offline)
+
+    // Wake-on-LAN (greyed and disabled?)
+    val canWoL = deviceStatus.canWakeup == true && deviceStatus.isOnline == false
+    val wolColor = if (canWoL) Color.Unspecified else Color.Gray
+
+    // shutdown (greyed and disabled?)
+    val canShutdown = deviceStatus.canShutdown == true && deviceStatus.isOnline == true
+    val shutdowndColor = if (canShutdown) Color.Unspecified else Color.Gray
+
+    // val statusMap by viewModel.statusMap.collectAsState()
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                Log.i("DeviceItem", "Status Map -> $statusMap")
-                val status = if (statusMap[device.ip] == true) Color.Green else Color.Red
-                Icon(Icons.Default.Circle, tint = status, contentDescription = "Estado")
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(Icons.Default.Circle, tint = onlineColor, contentDescription = onlineText)
             }
 
             // Name & IP
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.clickable { onEdit() }
+            ) {
                 Text(device.name, style = MaterialTheme.typography.titleMedium)
                 Text(device.ip, style = MaterialTheme.typography.bodySmall)
-                Text(if (device.mac.isNullOrBlank()) "[no MAC entered]" else device.mac!!, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    device.mac.ifBlank { stringResource(R.string.device_no_mac) },
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                // Shutdown icon + texto
+            Spacer(Modifier.width(8.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Shutdown icon + text
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    IconButton(onClick = onShutdown) {
-                        Icon(Icons.Default.Power, contentDescription = "Apagar")
+                    IconButton(
+                        onClick = onShutdown,
+                        enabled = canShutdown
+                    ) {
+                        Icon(
+                            Icons.Default.Power,
+                            tint = shutdowndColor,
+                            contentDescription = stringResource(R.string.shutdown_action)
+                        )
                     }
-                    Text("Shutdown", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.shutdown_action),
+                        color = shutdowndColor,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
 
-                // WoL icon + texto
+                // WoL icon + text
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    IconButton(onClick = onWake,
-                        enabled = device.canWakeup == true
+                    IconButton(
+                        onClick = onWake,
+                        enabled = canWoL
                     ) {
-                        Icon(Icons.Default.PowerSettingsNew,
+                        Icon(
+                            Icons.Default.PowerSettingsNew,
                             tint = wolColor,
                             contentDescription = stringResource(R.string.wol_action)
                         )
                     }
-                    Text(stringResource(R.string.wol_action),
+                    Text(
+                        stringResource(R.string.wol_action),
                         color = wolColor,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -94,9 +144,15 @@ fun DeviceItem(
                 // Delete icon + texto
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_action))
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.delete_action)
+                        )
                     }
-                    Text(stringResource(R.string.delete_action), style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        stringResource(R.string.delete_action),
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         }

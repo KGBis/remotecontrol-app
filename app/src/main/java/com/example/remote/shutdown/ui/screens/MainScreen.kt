@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -85,13 +86,18 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text(stringResource(R.string.app_name),
+                    Text(
+                        stringResource(R.string.app_name),
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center
-                ) },
+                    )
+                },
                 actions = {
                     IconButton(onClick = { navController.navigate("add_device") }) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_device))
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = stringResource(R.string.add_device)
+                        )
                     }
                     /*IconButton(onClick = { navController.navigate("add_device") }) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
@@ -112,11 +118,16 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                 isRefreshing = false
             }
         ) {
-            Column(Modifier.padding(16.dp).fillMaxWidth()) {
+            Column(Modifier
+                .padding(16.dp)
+                .fillMaxWidth().align(Alignment.TopCenter)
+            ) {
                 Text(
                     stringResource(R.string.shutdown_delay),
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp).fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
                 ShutdownDelayDropdown(viewModel = viewModel, options = shutdownDelayOptions)
@@ -124,10 +135,12 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                 Spacer(Modifier.height(16.dp))
 
                 if (devices.isEmpty()) {
-                    Text(stringResource(R.string.no_devices_yet),
+                    Text(
+                        stringResource(R.string.no_devices_yet),
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium)
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 } else {
                     LazyColumn {
                         items(devices.size) { index ->
@@ -175,6 +188,9 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                                 onDelete = {
                                     showSnackbar = context.getString(R.string.device_removed)
                                     viewModel.removeDevice(device)
+                                },
+                                onEdit = {
+                                    navController.navigate("edit_device/${device.ip}")
                                 }
                             )
                         }

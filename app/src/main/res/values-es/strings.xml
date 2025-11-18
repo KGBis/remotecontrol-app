@@ -12,6 +12,7 @@
     <string name="time">Tiempo</string>
     <string name="unit">Unidad</string>
     <string name="shutdown_delay">Apagar el dispositivo tras</string>
+    <string name="shutdown_delay_desc">Espera hasta apagado</string>
     <string name="no_devices_yet">No hay dispositivos aún, use ➕ Añadir dispositivo</string>
 
     <!-- Delay Options -->
@@ -29,18 +30,21 @@
     <string name="status_unknown">⚪ Desconocido</string>
 
     <!-- Acciones sobre un dispositivo -->
-    <string name="shutdown_action">🛑 Apagar PC</string>
+    <string name="shutdown_action">Apagar PC</string>
     <string name="delete_action">Eliminar</string>
     <string name="edit_action">⚙️ Configurar</string>
 
     <!-- Añadir dispositivo -->
     <string name="add_device">➕ Añadir dispositivo</string>
+    <string name="edit_device">✏️ Editar dispositivo</string>
     <string name="device_name">Nombre del dispositivo</string>
     <string name="device_ip">Dirección IP</string>
-    <string name="device_mac">Dirección MAC (opcional)</string>
+    <string name="device_mac">Dirección MAC</string>
     <string name="save_device">💾 Guardar</string>
+    <string name="update_device">💾 Actualizar</string>
 
     <!-- Mensajes / Snackbars -->
+    <string name="device_no_mac">[añada una MAC]</string>
     <string name="device_added">Dispositivo añadido</string>
     <string name="device_removed">Dispositivo eliminado</string>
     <string name="device_wol_sent">Paquete WoL enviado a %1$s</string>
@@ -49,7 +53,8 @@
     <string name="device_shutdown_sent_error">Error al envíar comando de apagado a %1$s</string>
     <string name="error_invalid_ip">❌ IP no válida</string>
     <string name="error_empty_fields">⚠️ Todos los campos obligatorios deben estar completos</string>
-    <string name="network_scan_running">🔍 Escaneando red…</string>
+    <string name="network_scan_button">🔍 Escanear red local</string>
+    <string name="network_scan_running">🔍 Escaneando red… puede tardar</string>
     <string name="network_scan_done">✔ Escaneo completado</string>
     <string name="no_devices_found">Ningún dispositivo encontrado</string>
 

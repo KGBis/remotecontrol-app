@@ -4,9 +4,10 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.remote.shutdown.data.*
+import com.example.remote.shutdown.data.Device
+import com.example.remote.shutdown.data.DeviceStatus
 import com.example.remote.shutdown.network.NetworkActions
-import com.example.remote.shutdown.network.NetworkScanner
+import com.example.remote.shutdown.network.NetworkScanner.deviceStatus
 import com.example.remote.shutdown.repository.DeviceRepository
 import com.example.remote.shutdown.repository.SettingsRepository
 import kotlinx.coroutines.Dispatchers
@@ -25,9 +26,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Device list
     private val _devices = MutableStateFlow<List<Device>>(emptyList())
     val devices = _devices.asStateFlow()
-
-    private val _statusMap = MutableStateFlow<Map<String, Boolean>>(emptyMap())
-    val statusMap = _statusMap.asStateFlow()
 
     // Device status
     private val _deviceStatusMap = MutableStateFlow<Map<String, DeviceStatus>>(emptyMap())
@@ -74,14 +72,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun getDeviceByIp(ip: String): Device? {
+        return _devices.value.firstOrNull { it.ip == ip }
+    }
+
+
     fun refreshStatuses() {
         viewModelScope.launch(Dispatchers.IO) {
             val current = _devices.value
-            val newStatuses = current.associate { device ->
+            /*val newStatuses = current.associate { device ->
                 device.ip to NetworkScanner.isPcOnline(device.ip)
+            }*/
+            val newStatuses = current.associate { device ->
+                device.ip to deviceStatus(device)
             }
             Log.i("refresh", "$newStatuses")
-            _statusMap.emit(newStatuses)
+            // _statusMap.emit(newStatuses)
+            _deviceStatusMap.emit(newStatuses)
         }
     }
 

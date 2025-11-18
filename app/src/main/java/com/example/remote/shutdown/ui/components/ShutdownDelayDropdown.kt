@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -17,9 +18,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+
 import androidx.compose.ui.Modifier
+
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.ShutdownDelayOption
 import com.example.remote.shutdown.viewmodel.MainViewModel
 
@@ -30,36 +36,41 @@ fun ShutdownDelayDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    // Flujos actuales
+    // Current delay and time unit
     val currentDelay by viewModel.shutdownDelay.collectAsState()
     val currentUnit by viewModel.shutdownUnit.collectAsState()
 
-    // El label del item seleccionado
+    // Selected option in dropdown which matches delay + time unit
     val selectedOption = options.find {
         it.amount == currentDelay.toLong() && it.unit == currentUnit
     } ?: options.first()
 
-    Box {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
         OutlinedButton(
             onClick = { expanded = true },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.align(Alignment.Center)
         ) {
-            Text(stringResource(selectedOption.labelRes))
+            Text(stringResource(selectedOption.labelRes), textAlign = TextAlign.Center)
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
-                imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = "Seleccionar tiempo"
+                imageVector = if (expanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                contentDescription = stringResource(R.string.shutdown_delay_desc)
             )
         }
 
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth(0.75f)
+                .align(Alignment.TopCenter)
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(stringResource(option.labelRes)) },
+                    text = { Text(stringResource(option.labelRes), textAlign = TextAlign.Center) },
                     onClick = {
                         viewModel.changeDelay(option.amount.toInt())
                         viewModel.changeUnit(option.unit)

@@ -3,6 +3,7 @@ package com.example.remote.shutdown.network
 import android.util.Log
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.DeviceStatus
+import com.example.remote.shutdown.network.NetworkStatus.SHUTDOWN_PORT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -51,11 +52,33 @@ object NetworkScanner {
      * 1. Device is online/offline
      * 2. Device can be shut down
      * 3. Device can be woken up
+     *
+     * The steps to achieve these are:
+     * 1. Check if [SHUTDOWN_PORT] is reachable. If so, device is online and can be shut down. Go to 3.
+     * If [SHUTDOWN_PORT] is not reachable, could be by shutdown computer application not being installed
+     * or device offline. Go to next.
+     * 2. Check if any of the [portsToScan] can be reached. If so, device is online.
+     * 3. Check if device has its MAC filled in the app. If so, Wake-on-LAN can be used.
      */
-    suspend fun deviceStatus(ip: String, timeout: Int = 500): DeviceStatus =
+    suspend fun deviceStatus(device: Device, timeout: Int = 500): DeviceStatus =
         withContext(Dispatchers.IO) {
-            return@withContext DeviceStatus()
-    }
+            val deviceStatus = DeviceStatus(isOnline = false, canWakeup = false, canShutdown = false)
+
+            // Step 1. Check for SHUTDOWN_PORT
+            val result: Boolean = canConnect(device.ip, SHUTDOWN_PORT, timeout)
+            if(result) {
+                deviceStatus.isOnline = true
+                deviceStatus.canShutdown = true
+            } else {
+                deviceStatus.isOnline = isPcOnline(device.ip)
+            }
+
+            if(device.mac?.isNotBlank() == true) {
+                deviceStatus.canWakeup = true
+            }
+
+            return@withContext deviceStatus
+        }
 
     /**
      * Returns `true` if an IP address can be reached connecting to any of the [portsToScan].
@@ -82,17 +105,19 @@ object NetworkScanner {
     suspend fun checkPcStatus(ip: String, timeout: Int = 500): Boolean {
         return portsToScan.any { port ->
             withContext(Dispatchers.IO) {
-                try {
-                    Socket().use { socket ->
-                        socket.connect(InetSocketAddress(ip, port), timeout)
-                        Log.i("checkPcStatus", "for ip $ip:$port connected")
-                    }
-                    true
-                } catch (_: Exception) {
-                    false
-                }
+                canConnect(ip, port, timeout)
             }
         }
+    }
+
+    private fun canConnect(ip: String, port: Int, timeout: Int): Boolean = try {
+        Socket().use { socket ->
+            socket.connect(InetSocketAddress(ip, port), timeout)
+            Log.i("checkPcStatus", "for ip $ip:$port connected")
+        }
+        true
+    } catch (_: Exception) {
+        false
     }
 
 }
