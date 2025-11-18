@@ -50,9 +50,18 @@ fun DeviceItem(
 
     // Online dot
     val online = deviceStatus.isOnline
-    val onlineColor = if (online == true) Color.Green else Color.Red
-    val onlineText =
-        if (online == true) stringResource(R.string.status_online) else stringResource(R.string.status_offline)
+    val onlineColor = when {
+        deviceStatusMap.isEmpty() -> Color.Gray
+        online == true -> Color.Green
+        else -> Color.Red
+    }
+    val onlineText = stringResource(
+        when {
+            deviceStatusMap.isEmpty() -> R.string.status_unknown
+            online == true -> R.string.status_online
+            else -> R.string.status_offline
+        }
+    )
 
     // Wake-on-LAN (greyed and disabled?)
     val canWoL = deviceStatus.canWakeup == true && deviceStatus.isOnline == false
@@ -61,8 +70,6 @@ fun DeviceItem(
     // shutdown (greyed and disabled?)
     val canShutdown = deviceStatus.canShutdown == true && deviceStatus.isOnline == true
     val shutdowndColor = if (canShutdown) Color.Unspecified else Color.Gray
-
-    // val statusMap by viewModel.statusMap.collectAsState()
 
     Card(
         modifier = Modifier
@@ -116,7 +123,8 @@ fun DeviceItem(
                             contentDescription = stringResource(R.string.shutdown_action)
                         )
                     }
-                    Text(stringResource(R.string.shutdown_action),
+                    Text(
+                        stringResource(R.string.shutdown_action),
                         color = shutdowndColor,
                         style = MaterialTheme.typography.bodySmall
                     )

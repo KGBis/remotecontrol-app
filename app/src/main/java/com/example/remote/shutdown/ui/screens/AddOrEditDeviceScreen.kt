@@ -42,6 +42,7 @@ import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.network.NetworkRangeDetector
 import com.example.remote.shutdown.network.NetworkScanner.scanLocalNetwork
+import com.example.remote.shutdown.ui.components.ValidatingTextField
 import com.example.remote.shutdown.util.Validators
 import com.example.remote.shutdown.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
@@ -52,6 +53,7 @@ fun AddOrEditDeviceScreen(
     navController: NavController, viewModel: MainViewModel, context: Context,
     deviceToEdit: Device? = null
 ) {
+    // Fields
     var name by remember {
         if (deviceToEdit == null) mutableStateOf("") else mutableStateOf(
             deviceToEdit.name
@@ -69,11 +71,10 @@ fun AddOrEditDeviceScreen(
         )
     }
 
+    // scanning
     var scanning by remember { mutableStateOf(false) }
     var results by remember { mutableStateOf(listOf<Device>()) }
-
     val scope = rememberCoroutineScope()
-
     val networkRangeDetector = NetworkRangeDetector(context)
 
     Scaffold(
@@ -117,31 +118,25 @@ fun AddOrEditDeviceScreen(
             )
             Spacer(Modifier.height(8.dp))
 
-            val isIpValid = Validators.isValidIp(ip)
-
-            OutlinedTextField(
+            ValidatingTextField(
                 value = ip,
-                textStyle = TextStyle(fontSize = 14.sp),
-                modifier = modifier,
                 onValueChange = { ip = it },
-                label = { Text(stringResource(R.string.device_ip)) },
-                isError = !isIpValid
+                label = stringResource(R.string.device_ip),
+                modifier = modifier,
+                validator = Validators::isValidIp,
+                errorMessage = R.string.error_invalid_ip
             )
-            if (!isIpValid) {
-                Text(
-                    text = "Formato de IP inválido",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
-                value = mac,
-                textStyle = TextStyle(fontSize = 14.sp),
-                modifier = modifier,
-                onValueChange = { ip = it },
-                label = { Text(stringResource(R.string.device_mac)) })
 
+            Spacer(Modifier.height(8.dp))
+
+            ValidatingTextField(
+                value = mac,
+                onValueChange = { mac = it },
+                label = stringResource(R.string.device_mac),
+                modifier = modifier,
+                validator = Validators::isValidMac,
+                errorMessage = R.string.error_invalid_mac
+            )
             Spacer(Modifier.height(16.dp))
 
             Button(
@@ -156,6 +151,11 @@ fun AddOrEditDeviceScreen(
                         } else {
                             // UPDATE
                             val updated = deviceToEdit.copy(name = name, ip = ip, mac = mac)
+                            Log.i(
+                                "AddOrEditDevice-Update",
+                                "deviceToEdit -> $deviceToEdit\nUpdated object -> $updated"
+                            )
+                            // TODO call the new update fun
                             viewModel.addDevice(updated)
                         }
                         navController.popBackStack()

@@ -1,9 +1,11 @@
 package com.example.remote.shutdown.ui.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
@@ -19,12 +21,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-
 import androidx.compose.ui.Modifier
-
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.xr.compose.testing.toDp
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.ShutdownDelayOption
 import com.example.remote.shutdown.viewmodel.MainViewModel
@@ -45,13 +49,27 @@ fun ShutdownDelayDropdown(
         it.amount == currentDelay.toLong() && it.unit == currentUnit
     } ?: options.first()
 
+    // to center drop down
+    var parentWidth by remember { mutableStateOf(0.dp) }
+    var menuWidth by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
+
+    // Horizontal offset for dropdown
+    val horizontalOffset = (parentWidth - menuWidth) / 2
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .onGloballyPositioned { coords ->
+                @Suppress("AssignedValueIsNeverRead")
+                parentWidth = coords.size.width.toDp()
+            },
+        contentAlignment = Alignment.Center
     ) {
         OutlinedButton(
             onClick = { expanded = true },
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier
+                .wrapContentWidth()
         ) {
             Text(stringResource(selectedOption.labelRes), textAlign = TextAlign.Center)
             Spacer(modifier = Modifier.width(8.dp))
@@ -65,8 +83,12 @@ fun ShutdownDelayDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier
-                .fillMaxWidth(0.75f)
-                .align(Alignment.TopCenter)
+                .width(IntrinsicSize.Max)
+                .onGloballyPositioned { layout ->
+                    @Suppress("AssignedValueIsNeverRead")
+                    menuWidth = with(density) { layout.size.width.toDp() }
+                },
+            offset = DpOffset(horizontalOffset, 0.dp)
         ) {
             options.forEach { option ->
                 DropdownMenuItem(

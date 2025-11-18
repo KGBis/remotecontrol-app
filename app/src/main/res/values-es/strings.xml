@@ -51,7 +51,9 @@
     <string name="device_wol_sent_error">Error enviando paquete Wake-on-LAN a %1$s</string>
     <string name="device_shutdown_sent">Comando de apagado enviado a %1$s</string>
     <string name="device_shutdown_sent_error">Error al envíar comando de apagado a %1$s</string>
-    <string name="error_invalid_ip">❌ IP no válida</string>
+    <string name="generic_validation_error">Error de validación</string>
+    <string name="error_invalid_ip">IP no válida</string>
+    <string name="error_invalid_mac">Dirección MAC no válida</string>
     <string name="error_empty_fields">⚠️ Todos los campos obligatorios deben estar completos</string>
     <string name="network_scan_button">🔍 Escanear red local</string>
     <string name="network_scan_running">🔍 Escaneando red… puede tardar</string>

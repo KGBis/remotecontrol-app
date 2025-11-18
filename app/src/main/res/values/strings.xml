@@ -53,7 +53,9 @@
     <string name="device_wol_sent_error">Error sending Wake-on-LAN packet to %1$s</string>
     <string name="device_shutdown_sent">Shutdown command sent to %1$s</string>
     <string name="device_shutdown_sent_error">Error while sending shutdown command to %1$s</string>
-    <string name="error_invalid_ip">❌ Invalid IP address</string>
+    <string name="generic_validation_error">Validation error</string>
+    <string name="error_invalid_ip">Invalid IP address</string>
+    <string name="error_invalid_mac">Invalid MAC address</string>
     <string name="error_empty_fields">⚠️ All required fields must be filled</string>
     <string name="network_scan_button">🔍 Scan local network</string>
     <string name="network_scan_running">🔍 Scanning… may take some time</string>

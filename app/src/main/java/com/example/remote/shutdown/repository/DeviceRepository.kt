@@ -1,12 +1,15 @@
 package com.example.remote.shutdown.repository
 
 import android.content.Context
+import androidx.compose.ui.text.toLowerCase
 import androidx.core.content.edit
 import com.example.remote.shutdown.data.Device
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Locale
+import java.util.Locale.getDefault
 
 class DeviceRepository(context: Context) {
 
@@ -64,11 +67,19 @@ class DeviceRepository(context: Context) {
     }
 
     suspend fun addDevice(device: Device) = withContext(Dispatchers.IO) {
+        // normalize MAC address to colon separated (i.e. 91:75:1a:ec:9a:c7)
+        device.mac = device.mac.replace('-', ':').lowercase(getDefault())
+
+        // now save
         val devices = getDevices().toMutableList()
         devices.removeAll { it.ip == device.ip }
         devices.add(device)
         saveDevices(devices)
     }
+
+    // TODO update device fun with
+    //  deviceToEdit -> Device(name=192.168.1.43, ip=192.168.1.43, mac=)
+    //  and Updated object -> Device(name=192.168.1.43, ip=192.168.1.36, mac=)
 
     suspend fun removeDevice(device: Device) = withContext(Dispatchers.IO) {
         val devices = getDevices().filterNot { it.ip == device.ip }

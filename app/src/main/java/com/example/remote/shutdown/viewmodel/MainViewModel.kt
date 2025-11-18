@@ -65,6 +65,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // TODO update device fun with
+    //  deviceToEdit -> Device(name=192.168.1.43, ip=192.168.1.43, mac=)
+    //  and Updated object -> Device(name=192.168.1.43, ip=192.168.1.36, mac=)
+
     fun removeDevice(device: Device) {
         viewModelScope.launch {
             repository.removeDevice(device)

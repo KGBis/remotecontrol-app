@@ -73,7 +73,7 @@ object NetworkScanner {
                 deviceStatus.isOnline = isPcOnline(device.ip)
             }
 
-            if(device.mac?.isNotBlank() == true) {
+            if(device.mac.isNotBlank()) {
                 deviceStatus.canWakeup = true
             }
 
