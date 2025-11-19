@@ -67,15 +67,11 @@ class DeviceRepository(context: Context) {
     }
 
     /**
-     * Save list of devices trimming and normalizing MAC if set
+     * Save list of devices in JSON format
      */
     private fun saveDevices(devices: List<Device>) {
         val arr = JSONArray()
         for (d in devices) {
-            // Normalize before saving
-            d.normalize()
-
-            // convert to JSON
             val obj = JSONObject()
             obj.put("name", d.name)
             obj.put("ip", d.ip)

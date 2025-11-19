@@ -66,7 +66,7 @@ object NetworkScanner {
         withContext(Dispatchers.IO) {
             val deviceStatus = DeviceStatus(isOnline = false, canWakeup = false, canShutdown = false)
 
-            // Step 1. Check for SHUTDOWN_PORT
+            // Check for SHUTDOWN_PORT
             val result: Boolean = canConnect(device.ip, SHUTDOWN_PORT, timeout)
             if(result) {
                 deviceStatus.isOnline = true
@@ -115,7 +115,7 @@ object NetworkScanner {
     private fun canConnect(ip: String, port: Int, timeout: Int): Boolean = try {
         Socket().use { socket ->
             socket.connect(InetSocketAddress(ip, port), timeout)
-            Log.i("checkPcStatus", "for ip $ip:$port connected")
+            Log.i("canConnect", "for ip $ip:$port connected")
         }
         true
     } catch (_: Exception) {

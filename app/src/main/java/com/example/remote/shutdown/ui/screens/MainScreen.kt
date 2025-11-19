@@ -86,7 +86,7 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
 
     LaunchedEffect(Unit) {
         while (true) {
-            if(skipAfterAction) {
+            if (skipAfterAction) {
                 skipAfterAction = false
                 Log.i("autoRefresh", "Skipping refresh for $REFRESH_DELAY_MS ms")
             } else {
@@ -155,10 +155,7 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                 // List of added devices or "empty list" text
                 if (devices.isEmpty()) {
                     Text(
-                        if (pulltoRefreshIsRefreshing)
-                            stringResource(R.string.no_devices_yet)
-                        else
-                            stringResource(R.string.initializing),
+                        stringResource(R.string.no_devices_yet),
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.bodyMedium

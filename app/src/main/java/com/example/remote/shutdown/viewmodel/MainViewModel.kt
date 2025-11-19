@@ -60,6 +60,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun addDevice(device: Device) {
+        device.normalize()
         viewModelScope.launch {
             repository.addDevice(device)
             loadDevices()
@@ -67,6 +68,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun updateDevice(original: Device, updated: Device) {
+        updated.normalize()
         viewModelScope.launch {
             repository.updateDevice(original, updated)
             loadDevices()

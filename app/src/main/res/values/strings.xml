@@ -13,7 +13,6 @@
     <string name="unit">Unit</string>
     <string name="shutdown_delay">Shutdown device after</string>
     <string name="shutdown_delay_desc">Shutdown delay</string>
-    <string name="initializing">⟳ initializing, please wait</string>
     <string name="no_devices_yet">No devices yet, use ➕ Add device</string>
 
     <!-- Delay Options -->
@@ -58,7 +57,7 @@
     <string name="error_invalid_mac">Invalid MAC address</string>
     <string name="error_empty_fields">⚠️ All required fields must be filled</string>
     <string name="network_scan_button">🔍 Scan local network</string>
-    <string name="network_scan_running">🔍 Scanning… Please, wait</string>
+    <string name="network_scan_running">🔍 Scanning…</string>
     <string name="network_scan_done">✔ Scan completed</string>
     <string name="no_devices_found">No devices found</string>
 

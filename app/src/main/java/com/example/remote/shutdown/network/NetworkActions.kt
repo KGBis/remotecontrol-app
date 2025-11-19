@@ -15,6 +15,36 @@ import kotlin.experimental.inv
 
 object NetworkActions {
 
+    /**
+     * Tries to send an information request to target device port [SHUTDOWN_PORT].
+     * @return a [Triple] with values `true`, `hostname` and `mac address`
+     * if successful or `true`, `null` and `null` if not.
+     */
+    suspend fun sendInfoRequest(device: Device, delay: Int, unit: String): Triple<Boolean, String?, String?> =
+        withContext(Dispatchers.IO) {
+            try {
+                Socket(device.ip, SHUTDOWN_PORT).use { socket ->
+                    val msg = "INFO ${device.ip}"
+                    Log.d("sendShutdown", "Message sent: '$msg'")
+                    socket.getOutputStream().apply {
+                        write(msg.toByteArray())
+                        flush()
+                    }
+
+                    socket.getInputStream().use { inputStream ->
+                        val message = inputStream.readAllBytes().toString()
+                        message.split(" ")
+
+                        Triple(true, null, null)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Triple(false, null, null)
+            }
+
+        }
+
     suspend fun sendShutdown(device: Device, delay: Int, unit: String): Boolean =
         withContext(Dispatchers.IO) {
             try {
@@ -55,51 +85,38 @@ object NetworkActions {
             }
         }
 
-    /*fun getBroadcastAddress(): InetAddress? {
-        val interfaces = NetworkInterface.getNetworkInterfaces()
-        for (intf in interfaces) {
-            if (!intf.isUp || intf.isLoopback) continue
-            for (addr in intf.interfaceAddresses) {
-                Log.i("getBroadcastAddress", "Address -> $addr")
-                addr.broadcast?.let { return it } // devuelve la broadcast real de la subred
-            }
-        }
-        return null
-    }*/
-
     fun getBroadcastAddress(
         emulatorFallback: String = "192.168.1.255"
     ): String {
 
-        // Detectar emulador por fingerprint o IP típica 10.0.x.x
+        // Detect if emulator by fingerprint o typical 10.0.x.x IP
         val isEmulator =
             android.os.Build.FINGERPRINT.contains("generic", ignoreCase = true) ||
                     android.os.Build.MODEL.contains("Emulator", ignoreCase = true)
 
-        // Recoger IP y máscara reales del dispositivo
-        // Si no tenemos datos → fallback
+        // Grab device's real IP and network mask. If nothing → fallback
         val local =
             getLocalIpAndMask() ?: return if (isEmulator) emulatorFallback else "255.255.255.255"
 
-
+        // each part of the Pair
         val (ip, mask) = local
 
-        // Si estamos en emulador: ignoramos cálculo → la broadcast real de la LAN
+        // If in emulator use fallback
         if (isEmulator || ip.startsWith("10.0.")) {
             return emulatorFallback
         }
 
-        // Cálculo normal de broadcast
+        // calculate broadcast IP
         val broadcast = calculateBroadcast(
             InetAddress.getByName(ip),
             InetAddress.getByName(mask)
         )
 
-        return broadcast.hostAddress
+        return broadcast.hostAddress!!
     }
 
     /**
-     * Devuelve (IP, máscara) si existe interfaz válida.
+     * Returns (IP, máscara) if network interface is valid
      */
     fun getLocalIpAndMask(): Pair<String, String>? {
         val interfaces = NetworkInterface.getNetworkInterfaces()
@@ -107,19 +124,20 @@ object NetworkActions {
         for (netIf in interfaces) {
             if (!netIf.isUp || netIf.isLoopback) continue
 
-            val interfaceAddress = netIf.interfaceAddresses.firstOrNull { it.address is Inet4Address } ?: continue
+            val interfaceAddress =
+                netIf.interfaceAddresses.firstOrNull { it.address is Inet4Address } ?: continue
             val address = interfaceAddress.address as Inet4Address
 
             val prefix = interfaceAddress.networkPrefixLength
             val maskAddress = prefixToMask(prefix.toInt())
 
-            return address.hostAddress to maskAddress.hostAddress
+            return address.hostAddress!! to maskAddress.hostAddress!!
         }
         return null
     }
 
     /**
-     * Prefijo → máscara IPv4
+     * Prefix → IPv4 mask
      */
     fun prefixToMask(prefix: Int): InetAddress {
         val mask = ByteArray(4)
@@ -136,7 +154,7 @@ object NetworkActions {
     }
 
     /**
-     * IP + máscara → broadcast
+     * IP + mask → broadcast
      */
     fun calculateBroadcast(ip: InetAddress, mask: InetAddress): InetAddress {
         val ipBytes = ip.address
@@ -149,6 +167,5 @@ object NetworkActions {
 
         return InetAddress.getByAddress(broadcast)
     }
-
 
 }

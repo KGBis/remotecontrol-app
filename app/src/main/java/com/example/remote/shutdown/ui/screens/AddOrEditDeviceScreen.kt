@@ -139,18 +139,12 @@ fun AddOrEditDeviceScreen(
                     .align(Alignment.CenterHorizontally),
                 onClick = {
                     if (name.isNotBlank() && ip.isNotBlank()) {
-                        if (deviceToEdit == null) {
-                            // ADD
-                            viewModel.addDevice(Device(name, ip, mac))
-                        } else {
-                            // UPDATE
-                            val updated = deviceToEdit.copy(name = name, ip = ip, mac = mac)
-                            Log.i(
-                                "AddOrEditDevice-Update",
-                                "deviceToEdit -> $deviceToEdit\nUpdated object -> $updated"
-                            )
-                            // TODO call the new update fun
-                            viewModel.updateDevice(deviceToEdit, updated)
+                        when(deviceToEdit) {
+                            null -> viewModel.addDevice(Device(name, ip, mac))
+                            else -> {
+                                val updated = deviceToEdit.copy(name = name, ip = ip, mac = mac)
+                                viewModel.updateDevice(deviceToEdit, updated)
+                            }
                         }
                         navController.popBackStack()
                     }
@@ -162,6 +156,7 @@ fun AddOrEditDeviceScreen(
                 )
             }
 
+            // Not editing -> Scan network part
             if (deviceToEdit == null) {
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(
