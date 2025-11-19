@@ -28,7 +28,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.xr.compose.testing.toDp
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.ShutdownDelayOption
 import com.example.remote.shutdown.viewmodel.MainViewModel
@@ -58,11 +57,17 @@ fun ShutdownDelayDropdown(
     val horizontalOffset = (parentWidth - menuWidth) / 2
 
     Box(
-        modifier = Modifier
+        /*modifier = Modifier
             .fillMaxWidth()
             .onGloballyPositioned { coords ->
                 @Suppress("AssignedValueIsNeverRead")
                 parentWidth = coords.size.width.toDp()
+            },*/
+        modifier = Modifier
+            .fillMaxWidth()
+            .onGloballyPositioned { coords ->
+                // coords.size.width está en píxeles (Int)
+                parentWidth = with(density) { coords.size.width.toDp() }
             },
         contentAlignment = Alignment.Center
     ) {

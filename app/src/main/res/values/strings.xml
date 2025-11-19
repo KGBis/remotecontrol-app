@@ -1,8 +1,7 @@
 <resources>
 
     <!-- App name -->
-    <!--<string name="app_name">Wake &amp; Shutdown</string>-->
-    <string name="app_name" translatable="false">⚡ Remote PC Control</string>
+    <string name="app_name" translatable="false">Remote PC Control</string>
 
     <!-- Common -->
     <string name="back">Back</string>
@@ -14,6 +13,7 @@
     <string name="unit">Unit</string>
     <string name="shutdown_delay">Shutdown device after</string>
     <string name="shutdown_delay_desc">Shutdown delay</string>
+    <string name="initializing">⟳ initializing, please wait</string>
     <string name="no_devices_yet">No devices yet, use ➕ Add device</string>
 
     <!-- Delay Options -->
@@ -37,9 +37,9 @@
     <string name="edit_action">⚙️ Configure</string>
 
     <!-- Add/edit device -->
-    <string name="add_device">➕ Add device</string>
-    <string name="edit_device">✏️ Edit device</string>
-    <string name="device_name">Device name</string>
+    <string name="add_device">Add device</string>
+    <string name="edit_device">Edit device</string>
+    <string name="device_name">Name</string>
     <string name="device_ip">IP address</string>
     <string name="device_mac">MAC address</string>
     <string name="save_device">💾 Save</string>
@@ -58,7 +58,7 @@
     <string name="error_invalid_mac">Invalid MAC address</string>
     <string name="error_empty_fields">⚠️ All required fields must be filled</string>
     <string name="network_scan_button">🔍 Scan local network</string>
-    <string name="network_scan_running">🔍 Scanning… may take some time</string>
+    <string name="network_scan_running">🔍 Scanning… Please, wait</string>
     <string name="network_scan_done">✔ Scan completed</string>
     <string name="no_devices_found">No devices found</string>
 

@@ -18,6 +18,7 @@ class SettingsRepository(private val context: Context) {
         val KEY_DELAY_UNIT = stringPreferencesKey("delay_unit")
     }
 
+    /* Initialize delay and time unit values in case not saved yet */
     val shutdownDelayFlow: Flow<Int> =
         context.dataStore.data.map { prefs ->
             prefs[KEY_DELAY_AMOUNT] ?: 15   // valor por defecto (15s como en tu VM)

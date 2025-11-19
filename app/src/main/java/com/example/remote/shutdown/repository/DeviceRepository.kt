@@ -1,15 +1,12 @@
 package com.example.remote.shutdown.repository
 
 import android.content.Context
-import androidx.compose.ui.text.toLowerCase
 import androidx.core.content.edit
 import com.example.remote.shutdown.data.Device
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.Locale
-import java.util.Locale.getDefault
 
 class DeviceRepository(context: Context) {
 
@@ -39,6 +36,54 @@ class DeviceRepository(context: Context) {
         list.sortedBy { it.ip.toIpLong() }
     }
 
+    /**
+     * Add a new device. If IP was repeated (another device with same IP) this
+     * will overwrite the stored one
+     */
+    suspend fun addDevice(device: Device) = withContext(Dispatchers.IO) {
+        val devices = getDevices().toMutableList()
+        devices.removeAll { it.ip == device.ip }
+        devices.add(device)
+        saveDevices(devices)
+    }
+
+    /**
+     * Update a device.
+     * Original data is wiped to avoid creating a new one device if IP is changed
+     */
+    suspend fun updateDevice(original: Device, updated: Device) = withContext(Dispatchers.IO) {
+        val devices = getDevices().toMutableList()
+        devices.removeAll { it.ip == original.ip }
+        devices.add(updated)
+        saveDevices(devices)
+    }
+
+    /**
+     * Delete a device
+     */
+    suspend fun removeDevice(device: Device) = withContext(Dispatchers.IO) {
+        val devices = getDevices().filterNot { it.ip == device.ip }
+        saveDevices(devices)
+    }
+
+    /**
+     * Save list of devices trimming and normalizing MAC if set
+     */
+    private fun saveDevices(devices: List<Device>) {
+        val arr = JSONArray()
+        for (d in devices) {
+            // Normalize before saving
+            d.normalize()
+
+            // convert to JSON
+            val obj = JSONObject()
+            obj.put("name", d.name)
+            obj.put("ip", d.ip)
+            obj.put("mac", d.mac)
+            arr.put(obj)
+        }
+        prefs.edit { putString("devices", arr.toString()) }
+    }
 
     private fun String.toIpLong(): Long {
         val parts = this.split(".")
@@ -52,37 +97,5 @@ class DeviceRepository(context: Context) {
         } catch (_: NumberFormatException) {
             0L
         }
-    }
-
-    private fun saveDevices(devices: List<Device>) {
-        val arr = JSONArray()
-        for (d in devices) {
-            val obj = JSONObject()
-            obj.put("name", d.name)
-            obj.put("ip", d.ip)
-            obj.put("mac", d.mac)
-            arr.put(obj)
-        }
-        prefs.edit { putString("devices", arr.toString()) }
-    }
-
-    suspend fun addDevice(device: Device) = withContext(Dispatchers.IO) {
-        // normalize MAC address to colon separated (i.e. 91:75:1a:ec:9a:c7)
-        device.mac = device.mac.replace('-', ':').lowercase(getDefault())
-
-        // now save
-        val devices = getDevices().toMutableList()
-        devices.removeAll { it.ip == device.ip }
-        devices.add(device)
-        saveDevices(devices)
-    }
-
-    // TODO update device fun with
-    //  deviceToEdit -> Device(name=192.168.1.43, ip=192.168.1.43, mac=)
-    //  and Updated object -> Device(name=192.168.1.43, ip=192.168.1.36, mac=)
-
-    suspend fun removeDevice(device: Device) = withContext(Dispatchers.IO) {
-        val devices = getDevices().filterNot { it.ip == device.ip }
-        saveDevices(devices)
     }
 }

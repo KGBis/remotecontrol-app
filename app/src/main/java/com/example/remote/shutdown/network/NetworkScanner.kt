@@ -3,7 +3,9 @@ package com.example.remote.shutdown.network
 import android.util.Log
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.DeviceStatus
-import com.example.remote.shutdown.network.NetworkStatus.SHUTDOWN_PORT
+import com.example.remote.shutdown.network.NetworkScanner.portsToScan
+import com.example.remote.shutdown.util.Constants.DEFAULT_SUBNET
+import com.example.remote.shutdown.util.Constants.SHUTDOWN_PORT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -23,7 +25,7 @@ object NetworkScanner {
      * @return Device list of reachable (online) devices
      */
     suspend fun scanLocalNetwork(
-        baseIp: String = "192.168.1",
+        baseIp: String = DEFAULT_SUBNET,
         maxConcurrent: Int = 20
     ): List<Device> = coroutineScope {
         val semaphore = Semaphore(maxConcurrent)

@@ -1,5 +1,6 @@
 package com.example.remote.shutdown.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,8 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -40,7 +41,9 @@ import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.shutdownDelayOptions
 import com.example.remote.shutdown.ui.components.DeviceItem
 import com.example.remote.shutdown.ui.components.ShutdownDelayDropdown
+import com.example.remote.shutdown.util.Constants.REFRESH_DELAY_MS
 import com.example.remote.shutdown.viewmodel.MainViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,34 +53,47 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
     var showSnackbar by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var isRefreshing by remember { mutableStateOf(false) }
-    val state = rememberPullToRefreshState()
+    var pulltoRefreshIsRefreshing by remember { mutableStateOf(false) }
+    val pulltoRefreshState = rememberPullToRefreshState()
+
+    var skipAfterAction by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
     val delay by viewModel.shutdownDelay.collectAsState()
     val unit by viewModel.shutdownUnit.collectAsState()
 
+    // Snackbar autoclose
     LaunchedEffect(showSnackbar) {
         showSnackbar?.let { msg ->
-            val result = snackbarHostState.showSnackbar(
+            snackbarHostState.showSnackbar(
                 message = msg,
                 actionLabel = "OK",
                 duration = SnackbarDuration.Long
             )
 
-            /*if (result == SnackbarResult.ActionPerformed) {
-                // El usuario pulsó OK
-            }*/
-
+            @Suppress("AssignedValueIsNeverRead")
             showSnackbar = null
         }
     }
 
-    // to refresh status and so on automatically
+    // to refresh status when changes occur in device list
     LaunchedEffect(devices) {
         if (devices.isNotEmpty()) {
             viewModel.refreshStatuses()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            if(skipAfterAction) {
+                skipAfterAction = false
+                Log.i("autoRefresh", "Skipping refresh for $REFRESH_DELAY_MS ms")
+            } else {
+                viewModel.refreshStatuses()
+                Log.i("autoRefresh", "Statuses refreshed in MainScreen after $REFRESH_DELAY_MS ms")
+            }
+            delay(REFRESH_DELAY_MS)
         }
     }
 
@@ -85,42 +101,43 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
+                modifier = Modifier.fillMaxWidth(),
                 title = {
                     Text(
-                        stringResource(R.string.app_name),
+                        "⚡ " + stringResource(R.string.app_name),
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center
                     )
-                },
-                actions = {
-                    IconButton(onClick = { navController.navigate("add_device") }) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = stringResource(R.string.add_device)
-                        )
-                    }
-                    /*IconButton(onClick = { navController.navigate("add_device") }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }*/
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate("add_device") }
+            ) {
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_device))
+            }
         }
     ) { padding ->
         PullToRefreshBox(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize(),
-            state = state,
-            isRefreshing = isRefreshing,
+            state = pulltoRefreshState,
+            isRefreshing = pulltoRefreshIsRefreshing,
             onRefresh = {
-                isRefreshing = true
+                @Suppress("AssignedValueIsNeverRead")
+                pulltoRefreshIsRefreshing = true
                 viewModel.refreshStatuses()
-                isRefreshing = false
+                @Suppress("AssignedValueIsNeverRead")
+                pulltoRefreshIsRefreshing = false
             }
         ) {
-            Column(Modifier
-                .padding(16.dp)
-                .fillMaxWidth().align(Alignment.TopCenter)
+            Column(
+                Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
             ) {
                 Text(
                     stringResource(R.string.shutdown_delay),
@@ -130,13 +147,18 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                         .fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
+                // Custom dropdown for the shutdown delay option list
                 ShutdownDelayDropdown(viewModel = viewModel, options = shutdownDelayOptions)
 
                 Spacer(Modifier.height(16.dp))
 
+                // List of added devices or "empty list" text
                 if (devices.isEmpty()) {
                     Text(
-                        stringResource(R.string.no_devices_yet),
+                        if (pulltoRefreshIsRefreshing)
+                            stringResource(R.string.no_devices_yet)
+                        else
+                            stringResource(R.string.initializing),
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.bodyMedium
@@ -168,10 +190,8 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                                     }
                                 },
                                 onWake = {
-                                    viewModel.wakeOnLan(
-                                        device,
-                                        "00:11:22:33:44:55"
-                                    ) { success ->
+                                    viewModel.wakeOnLan(device) { success ->
+                                        skipAfterAction = true
                                         showSnackbar =
                                             if (success)
                                                 context.getString(

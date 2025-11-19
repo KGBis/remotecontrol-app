@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material.ContentAlpha
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.DeviceStatus
@@ -51,25 +52,25 @@ fun DeviceItem(
     // Online dot
     val online = deviceStatus.isOnline
     val onlineColor = when {
-        deviceStatusMap.isEmpty() -> Color.Gray
-        online == true -> Color.Green
+        deviceStatusMap.isEmpty() || online == null -> Color.Gray
+        online -> Color.Green
         else -> Color.Red
     }
     val onlineText = stringResource(
         when {
-            deviceStatusMap.isEmpty() -> R.string.status_unknown
-            online == true -> R.string.status_online
+            deviceStatusMap.isEmpty() ||  online == null -> R.string.status_unknown
+            online -> R.string.status_online
             else -> R.string.status_offline
         }
     )
 
     // Wake-on-LAN (greyed and disabled?)
     val canWoL = deviceStatus.canWakeup == true && deviceStatus.isOnline == false
-    val wolColor = if (canWoL) Color.Unspecified else Color.Gray
+    val wolColor = actionIconColor(canWoL)
 
     // shutdown (greyed and disabled?)
     val canShutdown = deviceStatus.canShutdown == true && deviceStatus.isOnline == true
-    val shutdowndColor = if (canShutdown) Color.Unspecified else Color.Gray
+    val shutdowndColor = actionIconColor(canShutdown)
 
     Card(
         modifier = Modifier
@@ -84,25 +85,29 @@ fun DeviceItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(Icons.Default.Circle, tint = onlineColor, contentDescription = onlineText)
-            }
+            Row(modifier = Modifier.clickable { onEdit() }) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(Icons.Default.Circle, tint = onlineColor, contentDescription = onlineText)
+                }
 
-            // Name & IP
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.clickable { onEdit() }
-            ) {
-                Text(device.name, style = MaterialTheme.typography.titleMedium)
-                Text(device.ip, style = MaterialTheme.typography.bodySmall)
-                Text(
-                    device.mac.ifBlank { stringResource(R.string.device_no_mac) },
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Spacer(Modifier.width(4.dp))
+
+                // Name & IP
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    // modifier = Modifier.clickable { onEdit() }
+                ) {
+                    Text(device.name, style = MaterialTheme.typography.titleMedium)
+                    Text(device.ip, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        device.mac.ifBlank { stringResource(R.string.device_no_mac) },
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
 
             Spacer(Modifier.width(8.dp))
@@ -164,5 +169,13 @@ fun DeviceItem(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun actionIconColor(value: Boolean): Color {
+    return when (value) {
+        true -> MaterialTheme.colorScheme.onBackground
+        false -> MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled)
     }
 }

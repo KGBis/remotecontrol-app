@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-
     // Device Repository and actions
     private val repository = DeviceRepository(application)
 
@@ -48,6 +48,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Class initializer. Load list of stored devices
     init {
         loadDevices()
     }
@@ -65,9 +66,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // TODO update device fun with
-    //  deviceToEdit -> Device(name=192.168.1.43, ip=192.168.1.43, mac=)
-    //  and Updated object -> Device(name=192.168.1.43, ip=192.168.1.36, mac=)
+    fun updateDevice(original: Device, updated: Device) {
+        viewModelScope.launch {
+            repository.updateDevice(original, updated)
+            loadDevices()
+        }
+    }
 
     fun removeDevice(device: Device) {
         viewModelScope.launch {
@@ -80,21 +84,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return _devices.value.firstOrNull { it.ip == ip }
     }
 
-
     fun refreshStatuses() {
         viewModelScope.launch(Dispatchers.IO) {
             val current = _devices.value
-            /*val newStatuses = current.associate { device ->
-                device.ip to NetworkScanner.isPcOnline(device.ip)
-            }*/
             val newStatuses = current.associate { device ->
                 device.ip to deviceStatus(device)
             }
-            Log.i("refresh", "$newStatuses")
-            // _statusMap.emit(newStatuses)
-            _deviceStatusMap.emit(newStatuses)
+
+            // Solo emitir si hay cambios
+            val oldStatuses = _deviceStatusMap.value
+            if (newStatuses != oldStatuses) {
+                Log.i("refreshStatuses", "emitting new statuses -> $newStatuses")
+                _deviceStatusMap.emit(newStatuses)
+            }
         }
     }
+
 
     fun sendShutdownCommand(device: Device, delay: Int, unit: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
@@ -103,9 +108,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun wakeOnLan(device: Device, mac: String, onResult: (Boolean) -> Unit) {
+    fun wakeOnLan(device: Device, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            val success = NetworkActions.sendWoL(device, mac)
+            val success = NetworkActions.sendWoL(device)
+            if(success) {
+                _deviceStatusMap.update { current ->
+                    current.toMutableMap().apply {
+                        this[device.ip] = this.getValue(device.ip).copy(isOnline = null)
+                    }
+                }
+            }
             onResult(success)
         }
     }

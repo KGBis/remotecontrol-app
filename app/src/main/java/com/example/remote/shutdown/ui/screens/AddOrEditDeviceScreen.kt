@@ -34,9 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.Device
@@ -109,14 +107,12 @@ fun AddOrEditDeviceScreen(
 
             OutlinedTextField(
                 value = name,
-                textStyle = TextStyle(fontSize = 14.sp),
                 onValueChange = { name = it },
                 modifier = modifier,
                 label = {
                     Text(stringResource(R.string.device_name))
                 }
             )
-            Spacer(Modifier.height(8.dp))
 
             ValidatingTextField(
                 value = ip,
@@ -127,8 +123,6 @@ fun AddOrEditDeviceScreen(
                 errorMessage = R.string.error_invalid_ip
             )
 
-            Spacer(Modifier.height(8.dp))
-
             ValidatingTextField(
                 value = mac,
                 onValueChange = { mac = it },
@@ -137,7 +131,7 @@ fun AddOrEditDeviceScreen(
                 validator = Validators::isValidMac,
                 errorMessage = R.string.error_invalid_mac
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
 
             Button(
                 modifier = Modifier
@@ -156,7 +150,7 @@ fun AddOrEditDeviceScreen(
                                 "deviceToEdit -> $deviceToEdit\nUpdated object -> $updated"
                             )
                             // TODO call the new update fun
-                            viewModel.addDevice(updated)
+                            viewModel.updateDevice(deviceToEdit, updated)
                         }
                         navController.popBackStack()
                     }
@@ -169,7 +163,7 @@ fun AddOrEditDeviceScreen(
             }
 
             if (deviceToEdit == null) {
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedButton(
                     enabled = !scanning,
                     onClick = {
