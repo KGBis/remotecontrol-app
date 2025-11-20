@@ -60,5 +60,6 @@
     <string name="network_scan_running">🔍 Scanning…</string>
     <string name="network_scan_done">✔ Scan completed</string>
     <string name="no_devices_found">No devices found</string>
+    <string name="devices_found">Devices found:</string>
 
 </resources>

@@ -5,10 +5,17 @@ import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.util.Constants.SHUTDOWN_PORT
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.BufferedWriter
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.Inet4Address
 import java.net.InetAddress
+import java.net.InetSocketAddress
 import java.net.NetworkInterface
 import java.net.Socket
 import kotlin.experimental.inv
@@ -20,30 +27,41 @@ object NetworkActions {
      * @return a [Triple] with values `true`, `hostname` and `mac address`
      * if successful or `true`, `null` and `null` if not.
      */
-    suspend fun sendInfoRequest(device: Device, delay: Int, unit: String): Triple<Boolean, String?, String?> =
+    suspend fun sendInfoRequest(device: Device, timeout: Int = 500): Triple<Boolean, String, String> =
         withContext(Dispatchers.IO) {
-            try {
-                Socket(device.ip, SHUTDOWN_PORT).use { socket ->
-                    val msg = "INFO ${device.ip}"
-                    Log.d("sendShutdown", "Message sent: '$msg'")
-                    socket.getOutputStream().apply {
-                        write(msg.toByteArray())
-                        flush()
-                    }
+        try {
+            val socket = Socket()
+            socket.soTimeout = timeout
+            socket.connect(InetSocketAddress(device.ip, SHUTDOWN_PORT), timeout)
+            Log.i("sendInfoRequest", "Connection established")
 
-                    socket.getInputStream().use { inputStream ->
-                        val message = inputStream.readAllBytes().toString()
-                        message.split(" ")
+            socket.use { s ->
+                val msg = "INFO ${device.ip}\n"
+                Log.i("sendInfoRequest", "Message sent: '$msg'")
 
-                        Triple(true, null, null)
-                    }
+                val out = BufferedWriter(OutputStreamWriter(s.getOutputStream()))
+                val reader = BufferedReader(InputStreamReader(s.getInputStream()))
+
+                // Write request
+                out.write(msg)
+                out.flush()
+
+                // read response
+                val message = reader.readLine()
+                Log.i("sendInfoRequest", "Message received: '$message'")
+                val strings = message.split(" ")
+
+                return@withContext when (strings.size) {
+                    2 -> Triple(true, strings[0], strings[1])
+                    1 -> Triple(true, strings[0], device.mac)
+                    else -> Triple(false, device.ip, device.mac)
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Triple(false, null, null)
             }
-
+        } catch (e: Exception) {
+            Log.i("sendInfoRequest", "failed -> $e")
+            return@withContext Triple(false, device.ip, device.mac)
         }
+    }
 
     suspend fun sendShutdown(device: Device, delay: Int, unit: String): Boolean =
         withContext(Dispatchers.IO) {
@@ -166,6 +184,18 @@ object NetworkActions {
         }
 
         return InetAddress.getByAddress(broadcast)
+    }
+
+    fun InputStream.readAllBytesCompat(): ByteArray {
+        return this.use { input ->
+            val buffer = ByteArrayOutputStream()
+            val data = ByteArray(4096)
+            var n: Int
+            while (input.read(data).also { n = it } != -1) {
+                buffer.write(data, 0, n)
+            }
+            buffer.toByteArray()
+        }
     }
 
 }

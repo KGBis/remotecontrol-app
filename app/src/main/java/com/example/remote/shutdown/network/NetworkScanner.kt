@@ -3,6 +3,7 @@ package com.example.remote.shutdown.network
 import android.util.Log
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.DeviceStatus
+import com.example.remote.shutdown.network.NetworkActions.sendInfoRequest
 import com.example.remote.shutdown.network.NetworkScanner.portsToScan
 import com.example.remote.shutdown.util.Constants.DEFAULT_SUBNET
 import com.example.remote.shutdown.util.Constants.SHUTDOWN_PORT
@@ -35,12 +36,19 @@ object NetworkScanner {
 
                 // Limitar la concurrencia
                 semaphore.withPermit {
+                    if(ip.endsWith(".43")) {
+                        Log.i("scanLocalNetwork", "What happens with 1.43?")
+                    }
                     if (checkPcStatus(ip)) {
-                        Device(
-                            name = ip,
-                            ip = ip,
-                            mac = ""
-                        )
+                        val device = Device(ip, ip, "")
+                        /*
+                        val now = System.currentTimeMillis()
+                        val (success, hostname, macAddress) = sendInfoRequest(device)
+                        device.name = hostname
+                        device.mac = macAddress
+                        Log.i("scanLocalNetwork", "Took ${System.currentTimeMillis() - now} ms. success? $success, Device -> $device")
+                        */
+                        device
                     } else null
                 }
             }

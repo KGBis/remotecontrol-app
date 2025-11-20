@@ -2,6 +2,8 @@ package com.example.remote.shutdown.ui.screens
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,14 +13,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemColors
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -33,6 +41,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -139,7 +149,7 @@ fun AddOrEditDeviceScreen(
                     .align(Alignment.CenterHorizontally),
                 onClick = {
                     if (name.isNotBlank() && ip.isNotBlank()) {
-                        when(deviceToEdit) {
+                        when (deviceToEdit) {
                             null -> viewModel.addDevice(Device(name, ip, mac))
                             else -> {
                                 val updated = deviceToEdit.copy(name = name, ip = ip, mac = mac)
@@ -190,18 +200,35 @@ fun AddOrEditDeviceScreen(
                 Spacer(Modifier.height(16.dp))
 
                 if (results.isNotEmpty()) {
-                    Text("Dispositivos detectados:", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.devices_found), style = MaterialTheme.typography.titleSmall)
                     LazyColumn {
                         items(results.size) { i ->
                             val d = results[i]
-                            ListItem(
-                                headlineContent = { Text(d.name) },
-                                supportingContent = { Text(d.ip) },
-                                modifier = Modifier.clickable {
-                                    viewModel.addDevice(d)
-                                    navController.popBackStack()
-                                }
-                            )
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clickable {
+                                        viewModel.addDevice(d)
+                                        navController.popBackStack()
+                                    },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.inversePrimary
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(2.dp)
+                            ) {
+                                ListItem(
+                                    overlineContent = { Text(d.name) },
+                                    headlineContent = { Text(d.ip) },
+                                    supportingContent = { Text(d.mac) },
+                                    trailingContent = {
+                                        Text(if (d.mac.isNotBlank()) "✨ ${stringResource(R.string.app_name)}" else "")
+                                    }
+                                )
+                            }
+
+                            Spacer(Modifier.height(4.dp))
                         }
                     }
                 }

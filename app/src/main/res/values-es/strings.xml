@@ -59,5 +59,6 @@
     <string name="network_scan_running">🔍 Escaneando…</string>
     <string name="network_scan_done">✔ Escaneo completado</string>
     <string name="no_devices_found">Ningún dispositivo encontrado</string>
+    <string name="devices_found">Dispositivos detectados:</string>
 
 </resources>
