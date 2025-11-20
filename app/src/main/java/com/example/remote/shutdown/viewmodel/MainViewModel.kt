@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
+import java.time.temporal.ChronoUnit
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Device Repository and actions
@@ -135,7 +135,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val shutdownUnit = settingsRepo.shutdownUnitFlow.stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(5_000), TimeUnit.SECONDS
+        SharingStarted.WhileSubscribed(5_000), ChronoUnit.SECONDS
     )
 
     fun changeDelay(newDelay: Int) {
@@ -144,7 +144,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun changeUnit(newUnit: TimeUnit) {
+    fun changeUnit(newUnit: ChronoUnit) {
         viewModelScope.launch {
             settingsRepo.saveShutdownUnit(newUnit)
         }

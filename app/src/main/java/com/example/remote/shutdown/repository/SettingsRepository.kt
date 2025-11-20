@@ -7,7 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.util.concurrent.TimeUnit
+import java.time.temporal.ChronoUnit
 
 class SettingsRepository(private val context: Context) {
 
@@ -24,9 +24,9 @@ class SettingsRepository(private val context: Context) {
             prefs[KEY_DELAY_AMOUNT] ?: 15   // valor por defecto (15s como en tu VM)
         }
 
-    val shutdownUnitFlow: Flow<TimeUnit> =
+    val shutdownUnitFlow: Flow<ChronoUnit> =
         context.dataStore.data.map { prefs ->
-            prefs[KEY_DELAY_UNIT]?.let { TimeUnit.valueOf(it) } ?: TimeUnit.SECONDS
+            prefs[KEY_DELAY_UNIT]?.let { ChronoUnit.valueOf(it) } ?: ChronoUnit.SECONDS
         }
 
     suspend fun saveShutdownDelay(delay: Int) {
@@ -35,7 +35,7 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
-    suspend fun saveShutdownUnit(unit: TimeUnit) {
+    suspend fun saveShutdownUnit(unit: ChronoUnit) {
         context.dataStore.edit { prefs ->
             prefs[KEY_DELAY_UNIT] = unit.name
         }

@@ -40,21 +40,32 @@ object NetworkScanner {
                         Log.i("scanLocalNetwork", "What happens with 1.43?")
                     }
                     if (checkPcStatus(ip)) {
-                        val device = Device(ip, ip, "")
                         /*
+                        val device = Device(ip, ip, "")
                         val now = System.currentTimeMillis()
                         val (success, hostname, macAddress) = sendInfoRequest(device)
                         device.name = hostname
                         device.mac = macAddress
                         Log.i("scanLocalNetwork", "Took ${System.currentTimeMillis() - now} ms. success? $success, Device -> $device")
-                        */
                         device
+                        */
+                        getInfoForIp(ip)
                     } else null
                 }
             }
         }
 
         jobs.awaitAll().filterNotNull()
+    }
+
+    private suspend fun getInfoForIp(ip: String): Device {
+        val device = Device(ip, ip, "")
+        val now = System.currentTimeMillis()
+        val (success, hostname, macAddress) = sendInfoRequest(device)
+        device.name = hostname
+        device.mac = macAddress
+        Log.i("scanLocalNetwork", "Took ${System.currentTimeMillis() - now} ms. success? $success, Device -> $device")
+        return device
     }
 
     /**
