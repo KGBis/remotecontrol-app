@@ -3,7 +3,7 @@ package com.example.remote.shutdown.network
 import android.util.Log
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.DeviceStatus
-import com.example.remote.shutdown.network.NetworkActions.sendInfoRequest
+import com.example.remote.shutdown.network.NetworkActions.sendMessage
 import com.example.remote.shutdown.network.NetworkScanner.portsToScan
 import com.example.remote.shutdown.util.Constants.DEFAULT_SUBNET
 import com.example.remote.shutdown.util.Constants.SHUTDOWN_PORT
@@ -16,6 +16,7 @@ import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.net.SocketTimeoutException
 
 object NetworkScanner {
 
@@ -36,19 +37,7 @@ object NetworkScanner {
 
                 // Limitar la concurrencia
                 semaphore.withPermit {
-                    if(ip.endsWith(".43")) {
-                        Log.i("scanLocalNetwork", "What happens with 1.43?")
-                    }
                     if (checkPcStatus(ip)) {
-                        /*
-                        val device = Device(ip, ip, "")
-                        val now = System.currentTimeMillis()
-                        val (success, hostname, macAddress) = sendInfoRequest(device)
-                        device.name = hostname
-                        device.mac = macAddress
-                        Log.i("scanLocalNetwork", "Took ${System.currentTimeMillis() - now} ms. success? $success, Device -> $device")
-                        device
-                        */
                         getInfoForIp(ip)
                     } else null
                 }
@@ -61,11 +50,33 @@ object NetworkScanner {
     private suspend fun getInfoForIp(ip: String): Device {
         val device = Device(ip, ip, "")
         val now = System.currentTimeMillis()
-        val (success, hostname, macAddress) = sendInfoRequest(device)
-        device.name = hostname
-        device.mac = macAddress
-        Log.i("scanLocalNetwork", "Took ${System.currentTimeMillis() - now} ms. success? $success, Device -> $device")
+        val result = sendMessage(device, "INFO ${device.ip}",::infoRequest, 1500)
+        if(result != null) {
+            device.name = result.second
+            device.mac = result.third
+        }
+        Log.i(
+            "scanLocalNetwork",
+            "Took ${System.currentTimeMillis() - now} ms. success? ${result?.first ?: false}, Device -> $device"
+        )
         return device
+    }
+
+    fun infoRequest(message: String, device: Device): Triple<Boolean, String, String> {
+        Log.i("infoRequest", "Processing INFO response")
+        val strings = message.split(" ")
+
+        return when (strings.size) {
+            2 -> Triple(true, strings[0], strings[1])
+            1 -> Triple(true, strings[0], device.mac)
+            else -> Triple(false, device.ip, device.mac)
+        }
+    }
+
+    @Suppress("unused")
+    fun shutdownRequest(message: String, device: Device): Boolean {
+        Log.i("shutdownRequest", "Computer response: $message")
+        return message == "ACK"
     }
 
     /**
@@ -83,19 +94,30 @@ object NetworkScanner {
      */
     suspend fun deviceStatus(device: Device, timeout: Int = 500): DeviceStatus =
         withContext(Dispatchers.IO) {
-            val deviceStatus = DeviceStatus(isOnline = false, canWakeup = false, canShutdown = false)
+            val deviceStatus =
+                DeviceStatus(isOnline = false, canWakeup = false, canShutdown = false)
 
             // Check for SHUTDOWN_PORT
-            val result: Boolean = canConnect(device.ip, SHUTDOWN_PORT, timeout)
-            if(result) {
-                deviceStatus.isOnline = true
-                deviceStatus.canShutdown = true
-            } else {
-                deviceStatus.isOnline = isPcOnline(device.ip)
-            }
+            val result: Boolean? = canConnect(device.ip, SHUTDOWN_PORT, timeout)
 
-            if(device.mac.isNotBlank()) {
-                deviceStatus.canWakeup = true
+            // For network errors, not timeouts this:
+            if(result == null) {
+                deviceStatus.isOnline = null
+                deviceStatus.canShutdown = null
+                deviceStatus.canWakeup = null
+            } else {
+                // if reply from 6800 it's all right
+                if (result) {
+                    deviceStatus.isOnline = true
+                    deviceStatus.canShutdown = true
+                } else {
+                    // if not, try to common ports
+                    deviceStatus.isOnline = isPcOnline(device.ip)
+                }
+                // device depends on mac filled + device offline
+                if (device.mac.isNotBlank() && deviceStatus.isOnline == false) {
+                    deviceStatus.canWakeup = true
+                }
             }
 
             return@withContext deviceStatus
@@ -126,19 +148,24 @@ object NetworkScanner {
     suspend fun checkPcStatus(ip: String, timeout: Int = 500): Boolean {
         return portsToScan.any { port ->
             withContext(Dispatchers.IO) {
-                canConnect(ip, port, timeout)
+                canConnect(ip, port, timeout)?: false
             }
         }
     }
 
-    private fun canConnect(ip: String, port: Int, timeout: Int): Boolean = try {
-        Socket().use { socket ->
-            socket.connect(InetSocketAddress(ip, port), timeout)
-            Log.i("canConnect", "for ip $ip:$port connected")
+    private fun canConnect(ip: String, port: Int, timeout: Int): Boolean? {
+        return try {
+            Socket().use { socket ->
+                socket.connect(InetSocketAddress(ip, port), timeout)
+                Log.i("canConnect", "for ip $ip:$port connected")
+            }
+            true
+        } catch (e: Exception) {
+            if(e is SocketTimeoutException) {
+                return false
+            }
+            null
         }
-        true
-    } catch (_: Exception) {
-        false
     }
 
 }

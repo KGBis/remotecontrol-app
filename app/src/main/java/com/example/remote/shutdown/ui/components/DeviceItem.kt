@@ -81,7 +81,7 @@ fun DeviceItem(
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -93,7 +93,7 @@ fun DeviceItem(
                     Icon(Icons.Default.Circle, tint = onlineColor, contentDescription = onlineText)
                 }
 
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(1.dp))
 
                 // Name & IP
                 Column(

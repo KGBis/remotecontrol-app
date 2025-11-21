@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.DeviceStatus
 import com.example.remote.shutdown.network.NetworkActions
+import com.example.remote.shutdown.network.NetworkScanner
 import com.example.remote.shutdown.network.NetworkScanner.deviceStatus
 import com.example.remote.shutdown.repository.DeviceRepository
 import com.example.remote.shutdown.repository.SettingsRepository
@@ -105,15 +106,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun sendShutdownCommand(device: Device, delay: Int, unit: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            val success = NetworkActions.sendShutdown(device, delay, unit)
-            onResult(success)
+            val success = NetworkActions.sendMessage(
+                device = device,
+                command = "SHUTDOWN $delay $unit",
+                NetworkScanner::shutdownRequest
+            )
+            onResult(success == true)
         }
     }
 
     fun wakeOnLan(device: Device, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             val success = NetworkActions.sendWoL(device)
-            if(success) {
+            if (success) {
                 _deviceStatusMap.update { current ->
                     current.toMutableMap().apply {
                         this[device.ip] = this.getValue(device.ip).copy(isOnline = null)

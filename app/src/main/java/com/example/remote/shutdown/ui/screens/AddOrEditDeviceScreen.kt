@@ -22,6 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -214,9 +215,7 @@ fun AddOrEditDeviceScreen(
                                         viewModel.addDevice(d)
                                         navController.popBackStack()
                                     },
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.inversePrimary
-                                ),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                 shape = RoundedCornerShape(12.dp),
                                 elevation = CardDefaults.cardElevation(2.dp)
                             ) {
@@ -224,6 +223,9 @@ fun AddOrEditDeviceScreen(
                                     overlineContent = { Text(d.name) },
                                     headlineContent = { Text(d.ip) },
                                     supportingContent = { Text(d.mac) },
+                                    colors = ListItemDefaults.colors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.90f)
+                                    ),
                                     trailingContent = {
                                         Text(if (d.mac.isNotBlank()) "✨ ${stringResource(R.string.app_name)}" else "")
                                     }
