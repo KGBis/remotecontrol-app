@@ -1,6 +1,5 @@
 package com.example.remote.shutdown.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,9 +35,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.shutdownDelayOptions
+import com.example.remote.shutdown.network.NetworkRangeDetector
 import com.example.remote.shutdown.ui.components.DeviceItem
 import com.example.remote.shutdown.ui.components.ShutdownDelayDropdown
 import com.example.remote.shutdown.util.Constants.REFRESH_DELAY_MS
@@ -55,8 +58,6 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
 
     var pulltoRefreshIsRefreshing by remember { mutableStateOf(false) }
     val pulltoRefreshState = rememberPullToRefreshState()
-
-    var skipAfterAction by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -84,16 +85,16 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
         }
     }
 
+    // To refresh automatically device list every REFRESH_DELAY_MS
+    val networkRangeDetector = NetworkRangeDetector(context)
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(Unit) {
-        while (true) {
-            if (skipAfterAction) {
-                skipAfterAction = false
-                Log.i("autoRefresh", "Skipping refresh for $REFRESH_DELAY_MS ms")
-            } else {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                val x = networkRangeDetector.getScanSubnet()
                 viewModel.refreshStatuses()
-                Log.i("autoRefresh", "Statuses refreshed in MainScreen after $REFRESH_DELAY_MS ms")
+                delay(REFRESH_DELAY_MS)
             }
-            delay(REFRESH_DELAY_MS)
         }
     }
 
@@ -188,7 +189,6 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                                 },
                                 onWake = {
                                     viewModel.wakeOnLan(device) { success ->
-                                        skipAfterAction = true
                                         showSnackbar =
                                             if (success)
                                                 context.getString(

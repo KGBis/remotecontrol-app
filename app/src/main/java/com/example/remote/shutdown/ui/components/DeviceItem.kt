@@ -1,6 +1,5 @@
 package com.example.remote.shutdown.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,11 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.ContentAlpha
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.DeviceStatus
+import com.example.remote.shutdown.data.State
 import com.example.remote.shutdown.viewmodel.MainViewModel
 
 @Composable
@@ -47,30 +48,28 @@ fun DeviceItem(
     val deviceStatusMap by viewModel.deviceStatusMap.collectAsState()
     val deviceStatus = deviceStatusMap.getOrDefault(device.ip, DeviceStatus())
 
-    Log.i("DeviceItem", "Status Map -> $deviceStatusMap")
-
     // Online dot
-    val online = deviceStatus.isOnline
     val onlineColor = when {
-        deviceStatusMap.isEmpty() || online == null -> Color.Gray
-        online -> Color.Green
+        deviceStatus.state == State.Unknown || deviceStatusMap.isEmpty() -> Color.Gray
+        deviceStatus.state == State.HibernateOrStandby -> Color(0xFFFF9800)
+        deviceStatus.state == State.Awake -> Color.Green
         else -> Color.Red
     }
     val onlineText = stringResource(
         when {
-            deviceStatusMap.isEmpty() ||  online == null -> R.string.status_unknown
-            online -> R.string.status_online
+            deviceStatus.state == State.Unknown ||deviceStatusMap.isEmpty() -> R.string.status_unknown
+            deviceStatus.state == State.Awake -> R.string.status_online
             else -> R.string.status_offline
         }
     )
 
-    // Wake-on-LAN (greyed and disabled?)
-    val canWoL = deviceStatus.canWakeup == true && deviceStatus.isOnline == false
-    val wolColor = actionIconColor(canWoL)
-
     // shutdown (greyed and disabled?)
-    val canShutdown = deviceStatus.canShutdown == true && deviceStatus.isOnline == true
-    val shutdowndColor = actionIconColor(canShutdown)
+    // val canShutdown = deviceStatus.canShutdown == true && deviceStatus.isOnline == true
+    val shutdowndColor = actionIconColor(deviceStatus.canShutdown ?: false)
+
+    // Wake-on-LAN (greyed and disabled?)
+    /*val canWoL = deviceStatus.canWakeup == true && deviceStatus.isOnline == false*/
+    val wolColor = actionIconColor(deviceStatus.canWakeup ?: false)
 
     Card(
         modifier = Modifier
@@ -99,9 +98,13 @@ fun DeviceItem(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
-                    // modifier = Modifier.clickable { onEdit() }
+                    modifier = Modifier.width(110.dp)
                 ) {
-                    Text(device.name, style = MaterialTheme.typography.titleMedium)
+                    Text(device.name,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        style = MaterialTheme.typography.titleMedium
+                    )
                     Text(device.ip, style = MaterialTheme.typography.bodySmall)
                     Text(
                         device.mac.ifBlank { stringResource(R.string.device_no_mac) },
@@ -120,7 +123,7 @@ fun DeviceItem(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(
                         onClick = onShutdown,
-                        enabled = canShutdown
+                        enabled = deviceStatus.canShutdown ?: false
                     ) {
                         Icon(
                             Icons.Default.Power,
@@ -139,7 +142,7 @@ fun DeviceItem(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(
                         onClick = onWake,
-                        enabled = canWoL
+                        enabled = deviceStatus.canWakeup ?: false
                     ) {
                         Icon(
                             Icons.Default.PowerSettingsNew,

@@ -54,6 +54,7 @@ object NetworkActions {
                 }
             } catch (e: Exception) {
                 Log.i("sendMessage", "failed -> $e")
+                Log.i("sendMessage", "failed", e.cause)
                 return@withContext null
             }
         }

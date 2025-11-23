@@ -1,7 +1,8 @@
 package com.example.remote.shutdown.data
 
 data class DeviceStatus(
-    var isOnline: Boolean? = null,
-    var canWakeup: Boolean? = null,
-    var canShutdown: Boolean? = null
+    var state: State? = State.Unknown,
+    var isOnline: Boolean? = false,
+    var canWakeup: Boolean? = false,
+    var canShutdown: Boolean? = false
 )

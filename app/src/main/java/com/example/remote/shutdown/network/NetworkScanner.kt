@@ -3,6 +3,7 @@ package com.example.remote.shutdown.network
 import android.util.Log
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.DeviceStatus
+import com.example.remote.shutdown.data.State
 import com.example.remote.shutdown.network.NetworkActions.sendMessage
 import com.example.remote.shutdown.network.NetworkScanner.portsToScan
 import com.example.remote.shutdown.util.Constants.DEFAULT_SUBNET
@@ -20,7 +21,25 @@ import java.net.SocketTimeoutException
 
 object NetworkScanner {
 
-    private val portsToScan = listOf(445, 135, 22, 80, 443, 139, 3389, 6800)
+    // private val deepPorts = listOf(3389, 22, 80, 443)
+
+    private val DEEP_PORTS = listOf(
+        135,   // Windows RPC
+        3389,  // RDP
+        22,    // SSH
+        80,    // HTTP
+        443    // HTTPS
+    )
+
+    private val GHOST_PORTS = listOf(
+        445,   // SMB
+        139    // NetBIOS
+    )
+
+
+    // val ghostPorts = listOf(445, 139, 135)
+
+    private val portsToScan = DEEP_PORTS + GHOST_PORTS // listOf(445, 135, 22, 80, 443, 139, 3389, 6800)
 
     /**
      * Scans local network (i.e. 192.168.1.1 to 254 range) concurrently.
@@ -94,46 +113,59 @@ object NetworkScanner {
      */
     suspend fun deviceStatus(device: Device, timeout: Int = 500): DeviceStatus =
         withContext(Dispatchers.IO) {
-            val deviceStatus =
-                DeviceStatus(isOnline = false, canWakeup = false, canShutdown = false)
+            val switchedOn = isPcOnline(device.ip, DEEP_PORTS)
+            val hibernating = isPcOnline(device.ip, GHOST_PORTS)
+            val shutdown = canConnect(device.ip, SHUTDOWN_PORT, timeout)
 
-            // Check for SHUTDOWN_PORT
-            val result: Boolean? = canConnect(device.ip, SHUTDOWN_PORT, timeout)
+            Log.w("deviceStatus", "ip: ${device.ip} switchedOn: $switchedOn, hibernating: $hibernating, shutdown: $shutdown")
 
-            // For network errors, not timeouts this:
-            if(result == null) {
-                deviceStatus.isOnline = null
-                deviceStatus.canShutdown = null
-                deviceStatus.canWakeup = null
-            } else {
-                // if reply from 6800 it's all right
-                if (result) {
-                    deviceStatus.isOnline = true
-                    deviceStatus.canShutdown = true
-                } else {
-                    // if not, try to common ports
-                    deviceStatus.isOnline = isPcOnline(device.ip)
+            when (canConnect(device.ip, SHUTDOWN_PORT, timeout)) {
+                null -> { // network errors: broken DNS, host unreachable, etc.
+                    Log.w("deviceStatus", "Status cannot be determined. Network error")
+                    return@withContext DeviceStatus()
                 }
-                // device depends on mac filled + device offline
-                if (device.mac.isNotBlank() && deviceStatus.isOnline == false) {
-                    deviceStatus.canWakeup = true
+                true -> { // Port 6800 replies → Fully online
+                    Log.w("deviceStatus", "${device.ip} is online and can shutdown")
+                    return@withContext DeviceStatus(state = State.Awake, isOnline = true, canShutdown = true)
+                }
+                else -> { // shutdownPortResult == false → 6800 unreachable
+                    // try "real" online ports
+                    val switchedOn = isPcOnline(device.ip, DEEP_PORTS)
+                    if(switchedOn) {
+                        Log.w("deviceStatus", "${device.ip} is online by checking one of $DEEP_PORTS")
+                        return@withContext DeviceStatus(state = State.Awake, isOnline = true)
+                    }
+
+                    // try Hibernate/suspend ports that are reachable
+                    val hibernating = isPcOnline(device.ip, GHOST_PORTS)
+                    val canWakeup = device.mac.isNotBlank()
+                    if(hibernating) {
+                        Log.w("deviceStatus", "${device.ip} is in standby or hibernating by checking one of $GHOST_PORTS")
+                        return@withContext DeviceStatus(
+                            state = State.HibernateOrStandby,
+                            isOnline = false,
+                            canWakeup = canWakeup
+                        )
+                    }
+
+                    // if nothing of the above... it's down
+                    Log.i("deviceStatus", "${device.ip} seems to be down")
+                    return@withContext DeviceStatus(state = State.Down, canWakeup= canWakeup)
                 }
             }
-
-            return@withContext deviceStatus
         }
 
     /**
      * Returns `true` if an IP address can be reached connecting to any of the [portsToScan].
      * If none of the ports connect, `false` is returned
      */
-    suspend fun isPcOnline(ip: String): Boolean =
+    suspend fun isPcOnline(ip: String, portList: List<Int> = portsToScan): Boolean =
         withContext(Dispatchers.IO) {
             val init = System.currentTimeMillis()
-            if (checkPcStatus(ip)) {
+            if (checkPcStatus(ip, portList)) {
                 Log.i(
                     "isPcOnline",
-                    "$ip <== STOP pingInetAddress in ${System.currentTimeMillis() - init} ms"
+                    "$ip ==> END isPcOnline in ${System.currentTimeMillis() - init} ms"
                 )
                 return@withContext true
             } else {
@@ -142,13 +174,16 @@ object NetworkScanner {
         }
 
     /**
-     * Returns `true` if an IP address can be reached connecting to any of the [portsToScan].
+     * Returns `true` if an IP address can be reached connecting to any of the [portList].
      * If none of the ports connect, `false` is returned
      */
-    suspend fun checkPcStatus(ip: String, timeout: Int = 500): Boolean {
-        return portsToScan.any { port ->
+    suspend fun checkPcStatus(ip: String, portList: List<Int> = portsToScan, timeout: Int = 500): Boolean {
+        return portList.any { port ->
             withContext(Dispatchers.IO) {
-                canConnect(ip, port, timeout)?: false
+                Log.d("checkPcStatus", "Checking $ip @ $port")
+                val result = canConnect(ip, port, timeout)?: false
+                Log.d("checkPcStatus", "Result in $ip @ $port -> $result")
+                result
             }
         }
     }
@@ -164,6 +199,7 @@ object NetworkScanner {
             if(e is SocketTimeoutException) {
                 return false
             }
+            Log.i("canConnect", "Scanning $ip @ $port threw exception ${e.toString()}", e.cause)
             null
         }
     }

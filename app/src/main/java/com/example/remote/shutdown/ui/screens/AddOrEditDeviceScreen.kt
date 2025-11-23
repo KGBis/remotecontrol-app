@@ -37,7 +37,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.HorizontalAlignmentLine
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -251,8 +250,9 @@ private suspend fun startScan(
     // for time lapse calc
     val b = System.currentTimeMillis()
 
-    // detect local netwotrk and scan it
-    val networkRange = networkRangeDetector.getLocalNetworkRange()
+    // detect local network and scan it
+    // val networkRange = networkRangeDetector.getLocalNetworkRange()
+    val networkRange = networkRangeDetector.getScanSubnet()
     val results = scanLocalNetwork(baseIp = networkRange ?: "192.168.1", maxConcurrent = 30)
 
     // Try to find router(s) among the results
