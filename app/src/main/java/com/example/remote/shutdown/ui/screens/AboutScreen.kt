@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,7 +44,7 @@ fun AboutScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.about_app)) },
+                title = { Text(stringResource(R.string.about)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -89,8 +90,19 @@ fun AboutScreen(navController: NavController) {
             Spacer(Modifier.height(32.dp))
 
             // ---------- INFO SECTION ----------
-            SectionCard(title = stringResource(R.string.info_app)) {
-                Text(stringResource(R.string.info_app_content),
+            SectionCard(title = stringResource(R.string.about_info_section)) {
+                Text(stringResource(R.string.about_info_data),
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // ---------- OPTIONS SECTION ----------
+            SectionCard(title = stringResource(R.string.about_options_section)) {
+                Text(stringResource(R.string.about_options_data),
+                    modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -98,11 +110,11 @@ fun AboutScreen(navController: NavController) {
             Spacer(Modifier.height(16.dp))
 
             // ---------- SECCIÓN ENLACES ----------
-            SectionCard(title = "Enlaces útiles") {
+            SectionCard(title = "Enlaces") {
 
                 LinkItem(
                     icon = Icons.Default.Code,
-                    text = "Código fuente (GitHub)"
+                    text = "Remote PC Control Tray"
                 ) {
                     // TODO abrir URL
                 }

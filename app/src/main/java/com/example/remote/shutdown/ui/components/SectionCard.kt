@@ -26,7 +26,7 @@ fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(8.dp)) {
 
             Text(
                 text = title,

@@ -62,10 +62,20 @@
     <string name="devices_found">Dispositivos detectados:</string>
 
     <!-- about -->
-    <string name="about_app">Acerca de</string>
-    <string name="info_app">Información</string>
-    <string name="info_app_content"><![CDATA[
-        Aplicación para enviar comandos de apagado y Wake-on-LAN a equipos dentro de tu red local.
-    ]]></string>
-
+    <string name="about">Acerca de</string>
+    <string name="about_info_section">Información</string>
+    <string name="about_info_data">
+    Envía comandos de apagado y Wake-on-LAN a ordenadores dentro de tu red local.\n\n
+    Usa el gesto &#x27F3; en la lista de dispositivos para actualizar su estado en la pantalla principal.\n\n
+    Cuando uses la opción \"🔍 Escanear red local\", la aplicación intentará escanear puertos comunes
+    para determinar si el dispositivo está en línea. Usar esta función también asegurará que, si la
+    \"Remote PC Control Tray\" está en ejecución en alguno de los dispositivos, esta devolverá
+    su nombre de host y dirección MAC automáticamente.
+    \n\nTen en cuenta que, debido a las restricciones de seguridad de Android, a veces este
+    escaneo no devuelve los resultados esperados y algunas máquinas \"en línea\" podrían no aparecer.\n\n
+    Otra fuente de problemas es la forma en la que los PC modernos entran en hibernación/suspensión y cómo el SO y la BIOS
+    gestionan los puertos en estado de suspensión. Algunos ordenadores aparecerán como &#x1F534; desconectados,
+    mientras que otros se mostrarán como &#x1F7E2; en línea o correctamente como &#x1F7E0; hibernados/suspendidos.</string>
+    <string name="about_options_section">Opciones</string>
+    <string name="about_options_data">data</string>
 </resources>

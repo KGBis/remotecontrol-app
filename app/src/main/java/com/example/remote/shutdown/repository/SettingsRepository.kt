@@ -1,6 +1,7 @@
 package com.example.remote.shutdown.repository
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -16,6 +17,10 @@ class SettingsRepository(private val context: Context) {
     companion object {
         val KEY_DELAY_AMOUNT = intPreferencesKey("delay_amount")
         val KEY_DELAY_UNIT = stringPreferencesKey("delay_unit")
+
+        val KEY_AUTO_REFRESH = booleanPreferencesKey("auto_refresh")
+
+        val KEY_AUTO_REFRESH_DELAY = intPreferencesKey("auto_refresh_delay")
     }
 
     /* Initialize delay and time unit values in case not saved yet */
@@ -38,6 +43,30 @@ class SettingsRepository(private val context: Context) {
     suspend fun saveShutdownUnit(unit: ChronoUnit) {
         context.dataStore.edit { prefs ->
             prefs[KEY_DELAY_UNIT] = unit.name
+        }
+    }
+
+    /* Initialize auto refresh values in case not saved yet */
+
+    val autorefreshDelayFlow: Flow<Int> =
+        context.dataStore.data.map { prefs ->
+            prefs[KEY_AUTO_REFRESH_DELAY] ?: 15 // every 15 seconds
+        }
+
+    val autorefreshFlow: Flow<Boolean> =
+        context.dataStore.data.map { prefs ->
+            prefs[KEY_AUTO_REFRESH] ?: true
+        }
+
+    suspend fun saveAutorefreshDelay(delay: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_AUTO_REFRESH_DELAY] = delay
+        }
+    }
+
+    suspend fun saveAutorefresh(status: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_AUTO_REFRESH] = status
         }
     }
 }

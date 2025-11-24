@@ -153,4 +153,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             settingsRepo.saveShutdownUnit(newUnit)
         }
     }
+
+    // Autorefresh settings
+
+    private val _autorefreshFlag = MutableStateFlow(true)
+    val autorefreshFlag = _autorefreshFlag.asStateFlow()
+
+    private val _autorefreshPeriod = MutableStateFlow(15)
+    val autorefreshPeriod = _autorefreshPeriod.asStateFlow()
+
+
 }

@@ -63,10 +63,23 @@
     <string name="devices_found">Devices found:</string>
 
     <!-- about -->
-    <string name="about_app">About</string>
-    <string name="info_app">Information</string>
-    <string name="info_app_content"><![CDATA[
-        Application to send shutdown and Wake-on-LAN commands to computers within your local network.
-    ]]></string>
-
+    <string name="about">About</string>
+    <string name="about_info_section">Information</string>
+    <string name="about_info_data">
+    Send shutdown and Wake-on-LAN commands to computers within your local network.\n\n
+    Use &#x27F3; gesture on device list to refresh their status in main screen.\n\n
+    When using the \"🔍 Scan local network\" option the app will try to scan common ports
+    to determine if the device is online. Using this feature will also ensure that if the
+    \"Remote PC Control Tray\" is running if any of the devices it will return its host name
+    and MAC address automatically.
+    \n\nPlease keep in mind that due to Android security restrictions sometimes this
+    scan doesn\"t return the expected results and some \"online\" machines would not appear.\n\n
+    Another source of trouble is the way modern PCs enter hibernation/suspension and how the OS and BIOS
+    manage ports in suspension.Some computers will appear as &#x1F534; offline,
+    while others will be shown as &#x1F7E2; online or correctly shown as &#x1F7E0; hibernated/suspended.</string>
+    <string name="about_options_section">Auto refresh</string>
+    <string name="about_options_data">
+    Set the \"autorefresh\" option on to scan for computer status changes in the main device list. Set it off
+    to use only refresh by &#x27F3; gesture.
+    </string>
 </resources>
