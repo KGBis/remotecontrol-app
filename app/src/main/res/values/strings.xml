@@ -62,4 +62,11 @@
     <string name="no_devices_found">No devices found</string>
     <string name="devices_found">Devices found:</string>
 
+    <!-- about -->
+    <string name="about_app">About</string>
+    <string name="info_app">Information</string>
+    <string name="info_app_content"><![CDATA[
+        Application to send shutdown and Wake-on-LAN commands to computers within your local network.
+    ]]></string>
+
 </resources>

@@ -53,15 +53,16 @@ class NetworkRangeDetector(private val context: Context) {
                     // Filtrar solo IPv4 privadas
                     if (!address.isLoopbackAddress &&
                         address is Inet4Address &&
-                        isPrivateIP(address.hostAddress)) {
+                        isPrivateIP(address.hostAddress!!)) {
 
-                        return extractSubnet(address.hostAddress)
+                        return extractSubnet(address.hostAddress!!)
                     }
                 }
             }
             // Fallback si no encuentra IP local
             "192.168.1"
         } catch (e: Exception) {
+            Log.w("getLocalSubnet", "Exception $e")
             "192.168.1" // Fallback por defecto
         }
     }

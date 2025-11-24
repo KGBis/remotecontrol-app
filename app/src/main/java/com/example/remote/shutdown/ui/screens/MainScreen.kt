@@ -1,5 +1,6 @@
 package com.example.remote.shutdown.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,8 +42,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.shutdownDelayOptions
-import com.example.remote.shutdown.network.NetworkRangeDetector
 import com.example.remote.shutdown.ui.components.DeviceItem
+import com.example.remote.shutdown.ui.components.OptionsMenu
 import com.example.remote.shutdown.ui.components.ShutdownDelayDropdown
 import com.example.remote.shutdown.util.Constants.REFRESH_DELAY_MS
 import com.example.remote.shutdown.viewmodel.MainViewModel
@@ -63,6 +64,9 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
 
     val delay by viewModel.shutdownDelay.collectAsState()
     val unit by viewModel.shutdownUnit.collectAsState()
+
+    val options = listOf("Opción A", "Opción B", "Opción C")
+    var selectedOptions by remember { mutableStateOf(setOf<String>()) }
 
     // Snackbar autoclose
     LaunchedEffect(showSnackbar) {
@@ -86,12 +90,10 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
     }
 
     // To refresh automatically device list every REFRESH_DELAY_MS
-    val networkRangeDetector = NetworkRangeDetector(context)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(Unit) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             while (true) {
-                val x = networkRangeDetector.getScanSubnet()
                 viewModel.refreshStatuses()
                 delay(REFRESH_DELAY_MS)
             }
@@ -108,6 +110,22 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                         "⚡ " + stringResource(R.string.app_name),
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center
+                    )
+                },
+                actions = {
+                    OptionsMenu(
+                        navController = navController,
+                        options = options,
+                        selected = selectedOptions,
+                        onOptionToggled = { option ->
+                            selectedOptions =
+                                if (option in selectedOptions)
+                                    selectedOptions - option
+                                else
+                                    selectedOptions + option
+
+                            Log.i("OptionsMenu", "Options Selected :-> $selectedOptions")
+                        }
                     )
                 }
             )

@@ -103,7 +103,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
     fun sendShutdownCommand(device: Device, delay: Int, unit: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             val success = NetworkActions.sendMessage(

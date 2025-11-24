@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.remote.shutdown.ui.screens.AboutScreen
 import com.example.remote.shutdown.ui.screens.AddOrEditDeviceScreen
 import com.example.remote.shutdown.ui.screens.MainScreen
 import com.example.remote.shutdown.viewmodel.MainViewModel
@@ -36,6 +37,11 @@ fun NavGraph(context: Context) {
                 deviceToEdit = device
             )
         }
+
+        composable("about") {
+            AboutScreen(navController)
+        }
+
 
     }
 }

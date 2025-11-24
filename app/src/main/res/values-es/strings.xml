@@ -61,4 +61,11 @@
     <string name="no_devices_found">Ningún dispositivo encontrado</string>
     <string name="devices_found">Dispositivos detectados:</string>
 
+    <!-- about -->
+    <string name="about_app">Acerca de</string>
+    <string name="info_app">Información</string>
+    <string name="info_app_content"><![CDATA[
+        Aplicación para enviar comandos de apagado y Wake-on-LAN a equipos dentro de tu red local.
+    ]]></string>
+
 </resources>

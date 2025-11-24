@@ -251,9 +251,8 @@ private suspend fun startScan(
     val b = System.currentTimeMillis()
 
     // detect local network and scan it
-    // val networkRange = networkRangeDetector.getLocalNetworkRange()
     val networkRange = networkRangeDetector.getScanSubnet()
-    val results = scanLocalNetwork(baseIp = networkRange ?: "192.168.1", maxConcurrent = 30)
+    val results = scanLocalNetwork(baseIp = networkRange, maxConcurrent = 30)
 
     // Try to find router(s) among the results
     results.forEach { device ->
@@ -262,6 +261,6 @@ private suspend fun startScan(
         }
     }
 
-    Log.i("Scan", "Time to scan subnet -> ${System.currentTimeMillis() - b} millis")
+    Log.d("startScan", "Time to scan subnet -> ${System.currentTimeMillis() - b} millis")
     return Pair(results, false)
 }
