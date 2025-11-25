@@ -115,6 +115,7 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                 actions = {
                     OptionsMenu(
                         navController = navController,
+                        viewModel = viewModel,
                         options = options,
                         selected = selectedOptions,
                         onOptionToggled = { option ->
