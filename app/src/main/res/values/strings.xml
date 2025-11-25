@@ -63,7 +63,7 @@
     <string name="devices_found">Devices found:</string>
 
     <!-- about -->
-    <string name="about">About</string>
+    <string name="about">About…</string>
     <string name="about_info_section">Information</string>
     <string name="about_info_data">
     Send shutdown and Wake-on-LAN commands to computers within your local network.\n\n
@@ -75,11 +75,20 @@
     \n\nPlease keep in mind that due to Android security restrictions sometimes this
     scan doesn\"t return the expected results and some \"online\" machines would not appear.\n\n
     Another source of trouble is the way modern PCs enter hibernation/suspension and how the OS and BIOS
-    manage ports in suspension.Some computers will appear as &#x1F534; offline,
-    while others will be shown as &#x1F7E2; online or correctly shown as &#x1F7E0; hibernated/suspended.</string>
-    <string name="about_options_section">Auto refresh</string>
+    manage ports in suspension.During hibernation/suspension some computers will appear as &#x1F534; offline,
+    while others will be shown as &#x1F7E2; online or correctly shown as &#x1F7E0; hibernated/suspended.\n\n
+    When a PC goes into sleep or hibernation, each model decides which hardware parts stay \"awake\".
+    The BIOS or UEFI may keep some network ports active for features like waking the computer remotely,
+    but in other cases it turns them off to save power. The operating system can also limit or disable these
+    ports depending on its power settings. That’s why two seemingly identical computers can behave
+    differently: one keeps the network port listening while the other completely shuts it down during sleep.</string>
+    <string name="about_options_section">Auto-refreshing</string>
     <string name="about_options_data">
     Set the \"autorefresh\" option on to scan for computer status changes in the main device list. Set it off
-    to use only refresh by &#x27F3; gesture.
+    to use refresh by &#x27F3; gesture only.
     </string>
+    <string name="settings">Settings</string>
+    <string name="settings_refresh_enabled">Auto-refresh Devices</string>
+    <string name="settings_refresh_rate">Refresh interval</string>
+    <string name="label_seconds">seconds</string>
 </resources>

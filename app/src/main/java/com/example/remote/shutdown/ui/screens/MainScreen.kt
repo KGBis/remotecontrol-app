@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -43,9 +45,8 @@ import androidx.navigation.NavController
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.shutdownDelayOptions
 import com.example.remote.shutdown.ui.components.DeviceItem
-import com.example.remote.shutdown.ui.components.OptionsMenu
+import com.example.remote.shutdown.ui.components.SettingsBottomSheet
 import com.example.remote.shutdown.ui.components.ShutdownDelayDropdown
-import com.example.remote.shutdown.util.Constants.REFRESH_DELAY_MS
 import com.example.remote.shutdown.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
 
@@ -62,11 +63,14 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
 
     val context = LocalContext.current
 
+    // for shutdown
     val delay by viewModel.shutdownDelay.collectAsState()
     val unit by viewModel.shutdownUnit.collectAsState()
 
-    val options = listOf("Opción A", "Opción B", "Opción C")
-    var selectedOptions by remember { mutableStateOf(setOf<String>()) }
+    // for about/settings
+    var sheetOpen by remember { mutableStateOf(false) }
+    val autorefreshEnabled by viewModel.autoRefreshEnabled.collectAsState()
+    val autorefreshInterval by viewModel.autoRefreshInterval.collectAsState()
 
     // Snackbar autoclose
     LaunchedEffect(showSnackbar) {
@@ -94,8 +98,12 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
     LaunchedEffect(Unit) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             while (true) {
-                viewModel.refreshStatuses()
-                delay(REFRESH_DELAY_MS)
+                if(autorefreshEnabled) {
+                    Log.d("LaunchedEffect", "Triggered refresh statuses...")
+                    viewModel.refreshStatuses()
+                }
+                Log.d("LaunchedEffect", "waiting ${autorefreshInterval.toLong()} seconds")
+                delay(autorefreshInterval.toLong() * 1000) // millis here
             }
         }
     }
@@ -113,21 +121,12 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                     )
                 },
                 actions = {
-                    OptionsMenu(
-                        navController = navController,
-                        viewModel = viewModel,
-                        options = options,
-                        selected = selectedOptions,
-                        onOptionToggled = { option ->
-                            selectedOptions =
-                                if (option in selectedOptions)
-                                    selectedOptions - option
-                                else
-                                    selectedOptions + option
-
-                            Log.i("OptionsMenu", "Options Selected :-> $selectedOptions")
-                        }
-                    )
+                    IconButton(onClick = {
+                        @Suppress("AssignedValueIsNeverRead")
+                        sheetOpen = true
+                    }) {
+                        Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.about))
+                    }
                 }
             )
         },
@@ -231,6 +230,20 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                             )
                         }
                     }
+                }
+
+                if (sheetOpen) {
+                    SettingsBottomSheet(
+                        enabled = autorefreshEnabled,
+                        interval = autorefreshInterval,
+                        onEnabledChange = { viewModel.setAutoRefreshEnabled(it) },
+                        onIntervalChange = { viewModel.setAutoRefreshInterval(it) },
+                        onAboutClick = {
+                            sheetOpen = false
+                            navController.navigate("about")
+                        },
+                        onDismiss = { sheetOpen = false }
+                    )
                 }
             }
         }

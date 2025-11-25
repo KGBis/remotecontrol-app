@@ -57,16 +57,10 @@ fun ShutdownDelayDropdown(
     val horizontalOffset = (parentWidth - menuWidth) / 2
 
     Box(
-        /*modifier = Modifier
-            .fillMaxWidth()
-            .onGloballyPositioned { coords ->
-                @Suppress("AssignedValueIsNeverRead")
-                parentWidth = coords.size.width.toDp()
-            },*/
         modifier = Modifier
             .fillMaxWidth()
             .onGloballyPositioned { coords ->
-                // coords.size.width está en píxeles (Int)
+                @Suppress("AssignedValueIsNeverRead")
                 parentWidth = with(density) { coords.size.width.toDp() }
             },
         contentAlignment = Alignment.Center

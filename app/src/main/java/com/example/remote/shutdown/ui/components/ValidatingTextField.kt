@@ -19,11 +19,11 @@ import kotlinx.coroutines.delay
 @Composable
 fun ValidatingTextField(
     value: String,
+    modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit,
     label: String,
     validator: (String) -> Boolean,
     debounceMillis: Long = 750,
-    modifier: Modifier = Modifier,
     errorMessage: Int = R.string.generic_validation_error
 ) {
     var isValid by remember { mutableStateOf(true) }

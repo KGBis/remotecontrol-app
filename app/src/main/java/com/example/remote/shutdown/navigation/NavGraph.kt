@@ -1,8 +1,6 @@
 package com.example.remote.shutdown.navigation
 
-import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -13,7 +11,7 @@ import com.example.remote.shutdown.ui.screens.MainScreen
 import com.example.remote.shutdown.viewmodel.MainViewModel
 
 @Composable
-fun NavGraph(context: Context) {
+fun NavGraph() {
     val navController = rememberNavController()
 
     // shared ViewModel
@@ -24,7 +22,7 @@ fun NavGraph(context: Context) {
             MainScreen(navController, mainViewModel)
         }
         composable("add_device") {
-            AddOrEditDeviceScreen(navController, mainViewModel, context)
+            AddOrEditDeviceScreen(navController, mainViewModel)
         }
 
         composable("edit_device/{ip}") { backStackEntry ->
@@ -33,7 +31,6 @@ fun NavGraph(context: Context) {
             AddOrEditDeviceScreen(
                 navController = navController,
                 viewModel = mainViewModel,
-                context = LocalContext.current,
                 deviceToEdit = device
             )
         }

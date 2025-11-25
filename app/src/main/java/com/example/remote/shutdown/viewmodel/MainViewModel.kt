@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.DeviceStatus
 import com.example.remote.shutdown.network.NetworkActions
+import com.example.remote.shutdown.network.NetworkRangeDetector
 import com.example.remote.shutdown.network.NetworkScanner
 import com.example.remote.shutdown.network.NetworkScanner.deviceStatus
 import com.example.remote.shutdown.repository.DeviceRepository
@@ -21,10 +22,15 @@ import kotlinx.coroutines.launch
 import java.time.temporal.ChronoUnit
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    // Device Repository and actions
+
+    val networkRangeDetector = NetworkRangeDetector()
+
     private val repository = DeviceRepository(application)
 
-    // Device list
+    private val settingsRepo = SettingsRepository(application)
+
+    /* Device Repository and actions */
+
     private val _devices = MutableStateFlow<List<Device>>(emptyList())
     val devices = _devices.asStateFlow()
 
@@ -47,11 +53,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             e.printStackTrace()
             emptyList()
         }
-    }
-
-    // Class initializer. Load list of stored devices
-    init {
-        loadDevices()
     }
 
     fun loadDevices() {
@@ -88,16 +89,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun refreshStatuses() {
+        val localSubnet = networkRangeDetector.getLocalSubnet()
+        Log.d("refreshStatuses", "Refreshing device list for subnet $localSubnet")
         viewModelScope.launch(Dispatchers.IO) {
             val current = _devices.value
             val newStatuses = current.associate { device ->
-                device.ip to deviceStatus(device)
+                device.ip to deviceStatus(device, localSubnet)
             }
 
-            // Solo emitir si hay cambios
+            // emit only if changes occur
             val oldStatuses = _deviceStatusMap.value
             if (newStatuses != oldStatuses) {
-                Log.i("refreshStatuses", "emitting new statuses -> $newStatuses")
+                Log.d("refreshStatuses", "emitting new statuses -> $newStatuses")
                 _deviceStatusMap.emit(newStatuses)
             }
         }
@@ -128,9 +131,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Shutdown settings (quantity and time unit)
-
-    private val settingsRepo = SettingsRepository(application)
+    /* Shutdown settings (quantity and time unit) */
 
     val shutdownDelay = settingsRepo.shutdownDelayFlow.stateIn(
         viewModelScope,
@@ -154,13 +155,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Autorefresh settings
+    /* Auto-refresh settings */
 
-    private val _autorefreshFlag = MutableStateFlow(true)
-    val autorefreshFlag = _autorefreshFlag.asStateFlow()
+    val autoRefreshEnabled = settingsRepo.autoRefreshEnabledFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000), true
+    )
 
-    private val _autorefreshPeriod = MutableStateFlow(15)
-    val autorefreshPeriod = _autorefreshPeriod.asStateFlow()
+    val autoRefreshInterval = settingsRepo.autoRefreshIntervalFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000), 15f
+    )
 
+    fun setAutoRefreshEnabled(value: Boolean) {
+        viewModelScope.launch {
+            settingsRepo.saveAutorefresh(value)
+        }
+    }
 
+    fun setAutoRefreshInterval(value: Float) {
+        viewModelScope.launch {
+            settingsRepo.saveAutorefreshDelay(value)
+        }
+    }
+
+    // Class initializer. Load list of stored devices
+    init {
+        loadDevices()
+    }
 }

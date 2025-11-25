@@ -5,7 +5,5 @@ object Constants {
 
     const val DEFAULT_SUBNET = "192.168.1"
 
-    const val REFRESH_DELAY_MS = 15000L
-
 
 }

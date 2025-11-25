@@ -62,20 +62,32 @@
     <string name="devices_found">Dispositivos detectados:</string>
 
     <!-- about -->
-    <string name="about">Acerca de</string>
+    <string name="about">Acerca de…</string>
     <string name="about_info_section">Información</string>
     <string name="about_info_data">
     Envía comandos de apagado y Wake-on-LAN a ordenadores dentro de tu red local.\n\n
     Usa el gesto &#x27F3; en la lista de dispositivos para actualizar su estado en la pantalla principal.\n\n
     Cuando uses la opción \"🔍 Escanear red local\", la aplicación intentará escanear puertos comunes
     para determinar si el dispositivo está en línea. Usar esta función también asegurará que, si la
-    \"Remote PC Control Tray\" está en ejecución en alguno de los dispositivos, esta devolverá
+    \"Remote PC Control Tray\" está en ejecución en alguno de los dispositivos, ésta devolverá
     su nombre de host y dirección MAC automáticamente.
     \n\nTen en cuenta que, debido a las restricciones de seguridad de Android, a veces este
     escaneo no devuelve los resultados esperados y algunas máquinas \"en línea\" podrían no aparecer.\n\n
-    Otra fuente de problemas es la forma en la que los PC modernos entran en hibernación/suspensión y cómo el SO y la BIOS
-    gestionan los puertos en estado de suspensión. Algunos ordenadores aparecerán como &#x1F534; desconectados,
-    mientras que otros se mostrarán como &#x1F7E2; en línea o correctamente como &#x1F7E0; hibernados/suspendidos.</string>
-    <string name="about_options_section">Opciones</string>
-    <string name="about_options_data">data</string>
+    Durante la suspensión/hibernación algunos ordenadores aparecerán como &#x1F534; desconectado,
+    mientras que otros se mostrarán como &#x1F7E2; en línea o correctamente como &#x1F7E0; hibernado/suspendido.\n\n
+    Cuando un PC entra en suspensión o hibernación, cada modelo decide qué partes del hardware siguen \"despiertas\".
+    La BIOS o UEFI puede permitir que ciertos puertos de red sigan activos para funciones como encender el equipo a
+    distancia, pero otras veces los apaga para ahorrar energía. Además, el sistema operativo también puede limitar
+    o desactivar esos puertos según la configuración de energía. Por eso, dos ordenadores aparentemente iguales
+    pueden comportarse distinto: uno mantiene el puerto de red escuchando y el otro lo apaga por completo mientras
+    duerme.</string>
+    <string name="about_options_section">Autorefresco</string>
+    <string name="about_options_data">
+    Set the \"autorefresh\" option on to scan for computer status changes in the main device list. Set it off
+    to use refresh by &#x27F3; gesture only.
+    </string>
+    <string name="settings">Configuración</string>
+    <string name="settings_refresh_enabled">Autorefresco de dispositivos</string>
+    <string name="settings_refresh_rate">Intervalo de refresco</string>
+    <string name="label_seconds">segundos</string>
 </resources>

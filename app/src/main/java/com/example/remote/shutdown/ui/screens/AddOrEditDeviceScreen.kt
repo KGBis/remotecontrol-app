@@ -1,6 +1,5 @@
 package com.example.remote.shutdown.ui.screens
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -52,9 +51,11 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddOrEditDeviceScreen(
-    navController: NavController, viewModel: MainViewModel, context: Context,
+    navController: NavController, viewModel: MainViewModel,
     deviceToEdit: Device? = null
 ) {
+    val networkRangeDetector = NetworkRangeDetector()
+
     // Fields
     var name by remember {
         if (deviceToEdit == null) mutableStateOf("") else mutableStateOf(
@@ -77,7 +78,6 @@ fun AddOrEditDeviceScreen(
     var scanning by remember { mutableStateOf(false) }
     var results by remember { mutableStateOf(listOf<Device>()) }
     val scope = rememberCoroutineScope()
-    val networkRangeDetector = NetworkRangeDetector(context)
 
     Scaffold(
         topBar = {
