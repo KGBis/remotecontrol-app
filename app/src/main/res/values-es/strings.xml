@@ -56,10 +56,12 @@
     <string name="error_invalid_mac">Dirección MAC no válida</string>
     <string name="error_empty_fields">⚠️ Todos los campos obligatorios deben estar completos</string>
     <string name="network_scan_button">🔍 Escanear red local</string>
-    <string name="network_scan_running">🔍 Escaneando…</string>
+    <string name="network_scan_running">Escaneando…</string>
     <string name="network_scan_done">✔ Escaneo completado</string>
     <string name="no_devices_found">Ningún dispositivo encontrado</string>
     <string name="devices_found">Dispositivos detectados:</string>
+    <string name="devices_found_add_button">Añadir %1$s seleccionados</string>
+    <string name="select">Seleccionar</string>
 
     <!-- about -->
     <string name="about">Acerca de…</string>
@@ -90,4 +92,5 @@
     <string name="settings_refresh_enabled">Autorefresco de dispositivos</string>
     <string name="settings_refresh_rate">Intervalo de refresco</string>
     <string name="label_seconds">segundos</string>
+    <string name="label_milliseconds">milisegundos</string>
 </resources>

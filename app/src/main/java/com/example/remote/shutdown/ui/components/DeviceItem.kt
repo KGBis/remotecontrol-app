@@ -116,7 +116,7 @@ fun DeviceItem(
             Spacer(Modifier.width(8.dp))
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Shutdown icon + text

@@ -69,6 +69,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun addDevices(devices: List<Device>) {
+        viewModelScope.launch {
+            devices.forEach { it.normalize() }
+            repository.addDevices(devices)
+            loadDevices()
+        }
+    }
+
+
     fun updateDevice(original: Device, updated: Device) {
         updated.normalize()
         viewModelScope.launch {
@@ -89,7 +98,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun refreshStatuses() {
-        val localSubnet = networkRangeDetector.getLocalSubnet()
+        val localSubnet = networkRangeDetector.getScanSubnet()
         Log.d("refreshStatuses", "Refreshing device list for subnet $localSubnet")
         viewModelScope.launch(Dispatchers.IO) {
             val current = _devices.value

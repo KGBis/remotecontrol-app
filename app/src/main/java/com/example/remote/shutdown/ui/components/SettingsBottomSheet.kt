@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
@@ -17,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.remote.shutdown.R
 
@@ -33,40 +35,64 @@ fun SettingsBottomSheet(
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
-                .padding(24.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
         ) {
             Text(
                 stringResource(R.string.settings),
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .fillMaxWidth(),
+                // textAlign = TextAlign.Center
             )
+            SectionCard(title = "Lista de dispositivos") {
+                // Switch
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        stringResource(R.string.settings_refresh_enabled),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(checked = enabled, onCheckedChange = onEnabledChange)
+                }
 
-            // Switch
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                // Slider
                 Text(
-                    stringResource(R.string.settings_refresh_enabled),
-                    modifier = Modifier.weight(1f)
+                    "${stringResource(R.string.settings_refresh_rate)}: ${interval.toInt()} ${
+                        stringResource(
+                            R.string.label_seconds
+                        )
+                    }"
                 )
-                Switch(checked = enabled, onCheckedChange = onEnabledChange)
+                Slider(
+                    value = interval,
+                    onValueChange = onIntervalChange,
+                    valueRange = 10f..60f,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
+        }
 
-            // Slider
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+        ) {
             Text(
-                "${stringResource(R.string.settings_refresh_rate)}: ${interval.toInt()} ${
+                // ${stringResource(R.string.settings_refresh_rate)}
+                "Scan network Timeout: ${interval.toInt()} ${
                     stringResource(
-                        R.string.label_seconds
+                        R.string.label_milliseconds
                     )
                 }"
             )
+            val interval2 = 500f
             Slider(
-                value = interval,
-                onValueChange = onIntervalChange,
-                valueRange = 10f..60f,
+                value = interval2,
+                onValueChange = { /*onIntervalChange*/ },
+                valueRange = 300f..5000f,
                 modifier = Modifier.fillMaxWidth()
             )
 

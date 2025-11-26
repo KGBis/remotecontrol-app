@@ -36,11 +36,10 @@ object NetworkScanner {
         139    // NetBIOS
     )
 
-
-    // val ghostPorts = listOf(445, 139, 135)
-
     private val portsToScan =
         DEEP_PORTS + GHOST_PORTS // listOf(445, 135, 22, 80, 443, 139, 3389, 6800)
+
+    val networkRangeDetector = NetworkRangeDetector()
 
     /**
      * Scans local network (i.e. 192.168.1.1 to 254 range) concurrently.
@@ -51,9 +50,15 @@ object NetworkScanner {
         maxConcurrent: Int = 20
     ): List<Device> = coroutineScope {
         val semaphore = Semaphore(maxConcurrent)
+        val localAddress = networkRangeDetector.getLocalAddress()
         val jobs = (1..254).map { i ->
             async(Dispatchers.IO) {
                 val ip = "$baseIp.$i"
+
+                if(ip == localAddress) {
+                    Log.i("scanLocalNetwork", "*** Skipping $ip as it's local host")
+                    return@async null
+                }
 
                 // Limitar la concurrencia
                 semaphore.withPermit {
@@ -93,7 +98,7 @@ object NetworkScanner {
         }
     }
 
-    fun shutdownRequest(message: String, device: Device): Boolean {
+    fun shutdownRequest(message: String, @Suppress("unused") device: Device): Boolean {
         Log.d("shutdownRequest", "Computer response: $message")
         return message == "ACK"
     }

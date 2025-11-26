@@ -7,68 +7,69 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class DeviceRepository(context: Context) {
 
     private val prefs = context.getSharedPreferences("devices_prefs", Context.MODE_PRIVATE)
 
-    /**
-     * Get all devices stored
-     */
+    // Mutex para proteger la lista
+    private val mutex = Mutex()
+
     suspend fun getDevices(): List<Device> = withContext(Dispatchers.IO) {
         val json = prefs.getString("devices", "[]") ?: "[]"
         val arr = JSONArray(json)
-
         val list: MutableList<Device> = mutableListOf()
-
         for (i in 0 until arr.length()) {
             val obj = arr.getJSONObject(i)
             list.add(
                 Device(
                     name = obj.getString("name"),
                     ip = obj.getString("ip"),
-                    mac = obj.optString("mac"),
+                    mac = obj.optString("mac")
                 )
             )
         }
-
-        // sort by IP (converted to Long for proper sorting)
         list.sortedBy { it.ip.toIpLong() }
     }
 
-    /**
-     * Add a new device. If IP was repeated (another device with same IP) this
-     * will overwrite the stored one
-     */
     suspend fun addDevice(device: Device) = withContext(Dispatchers.IO) {
-        val devices = getDevices().toMutableList()
-        devices.removeAll { it.ip == device.ip }
-        devices.add(device)
-        saveDevices(devices)
+        mutex.withLock {
+            val devices = getDevices().toMutableList()
+            devices.removeAll { it.ip == device.ip }
+            devices.add(device)
+            saveDevices(devices)
+        }
     }
 
-    /**
-     * Update a device.
-     * Original data is wiped to avoid creating a new one device if IP is changed
-     */
+    suspend fun addDevices(devicesToAdd: List<Device>) = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            val devices = getDevices().toMutableList()
+            devicesToAdd.forEach { d ->
+                devices.removeAll { it.ip == d.ip }
+                devices.add(d)
+            }
+            saveDevices(devices)
+        }
+    }
+
     suspend fun updateDevice(original: Device, updated: Device) = withContext(Dispatchers.IO) {
-        val devices = getDevices().toMutableList()
-        devices.removeAll { it.ip == original.ip }
-        devices.add(updated)
-        saveDevices(devices)
+        mutex.withLock {
+            val devices = getDevices().toMutableList()
+            devices.removeAll { it.ip == original.ip }
+            devices.add(updated)
+            saveDevices(devices)
+        }
     }
 
-    /**
-     * Delete a device
-     */
     suspend fun removeDevice(device: Device) = withContext(Dispatchers.IO) {
-        val devices = getDevices().filterNot { it.ip == device.ip }
-        saveDevices(devices)
+        mutex.withLock {
+            val devices = getDevices().filterNot { it.ip == device.ip }
+            saveDevices(devices)
+        }
     }
 
-    /**
-     * Save list of devices in JSON format
-     */
     private fun saveDevices(devices: List<Device>) {
         val arr = JSONArray()
         for (d in devices) {

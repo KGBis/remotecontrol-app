@@ -1,7 +1,6 @@
 package com.example.remote.shutdown.ui.screens
 
 import android.util.Log
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,19 +8,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -43,6 +36,7 @@ import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.network.NetworkRangeDetector
 import com.example.remote.shutdown.network.NetworkScanner.scanLocalNetwork
+import com.example.remote.shutdown.ui.components.DetectedDevicesList
 import com.example.remote.shutdown.ui.components.ValidatingTextField
 import com.example.remote.shutdown.util.Validators
 import com.example.remote.shutdown.viewmodel.MainViewModel
@@ -167,6 +161,7 @@ fun AddOrEditDeviceScreen(
                     enabled = !scanning,
                     onClick = {
                         scanning = true
+                        results = arrayListOf()
                         scope.launch {
                             val pair = startScan(networkRangeDetector, viewModel)
                             results = pair.first
@@ -198,42 +193,11 @@ fun AddOrEditDeviceScreen(
                         stringResource(R.string.devices_found),
                         style = MaterialTheme.typography.titleSmall
                     )
-                    LazyColumn(
-                        Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth()
-                            .align(Alignment.CenterHorizontally)
-                    ) {
-                        items(results.size) { i ->
-                            val d = results[i]
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .clickable {
-                                        viewModel.addDevice(d)
-                                        navController.popBackStack()
-                                    },
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                                shape = RoundedCornerShape(12.dp),
-                                elevation = CardDefaults.cardElevation(2.dp)
-                            ) {
-                                ListItem(
-                                    overlineContent = { Text(d.name) },
-                                    headlineContent = { Text(d.ip) },
-                                    supportingContent = { Text(d.mac) },
-                                    colors = ListItemDefaults.colors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.90f)
-                                    ),
-                                    trailingContent = {
-                                        Text(if (d.mac.isNotBlank()) "✨ ${stringResource(R.string.app_name)}" else "")
-                                    }
-                                )
-                            }
-
-                            Spacer(Modifier.height(4.dp))
-                        }
-                    }
+                    DetectedDevicesList(
+                        results = results,
+                        navController = navController,
+                        viewModel = viewModel
+                    )
                 }
             }
         }

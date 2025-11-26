@@ -33,6 +33,36 @@ class NetworkRangeDetector() {
                 Build.PRODUCT.contains("sdk")
     }
 
+    fun getLocalAddress(): String {
+        try {
+            val networkInterfaces = NetworkInterface.getNetworkInterfaces()
+            while (networkInterfaces.hasMoreElements()) {
+                val networkInterface = networkInterfaces.nextElement()
+
+                // Ignore loopback and non-active interfaces
+                if (networkInterface.isLoopback || !networkInterface.isUp) continue
+
+                val addresses = networkInterface.inetAddresses
+                while (addresses.hasMoreElements()) {
+                    val address = addresses.nextElement()
+
+                    // Filter by private IPv4 addresses
+                    if (!address.isLoopbackAddress &&
+                        address is Inet4Address &&
+                        isPrivateIP(address.hostAddress!!)
+                    ) {
+                        Log.i("getLocalAddress", "Local address is ${address.hostAddress!!}")
+                        return address.hostAddress!!
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("getLocalAddress", "Exception $e")
+        }
+        Log.i("getLocalAddress", "Local IP address not found")
+        return "127.0.0.1"
+    }
+
     fun getLocalSubnet(): String {
         return try {
             val networkInterfaces = NetworkInterface.getNetworkInterfaces()
@@ -49,7 +79,8 @@ class NetworkRangeDetector() {
                     // Filter by private IPv4 addresses
                     if (!address.isLoopbackAddress &&
                         address is Inet4Address &&
-                        isPrivateIP(address.hostAddress!!)) {
+                        isPrivateIP(address.hostAddress!!)
+                    ) {
 
                         return extractSubnet(address.hostAddress!!)
                     }
@@ -90,14 +121,17 @@ class NetworkRangeDetector() {
                 Log.i("extractSubnet", "ip: $ip -> subnet: ${ip.take(ip.lastIndexOf('.'))}")
                 ip.take(ip.lastIndexOf('.'))
             }
+
             ip.startsWith("10.") -> {
                 val parts = ip.split('.')
                 if (parts.size >= 2) "${parts[0]}.${parts[1]}" else "10.0"
             }
+
             ip.startsWith("172.") -> {
                 val parts = ip.split('.')
                 if (parts.size >= 2) "${parts[0]}.${parts[1]}" else "172.16"
             }
+
             else -> "0.0.0"
         }
     }
