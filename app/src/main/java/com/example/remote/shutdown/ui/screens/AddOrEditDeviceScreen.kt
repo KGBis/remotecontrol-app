@@ -38,7 +38,7 @@ import com.example.remote.shutdown.network.NetworkRangeDetector
 import com.example.remote.shutdown.network.NetworkScanner.scanLocalNetwork
 import com.example.remote.shutdown.ui.components.DetectedDevicesList
 import com.example.remote.shutdown.ui.components.ValidatingTextField
-import com.example.remote.shutdown.util.Validators
+import com.example.remote.shutdown.util.Utils
 import com.example.remote.shutdown.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
@@ -117,7 +117,7 @@ fun AddOrEditDeviceScreen(
                 onValueChange = { ip = it },
                 label = stringResource(R.string.device_ip),
                 modifier = modifier,
-                validator = Validators::isValidIp,
+                validator = Utils::isValidIp,
                 errorMessage = R.string.error_invalid_ip
             )
 
@@ -126,7 +126,7 @@ fun AddOrEditDeviceScreen(
                 onValueChange = { mac = it },
                 label = stringResource(R.string.device_mac),
                 modifier = modifier,
-                validator = Validators::isValidMac,
+                validator = Utils::isValidMac,
                 errorMessage = R.string.error_invalid_mac
             )
             Spacer(Modifier.height(8.dp))

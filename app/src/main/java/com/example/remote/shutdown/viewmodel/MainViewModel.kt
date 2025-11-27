@@ -12,6 +12,8 @@ import com.example.remote.shutdown.network.NetworkScanner
 import com.example.remote.shutdown.network.NetworkScanner.deviceStatus
 import com.example.remote.shutdown.repository.DeviceRepository
 import com.example.remote.shutdown.repository.SettingsRepository
+import com.example.remote.shutdown.util.Utils.loadAboutKeys
+import com.example.remote.shutdown.util.Utils.loadRouterIps
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -39,20 +41,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val deviceStatusMap = _deviceStatusMap.asStateFlow()
 
     val routerIps: List<String> by lazy {
-        loadRouterIps()
-    }
-
-    private fun loadRouterIps(): List<String> {
-        return try {
-            val context = getApplication<Application>()
-            context.assets.open("router_ips.txt")
-                .bufferedReader()
-                .readLines()
-                .filter { it.isNotBlank() }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
-        }
+        loadRouterIps(getApplication())
     }
 
     fun loadDevices() {
@@ -186,6 +175,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             settingsRepo.saveAutorefreshDelay(value)
         }
+    }
+
+    /* Network scan (socket) Timeout */
+    val socketTimeout = settingsRepo.socketTimeoutFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000), 500
+    )
+
+    fun setSocketTimeout(value: Float) {
+        viewModelScope.launch {
+            settingsRepo.saveSocketTimeout(value)
+        }
+    }
+
+    val aboutKeys: Map<String, String> by lazy {
+        loadAboutKeys(getApplication())
     }
 
     // Class initializer. Load list of stored devices

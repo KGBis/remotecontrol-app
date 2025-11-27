@@ -1,0 +1,8 @@
+# This file contains the keys for title and content of every
+# about section. this way the about screen is filled with sequential
+# cards containing i18n text.
+# blank lines or starting with the hash symbol are ignored as comments
+# Format is 'header=content keys'
+
+about_info_section=about_info_data
+about_bys_section=about_bys_data

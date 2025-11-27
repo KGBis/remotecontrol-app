@@ -12,10 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +22,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -33,14 +31,19 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.remote.shutdown.BuildConfig
 import com.example.remote.shutdown.R
-import com.example.remote.shutdown.ui.components.LinkItem
 import com.example.remote.shutdown.ui.components.SectionCard
+import com.example.remote.shutdown.util.HtmlText
+import com.example.remote.shutdown.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutScreen(navController: NavController) {
+fun AboutScreen(navController: NavController, viewModel: MainViewModel) {
 
     val versionName = BuildConfig.VERSION_NAME
+
+    val sections = viewModel.aboutKeys
+
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -57,7 +60,6 @@ fun AboutScreen(navController: NavController) {
             )
         }
     ) { padding ->
-
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -66,7 +68,6 @@ fun AboutScreen(navController: NavController) {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             // Logo
             Image(
                 painter = painterResource(R.drawable.computer),
@@ -90,8 +91,25 @@ fun AboutScreen(navController: NavController) {
 
             Spacer(Modifier.height(32.dp))
 
+            sections.forEach { (key, value) ->
+                val headerId = context.resources.getIdentifier(key, "string", context.packageName)
+                val contentId =
+                    context.resources.getIdentifier(value, "string", context.packageName)
+                SectionCard(title = stringResource(headerId)) {
+                    HtmlText(stringResource(contentId), modifier = Modifier.fillMaxWidth())
+                    /*Text(
+                        stringResource(contentId),
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Justify,
+                        style = MaterialTheme.typography.bodyMedium
+                    )*/
+                }
+
+                Spacer(Modifier.height(16.dp))
+            }
+
             // ---------- INFO SECTION ----------
-            SectionCard(title = stringResource(R.string.about_info_section)) {
+            /*SectionCard(title = stringResource(R.string.about_info_section)) {
                 Text(stringResource(R.string.about_info_data),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Justify,
@@ -145,7 +163,7 @@ fun AboutScreen(navController: NavController) {
                     "Software de código abierto. Úsese libremente bajo los términos de la licencia MIT.",
                     style = MaterialTheme.typography.bodyMedium
                 )
-            }
+            }*/
         }
     }
 }

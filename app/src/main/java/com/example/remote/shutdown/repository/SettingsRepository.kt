@@ -22,13 +22,16 @@ class SettingsRepository(private val context: Context) {
         val KEY_AUTO_REFRESH = booleanPreferencesKey("auto_refresh")
 
         val KEY_AUTO_REFRESH_DELAY = floatPreferencesKey("auto_refresh_delay")
+
+        val KEY_TIMEOUT = intPreferencesKey("scan_timeout")
     }
 
     /* Initialize delay and time unit values in case not saved yet */
     val shutdownDelayFlow: Flow<Int> =
         context.dataStore.data.map { prefs ->
-            prefs[KEY_DELAY_AMOUNT] ?: 15   // valor por defecto (15s como en tu VM)
-        }
+            prefs[KEY_DELAY_AMOUNT] ?: 15
+        }   // defaults to 15 seconds
+
 
     val shutdownUnitFlow: Flow<ChronoUnit> =
         context.dataStore.data.map { prefs ->
@@ -36,38 +39,38 @@ class SettingsRepository(private val context: Context) {
         }
 
     suspend fun saveShutdownDelay(delay: Int) {
-        context.dataStore.edit { prefs ->
-            prefs[KEY_DELAY_AMOUNT] = delay
-        }
+        context.dataStore.edit { prefs -> prefs[KEY_DELAY_AMOUNT] = delay }
     }
 
     suspend fun saveShutdownUnit(unit: ChronoUnit) {
-        context.dataStore.edit { prefs ->
-            prefs[KEY_DELAY_UNIT] = unit.name
-        }
+        context.dataStore.edit { prefs -> prefs[KEY_DELAY_UNIT] = unit.name }
     }
 
     /* Initialize auto refresh values in case not saved yet */
     /* Always start with auto-refresh enabled */
     val autoRefreshIntervalFlow: Flow<Float> =
         context.dataStore.data.map { prefs ->
-            prefs[KEY_AUTO_REFRESH_DELAY] ?: 15f   // defaults to 15s
-        }
+            prefs[KEY_AUTO_REFRESH_DELAY] ?: 15f
+        } // defaults to 15s
+
 
     val autoRefreshEnabledFlow: Flow<Boolean> =
-        context.dataStore.data.map { prefs ->
-            prefs[KEY_AUTO_REFRESH] ?: true
-        }
+        context.dataStore.data.map { prefs -> prefs[KEY_AUTO_REFRESH] ?: true }
 
     suspend fun saveAutorefreshDelay(delay: Float) {
-        context.dataStore.edit { prefs ->
-            prefs[KEY_AUTO_REFRESH_DELAY] = delay
-        }
+        context.dataStore.edit { prefs -> prefs[KEY_AUTO_REFRESH_DELAY] = delay }
     }
 
     suspend fun saveAutorefresh(status: Boolean) {
+        context.dataStore.edit { prefs -> prefs[KEY_AUTO_REFRESH] = status }
+    }
+
+    val socketTimeoutFlow: Flow<Int> =
+        context.dataStore.data.map { prefs -> prefs[KEY_TIMEOUT] ?: 500 }   // defaults to 500 ms
+
+    suspend fun saveSocketTimeout(delay: Float) {
         context.dataStore.edit { prefs ->
-            prefs[KEY_AUTO_REFRESH] = status
+            prefs[KEY_TIMEOUT] = delay.toInt()
         }
     }
 }

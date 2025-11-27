@@ -65,9 +65,19 @@
     <string name="select">Select</string>
 
     <!-- about -->
-    <string name="about">About…</string>
+    <string name="about">About / Help</string>
     <string name="about_info_section">Information</string>
     <string name="about_info_data">
+    Send shutdown and Wake-on-LAN commands to computers within your local network.\n\nBased on
+        \'Wake on Lan\' by Mr.Webb and \'Remote Shutdown\' by Isah Rikovic as an Android/Kotlin learning exercise.
+        Both available on Google Play.
+    </string>
+    <string name="about_bys_section">Before you start</string>
+    <string name="about_bys_data">
+        To use the remote shutdown feature and get device\'s hostname and MAC, please download the
+        &lt;a href=\"https://github.com/KGBis/remote-shutdown-tray\"&gt;Remote PC Control Tray&lt;a&gt;.
+    </string>
+    <string name="about_info_data2">
     Send shutdown and Wake-on-LAN commands to computers within your local network.\n\n
     Use &#x27F3; gesture on device list to refresh their status in main screen.\n\n
     When using the \"🔍 Scan local network\" option the app will try to scan common ports
@@ -91,7 +101,11 @@
     </string>
     <string name="settings">Settings</string>
     <string name="settings_refresh_enabled">Auto-refresh Devices</string>
-    <string name="settings_refresh_rate">Refresh interval</string>
+    <string name="settings_refresh_rate">Auto-refresh interval: %1$s seconds</string>
     <string name="label_seconds">seconds</string>
     <string name="label_milliseconds">milliseconds</string>
+    <string name="label_menu">Menu</string>
+    <string name="settings_advanced">Advanced options...</string>
+    <string name="settings_advanced_timeout">Network scan timeout: %1$s milliseconds</string>
+    <string name="settings_advanced_timeout_warning">⚠ Setting it too low may cause scan to skip devices; setting it too high may delay scanning.</string>
 </resources>

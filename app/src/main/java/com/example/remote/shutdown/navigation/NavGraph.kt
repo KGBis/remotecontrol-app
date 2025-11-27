@@ -35,8 +35,8 @@ fun NavGraph() {
             )
         }
 
-        composable("about") {
-            AboutScreen(navController)
+        composable("about_screen") {
+            AboutScreen(navController, mainViewModel)
         }
 
 

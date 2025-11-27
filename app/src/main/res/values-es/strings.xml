@@ -64,9 +64,20 @@
     <string name="select">Seleccionar</string>
 
     <!-- about -->
-    <string name="about">Acerca de…</string>
+    <string name="about">Acerca de / Ayuda</string>
     <string name="about_info_section">Información</string>
     <string name="about_info_data">
+    Envía comandos de apagado y Wake-on-LAN a ordenadores dentro de tu red local.\n\n
+        Basada en \'Wake on Lan\' de Mr.Webb y \'Remote Shutdown\' de Isah Rikovic como un ejercicio para
+        aprender Android/Kotlin.
+        Ambas disponibles en Google Play.
+    </string>
+    <string name="about_bys_section">Antes de empezar</string>
+    <string name="about_bys_data">
+        Para poder usar la funcionalidad de apagado remoto y obtener el nombre de equipo y su MAC, descargue
+        &lt;a href=\"https://github.com/KGBis/remote-shutdown-tray\"&gt;\'Remote PC Control Tray\'&lt;a&gt;.
+    </string>
+    <string name="about_info_data2">
     Envía comandos de apagado y Wake-on-LAN a ordenadores dentro de tu red local.\n\n
     Usa el gesto &#x27F3; en la lista de dispositivos para actualizar su estado en la pantalla principal.\n\n
     Cuando uses la opción \"🔍 Escanear red local\", la aplicación intentará escanear puertos comunes
@@ -90,7 +101,11 @@
     </string>
     <string name="settings">Configuración</string>
     <string name="settings_refresh_enabled">Autorefresco de dispositivos</string>
-    <string name="settings_refresh_rate">Intervalo de refresco</string>
+    <string name="settings_refresh_rate">Intervalo de autorefresco: %1$s segundos</string>
     <string name="label_seconds">segundos</string>
     <string name="label_milliseconds">milisegundos</string>
+    <string name="label_menu">Menú</string>
+    <string name="settings_advanced">Opciones avanzadas…</string>
+    <string name="settings_advanced_timeout">Timeout escaneo de red: %1$s milisegundos</string>
+    <string name="settings_advanced_timeout_warning">⚠ Ajustar demasiado bajo puede perder equipos; demasiado alto puede retrasar el escaneo.</string>
 </resources>

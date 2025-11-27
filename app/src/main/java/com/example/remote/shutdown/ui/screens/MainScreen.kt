@@ -44,6 +44,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.shutdownDelayOptions
+import com.example.remote.shutdown.ui.components.AppTopBar
 import com.example.remote.shutdown.ui.components.DeviceItem
 import com.example.remote.shutdown.ui.components.SettingsBottomSheet
 import com.example.remote.shutdown.ui.components.ShutdownDelayDropdown
@@ -98,11 +99,11 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
     LaunchedEffect(Unit) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             while (true) {
-                if(autorefreshEnabled) {
+                if (autorefreshEnabled) {
                     Log.d("LaunchedEffect", "Triggered refresh statuses...")
                     viewModel.refreshStatuses()
                 }
-                Log.d("LaunchedEffect", "waiting ${autorefreshInterval.toLong()} seconds")
+                Log.d("LaunchedEffect", "waiting ${autorefreshInterval.toInt()} seconds")
                 delay(autorefreshInterval.toLong() * 1000) // millis here
             }
         }
@@ -110,7 +111,7 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
+        /*topBar = {
             TopAppBar(
                 modifier = Modifier.fillMaxWidth(),
                 title = {
@@ -128,6 +129,12 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                         Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.about))
                     }
                 }
+            )
+        },*/
+        topBar = {
+            AppTopBar(
+                navController = navController,
+                viewModel = viewModel
             )
         },
         floatingActionButton = {
