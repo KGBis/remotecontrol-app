@@ -97,12 +97,6 @@ fun AboutScreen(navController: NavController, viewModel: MainViewModel) {
                     context.resources.getIdentifier(value, "string", context.packageName)
                 SectionCard(title = stringResource(headerId)) {
                     HtmlText(stringResource(contentId), modifier = Modifier.fillMaxWidth())
-                    /*Text(
-                        stringResource(contentId),
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Justify,
-                        style = MaterialTheme.typography.bodyMedium
-                    )*/
                 }
 
                 Spacer(Modifier.height(16.dp))

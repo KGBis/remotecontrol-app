@@ -9,11 +9,9 @@ class NetworkRangeDetector() {
 
     fun getScanSubnet(): String {
         return if (isEmulator()) {
-            // En emulador, usar subred por defecto
-            "192.168.1"
+            "192.168.1" // with Android emulator use this as default subnet
         } else {
-            // En dispositivo real, usar la subred real
-            val subnet = getLocalSubnet()
+            val subnet = getLocalSubnet() // in real device use its subnet
             Log.i("getScanSubnet", subnet)
             return subnet
         }

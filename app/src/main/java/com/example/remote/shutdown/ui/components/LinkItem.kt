@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
+@Deprecated("Unused", level = DeprecationLevel.WARNING)
 @Composable
 fun LinkItem(icon: ImageVector, text: String, onClick: () -> Unit) {
     Row(

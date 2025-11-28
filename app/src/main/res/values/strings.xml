@@ -68,44 +68,75 @@
     <string name="about">About / Help</string>
     <string name="about_info_section">Information</string>
     <string name="about_info_data">
-    Send shutdown and Wake-on-LAN commands to computers within your local network.\n\nBased on
-        \'Wake on Lan\' by Mr.Webb and \'Remote Shutdown\' by Isah Rikovic as an Android/Kotlin learning exercise.
-        Both available on Google Play.
+        Send shutdown and Wake-on-LAN commands to computers within your local network.&lt;p&gt;
+        Based on \'Wake on Lan\' by Mr.Webb and \'Remote Shutdown\' by Isah Rikovic as an all-in-one
+        Android/Kotlin learning exercise. Both apps are available on Google Play.&lt;p&gt;
+        &lt;b&gt;Contact:&lt;/b&gt;&lt;br/&gt;
+        ✉️ &lt;a href=\"mailto:kike.g.garcia@gmail.com\"&gt;kike.g.garcia@gmail.com&lt;/a&gt;
     </string>
     <string name="about_bys_section">Before you start</string>
     <string name="about_bys_data">
         To use the remote shutdown feature and get device\'s hostname and MAC, please download the
-        &lt;a href=\"https://github.com/KGBis/remote-shutdown-tray\"&gt;Remote PC Control Tray&lt;a&gt;.
+        &lt;a href=\"https://github.com/KGBis/remote-shutdown-tray\"&gt;Remote PC Control Tray&lt;a&gt;.&lt;br/&gt;
     </string>
-    <string name="about_info_data2">
-    Send shutdown and Wake-on-LAN commands to computers within your local network.\n\n
-    Use &#x27F3; gesture on device list to refresh their status in main screen.\n\n
-    When using the \"🔍 Scan local network\" option the app will try to scan common ports
-    to determine if the device is online. Using this feature will also ensure that if the
-    \"Remote PC Control Tray\" is running if any of the devices it will return its host name
-    and MAC address automatically.
-    \n\nPlease keep in mind that due to Android security restrictions sometimes this
-    scan doesn\"t return the expected results and some \"online\" machines would not appear.\n\n
-    Another source of trouble is the way modern PCs enter hibernation/suspension and how the OS and BIOS
-    manage ports in suspension.During hibernation/suspension some computers will appear as &#x1F534; offline,
-    while others will be shown as &#x1F7E2; online or correctly shown as &#x1F7E0; hibernated/suspended.\n\n
-    When a PC goes into sleep or hibernation, each model decides which hardware parts stay \"awake\".
-    The BIOS or UEFI may keep some network ports active for features like waking the computer remotely,
-    but in other cases it turns them off to save power. The operating system can also limit or disable these
-    ports depending on its power settings. That’s why two seemingly identical computers can behave
-    differently: one keeps the network port listening while the other completely shuts it down during sleep.</string>
-    <string name="about_options_section">Auto-refreshing</string>
-    <string name="about_options_data">
-    Set the \"autorefresh\" option on to scan for computer status changes in the main device list. Set it off
-    to use refresh by &#x27F3; gesture only.
+    <string name="about_limitations_section">Known limitations</string>
+    <string name="about_limitations_data">
+        Due to Android security restrictions since Android 13+ is not longer possible to ping or query ARP table
+        to get status/hostname and MAC address of target device. This means that for scanning a trial and error
+        approach has to be used querying some known TCP ports usually opened in the target device OS.&lt;p&gt;
+        In case that &lt;i&gt;Remote PC Control Tray&lt;/i&gt; is running in the computer, as the first try is
+        to reach its listening port it will return both computer hostname and its MAC address. Otherwise, neither
+        the hostname nor MAC address will be returned and they will need to be entered manually.
     </string>
+    <string name="about_scan_section">Device scan doesn\'t find my devices</string>
+    <string name="about_scan_data">
+        Firstly, make sure that your devices are turned on. Device scanning will only work for devices that are turned on.&lt;p&gt;
+        Scanning can sometimes miss a device if it does not respond quickly enough to connection attempt. Trying
+        again or setting a higher &lt;i&gt;timeout&lt;/i&gt; may pick up those missing devices. If not detected in any way,
+        you can always add it manually.&lt;p&gt;
+        Read the &lt;i&gt;Known limitations&lt;/i&gt; section for more information about this.&lt;p&gt;
+        &lt;i&gt;&lt;b&gt;⚠ Setting timeout too low may cause scan to miss devices; setting it too high may delay scanning.&lt;/b&gt;&lt;/i&gt;
+    </string>
+    <string name="about_status_section">Device status is wrong or inconsistent</string>
+    <string name="about_status_data">
+        Sometimes the status shown in the main screen device list is wrong or does not match the actual device status.
+        This can be caused by the &lt;i&gt;Known limitations&lt;/i&gt; and/or by modern OS/BIOS energy saving management.&lt;p&gt;
+        It has been observed strange behaviours when a device is in suspension or hibernation leading to being able to access ports
+        that in other systems are not available and vice-versa, and showing an incorrect status. It seems to depend on vendors.&lt;p&gt;
+        For devices showing as &lt;i&gt;off&lt;/i&gt; when they\'re turned on, one common cause is the use of router\'s DHCP automatic
+        IP assignment. When using DHCP, the once added device may have been assigned a different IP address, showing itself as turned off.&lt;p&gt;
+        To deal with this, either change device IP manually in the app or just assign a static IP address for the device in the router so
+        it will be always the same.
+    </string>
+    <string name="about_legal_section">Legal</string>
+    <string name="about_legal_data">
+        &lt;p&gt;&lt;b&gt;Privacy&lt;/b&gt;&lt;/p&gt;
+        &lt;p&gt;This app does not collect, store, or transmit any personal data.&lt;p&gt;
+        It does not use cookies, analytics, tracking technologies, or any external services that could identify you.
+        &lt;p&gt;All information handled by the app (such as saved devices or configuration preferences) is stored
+        &lt;b&gt;locally on your device only&lt;/b&gt;, using Android\'s standard storage mechanisms (SharedPreferences/DataStore).
+        These data never leave your phone and can be removed at any time by uninstalling the app.&lt;/p&gt;
+        &lt;p&gt;The app does not request any special permissions beyond what is strictly necessary for its functionality,
+        and it does not connect to any external servers other than the one you configure yourself.&lt;/p&gt;
+        &lt;br&gt;
+        &lt;p&gt;&lt;b&gt;License&lt;/b&gt;&lt;/p&gt;
+        &lt;p&gt;This software is distributed under the &lt;b&gt;GNU General Public License version 2 (GPLv2)&lt;/b&gt;.&lt;/p&gt;
+        • You may use the application free of charge.&lt;br/&gt;
+        • You may study and modify the source code.&lt;br/&gt;
+        • You may redistribute it or publish modified versions under the same GPLv2 license.&lt;br/&gt;
+        • You may not distribute modified versions as proprietary software or sell the software without complying with GPLv2.&lt;br/&gt;
+        • You must include credits and the original license notice when publishing modifications.&lt;br/&gt;
+        
+        &lt;p&gt;The GPLv2 ensures that this project remains free, open, and accessible to everyone.&lt;/p&gt;
+    </string>
+
     <string name="settings">Settings</string>
     <string name="settings_refresh_enabled">Auto-refresh Devices</string>
     <string name="settings_refresh_rate">Auto-refresh interval: %1$s seconds</string>
     <string name="label_seconds">seconds</string>
     <string name="label_milliseconds">milliseconds</string>
     <string name="label_menu">Menu</string>
-    <string name="settings_advanced">Advanced options...</string>
-    <string name="settings_advanced_timeout">Network scan timeout: %1$s milliseconds</string>
+    <string name="settings_advanced">Advanced options…</string>
+    <string name="settings_advanced_timeout">Network scan timeout: %1$s ms</string>
     <string name="settings_advanced_timeout_warning">⚠ Setting it too low may cause scan to skip devices; setting it too high may delay scanning.</string>
 </resources>

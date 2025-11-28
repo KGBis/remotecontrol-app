@@ -67,38 +67,77 @@
     <string name="about">Acerca de / Ayuda</string>
     <string name="about_info_section">Información</string>
     <string name="about_info_data">
-    Envía comandos de apagado y Wake-on-LAN a ordenadores dentro de tu red local.\n\n
+        Envía comandos de apagado y Wake-on-LAN a ordenadores dentro de tu red local.&lt;p&gt;
         Basada en \'Wake on Lan\' de Mr.Webb y \'Remote Shutdown\' de Isah Rikovic como un ejercicio para
-        aprender Android/Kotlin.
-        Ambas disponibles en Google Play.
+        aprender Android/Kotlin y un \'todo en uno\'. Ambas aplicaciones disponibles en Google Play.&lt;p&gt;
+        &lt;b&gt;Contacto:&lt;/b&gt;&lt;br/&gt;
+        ✉️ &lt;a href=\"mailto:kike.g.garcia@gmail.com\"&gt;kike.g.garcia@gmail.com&lt;/a&gt;
     </string>
     <string name="about_bys_section">Antes de empezar</string>
     <string name="about_bys_data">
         Para poder usar la funcionalidad de apagado remoto y obtener el nombre de equipo y su MAC, descargue
-        &lt;a href=\"https://github.com/KGBis/remote-shutdown-tray\"&gt;\'Remote PC Control Tray\'&lt;a&gt;.
+        &lt;a href=\"https://github.com/KGBis/remote-shutdown-tray\"&gt;Remote PC Control Tray&lt;/a&gt;.&lt;br/&gt;
     </string>
-    <string name="about_info_data2">
-    Envía comandos de apagado y Wake-on-LAN a ordenadores dentro de tu red local.\n\n
-    Usa el gesto &#x27F3; en la lista de dispositivos para actualizar su estado en la pantalla principal.\n\n
-    Cuando uses la opción \"🔍 Escanear red local\", la aplicación intentará escanear puertos comunes
-    para determinar si el dispositivo está en línea. Usar esta función también asegurará que, si la
-    \"Remote PC Control Tray\" está en ejecución en alguno de los dispositivos, ésta devolverá
-    su nombre de host y dirección MAC automáticamente.
-    \n\nTen en cuenta que, debido a las restricciones de seguridad de Android, a veces este
-    escaneo no devuelve los resultados esperados y algunas máquinas \"en línea\" podrían no aparecer.\n\n
-    Durante la suspensión/hibernación algunos ordenadores aparecerán como &#x1F534; desconectado,
-    mientras que otros se mostrarán como &#x1F7E2; en línea o correctamente como &#x1F7E0; hibernado/suspendido.\n\n
-    Cuando un PC entra en suspensión o hibernación, cada modelo decide qué partes del hardware siguen \"despiertas\".
-    La BIOS o UEFI puede permitir que ciertos puertos de red sigan activos para funciones como encender el equipo a
-    distancia, pero otras veces los apaga para ahorrar energía. Además, el sistema operativo también puede limitar
-    o desactivar esos puertos según la configuración de energía. Por eso, dos ordenadores aparentemente iguales
-    pueden comportarse distinto: uno mantiene el puerto de red escuchando y el otro lo apaga por completo mientras
-    duerme.</string>
-    <string name="about_options_section">Autorefresco</string>
-    <string name="about_options_data">
-    Set the \"autorefresh\" option on to scan for computer status changes in the main device list. Set it off
-    to use refresh by &#x27F3; gesture only.
+    <string name="about_limitations_section">Limitaciones conocidas</string>
+    <string name="about_limitations_data">
+        Debido a las restricciones de seguridad de Android, desde Android 13 en adelante, ya no es posible
+        hacer ping ni consultar la tabla ARP para obtener el estado, el nombre de host y la dirección MAC
+        del dispositivo de destino. Esto significa que, para el escaneo, se debe utilizar un método de
+        prueba y error, consultando algunos puertos TCP conocidos, normalmente abiertos en el sistema
+        operativo del dispositivo de destino.&lt;p&gt;
+        Si &lt;i&gt;&lt;b&gt;Remote PC Control Tray&lt;/b&gt;&lt;/i&gt; se está ejecutando en el ordenador
+        el primer intento es alcanzar su puerto de escucha e intentará devolver tanto el nombre de host como
+        su dirección MAC. De lo contrario, no se devolverán ni el nombre de host ni la dirección MAC,
+        y deberán introducirse manualmente.
     </string>
+    <string name="about_scan_section">El escaneo no encuentra mis dispositivos</string>
+    <string name="about_scan_data">
+        Primero, asegúrese de que sus dispositivos estén encendidos. El escaneo de dispositivos solo funcionará
+        con dispositivos encendidos.&lt;p&gt;
+        El escaneo a veces puede pasar por alto un dispositivo si no responde con la suficiente rapidez al
+        intento de conexión. Intentarlo de nuevo o aumentar el &lt;i&gt;timeout&lt;/i&gt; podría detectar los
+        dispositivos faltantes. Si no se detecta, siempre puede agregarlo manualmente.&lt;p&gt;
+        Consulte la sección &lt;i&gt;&lt;b&gt;Limitaciones conocidas&lt;/b&gt;&lt;/i&gt; para obtener más
+        información al respecto.&lt;p&gt;
+        &lt;i&gt;&lt;b&gt;⚠ Ajustar demasiado bajo el timeout puede perder equipos; demasiado alto puede retrasar
+        el escaneo.&lt;/b&gt;&lt;/i&gt;
+    </string>
+    <string name="about_status_section">El estado de los dispositivos es erróneo</string>
+    <string name="about_status_data">
+        A veces, el estado que se muestra en la lista de dispositivos de la pantalla principal es incorrecto o
+        no coincide con el estado real del dispositivo. Esto puede deberse a las &lt;i&gt;Limitaciones conocidas&lt;/i&gt;
+        o a la forma en que los sistemas operativos/BIOS modernos gestionan el ahorro de energía.&lt;p&gt;
+        Se han observado comportamientos extraños cuando un dispositivo está en suspensión o hibernación, lo que provoca
+        que no pueda acceder a puertos que en otros sistemas no están disponibles y viceversa, mostrando un estado
+        incorrecto. Parece depender de los fabricantes.&lt;p&gt;
+        Para los dispositivos que se muestran como &lt;i&gt;apagados&lt;/i&gt; cuando están encendidos, una causa común
+        es el uso de la asignación automática de IP por parte del DHCP del router. Al usar DHCP, es posible que al
+        dispositivo añadido se le haya asignado una dirección IP diferente, mostrándose como apagado.&lt;p&gt;
+        Para solucionar esto, simplemente cambie la dirección IP en la aplicación o asigne una dirección IP estática al
+        dispositivo en el router para que siempre sea la misma.
+    </string>
+    <string name="about_legal_section">Legal</string>
+    <string name="about_legal_data">
+        &lt;p&gt;&lt;b&gt;Privacidad&lt;/b&gt;&lt;/p&gt;
+        &lt;p&gt;Esta aplicación no recopila, almacena ni transmite ningún dato personal.&lt;br&gt;
+        No utiliza cookies, analíticas, rastreadores ni servicios externos que puedan identificarte.&lt;/p&gt;
+        &lt;p&gt;Toda la información que maneja la aplicación (como dispositivos añadidos o preferencias de configuración) 
+        se guarda &lt;b&gt;únicamente en tu dispositivo&lt;/b&gt;, usando los mecanismos estándar de Android 
+        (SharedPreferences/DataStore).&lt;br&gt;Estos datos nunca abandonan tu teléfono y puedes borrarlos cuando quieras 
+        desinstalando la aplicación.&lt;/p&gt;
+        &lt;p&gt;La aplicación no requiere permisos especiales más allá de los mínimos necesarios para funcionar, y no 
+        se conecta a ningún servidor externo que no sea el que tú mismo configures.&lt;/p&gt;
+        &lt;br&gt;
+        &lt;p&gt;&lt;b&gt;Licencia&lt;/b&gt;&lt;/p&gt;
+        &lt;p&gt;Este software se distribuye bajo la licencia &lt;b&gt;GNU General Public License versión 2 (GPLv2)&lt;/b&gt;.&lt;/p&gt;
+        • Puedes usar la aplicación de manera gratuita.&lt;br/&gt;
+        • Puedes estudiar y modificar el código.&lt;br/&gt;
+        • Puedes redistribuirla o publicar tus propias versiones manteniendo la licencia GPLv2.&lt;br/&gt;
+        • No puedes distribuir versiones modificadas como software propietario ni vender el software sin cumplir la GPLv2.&lt;br/&gt;
+        • Debes incluir los créditos y el aviso de licencia si publicas una modificación.&lt;br/&gt;
+        &lt;p&gt;La GPLv2 garantiza que este proyecto siga siendo libre, abierto y accesible para todos.&lt;/p&gt;
+    </string>
+
     <string name="settings">Configuración</string>
     <string name="settings_refresh_enabled">Autorefresco de dispositivos</string>
     <string name="settings_refresh_rate">Intervalo de autorefresco: %1$s segundos</string>
@@ -106,6 +145,6 @@
     <string name="label_milliseconds">milisegundos</string>
     <string name="label_menu">Menú</string>
     <string name="settings_advanced">Opciones avanzadas…</string>
-    <string name="settings_advanced_timeout">Timeout escaneo de red: %1$s milisegundos</string>
+    <string name="settings_advanced_timeout">Timeout escaneo de red: %1$s ms</string>
     <string name="settings_advanced_timeout_warning">⚠ Ajustar demasiado bajo puede perder equipos; demasiado alto puede retrasar el escaneo.</string>
 </resources>
