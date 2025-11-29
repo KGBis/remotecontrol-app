@@ -101,7 +101,7 @@ fun AddOrEditDeviceScreen(
         ) {
             val modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .fillMaxWidth(0.5f)
+                .fillMaxWidth(0.75f)
 
             OutlinedTextField(
                 value = name,

@@ -14,8 +14,8 @@ android {
         applicationId = "com.example.remote.shutdown"
         minSdk = 31
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.3"
+        versionCode = (project.properties["VERSION_CODE"] ?: "1").toString().toInt()
+        versionName = (project.properties["VERSION_NAME"] ?: "1.0.0") as String?
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
