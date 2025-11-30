@@ -26,7 +26,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.remote.shutdown.BuildConfig
@@ -101,63 +100,6 @@ fun AboutScreen(navController: NavController, viewModel: MainViewModel) {
 
                 Spacer(Modifier.height(16.dp))
             }
-
-            // ---------- INFO SECTION ----------
-            /*SectionCard(title = stringResource(R.string.about_info_section)) {
-                Text(stringResource(R.string.about_info_data),
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Justify,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // ---------- OPTIONS SECTION ----------
-            SectionCard(title = stringResource(R.string.about_options_section)) {
-                Text(stringResource(R.string.about_options_data),
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // ---------- SECCIÓN ENLACES ----------
-            SectionCard(title = "Enlaces") {
-
-                LinkItem(
-                    icon = Icons.Default.Code,
-                    text = "Remote PC Control Tray"
-                ) {
-                    // TODO abrir URL
-                }
-
-                HorizontalDivider()
-
-                LinkItem(
-                    icon = Icons.Default.Email,
-                    text = "Contacto y soporte"
-                ) {
-                    // TODO abrir correo
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // ---------- LICENCIA ----------
-            SectionCard(title = "Licencia") {
-                Text(
-                    "MIT License",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Software de código abierto. Úsese libremente bajo los términos de la licencia MIT.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }*/
         }
     }
 }

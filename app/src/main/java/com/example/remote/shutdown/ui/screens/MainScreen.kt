@@ -107,26 +107,6 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        /*topBar = {
-            TopAppBar(
-                modifier = Modifier.fillMaxWidth(),
-                title = {
-                    Text(
-                        "⚡ " + stringResource(R.string.app_name),
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.Center
-                    )
-                },
-                actions = {
-                    IconButton(onClick = {
-                        @Suppress("AssignedValueIsNeverRead")
-                        sheetOpen = true
-                    }) {
-                        Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.about))
-                    }
-                }
-            )
-        },*/
         topBar = {
             AppTopBar(
                 navController = navController,

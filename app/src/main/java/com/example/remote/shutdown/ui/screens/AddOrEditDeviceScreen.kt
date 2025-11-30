@@ -1,6 +1,5 @@
 package com.example.remote.shutdown.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,10 +21,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,13 +33,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.remote.shutdown.R
 import com.example.remote.shutdown.data.Device
-import com.example.remote.shutdown.network.NetworkRangeDetector
-import com.example.remote.shutdown.network.NetworkScanner.scanLocalNetwork
+import com.example.remote.shutdown.network.ScanState
 import com.example.remote.shutdown.ui.components.DetectedDevicesList
 import com.example.remote.shutdown.ui.components.ValidatingTextField
 import com.example.remote.shutdown.util.Utils
 import com.example.remote.shutdown.viewmodel.MainViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +45,7 @@ fun AddOrEditDeviceScreen(
     navController: NavController, viewModel: MainViewModel,
     deviceToEdit: Device? = null
 ) {
-    val networkRangeDetector = NetworkRangeDetector()
+    // val networkRangeDetector = NetworkRangeDetector()
 
     // Fields
     var name by remember {
@@ -69,9 +66,14 @@ fun AddOrEditDeviceScreen(
     }
 
     // scanning
-    var scanning by remember { mutableStateOf(false) }
-    var results by remember { mutableStateOf(listOf<Device>()) }
-    val scope = rememberCoroutineScope()
+    val total = 255
+    val scanProgress by viewModel.scanProgress.collectAsState()
+    val results by viewModel.scanResults.collectAsState()
+    val scanState by viewModel.scanState.collectAsState()
+
+    val scanning = scanState == ScanState.Running
+
+    // val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -158,32 +160,21 @@ fun AddOrEditDeviceScreen(
             if (deviceToEdit == null) {
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(
-                    enabled = !scanning,
                     onClick = {
-                        scanning = true
-                        results = arrayListOf()
-                        scope.launch {
-                            val pair = startScan(networkRangeDetector, viewModel)
-                            results = pair.first
-                            scanning = pair.second
-                        }
+                        if (!scanning) viewModel.startScan()
+                        else viewModel.cancelScan()
                     },
-                    modifier = Modifier
-                        .fillMaxWidth(0.75f)
-                        .align(Alignment.CenterHorizontally)
+                    enabled = true,
+                    modifier = Modifier.fillMaxWidth(0.75f).align(Alignment.CenterHorizontally)
                 ) {
                     if (scanning) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
+                        // TODO Replace "click to cancel" with i18n!
+                        Text("${stringResource(R.string.network_scan_running)} ${(scanProgress * 100 / total)}% - Click to cancel")
+                    } else {
+                        Text(stringResource(R.string.network_scan_button))
                     }
-                    Text(
-                        if (scanning) stringResource(R.string.network_scan_running) else stringResource(
-                            R.string.network_scan_button
-                        )
-                    )
                 }
 
                 Spacer(Modifier.height(16.dp))
@@ -202,29 +193,4 @@ fun AddOrEditDeviceScreen(
             }
         }
     }
-}
-
-private suspend fun startScan(
-    networkRangeDetector: NetworkRangeDetector,
-    viewModel: MainViewModel
-): Pair<List<Device>, Boolean> {
-    // list of router IPs
-    val knownRouters = viewModel.routerIps
-
-    // for time lapse calc
-    val b = System.currentTimeMillis()
-
-    // detect local network and scan it
-    val networkRange = networkRangeDetector.getScanSubnet()
-    val results = scanLocalNetwork(baseIp = networkRange, maxConcurrent = 30)
-
-    // Try to find router(s) among the results
-    results.forEach { device ->
-        if (knownRouters.contains(device.ip)) {
-            device.name = "Router"
-        }
-    }
-
-    Log.d("startScan", "Time to scan subnet -> ${System.currentTimeMillis() - b} millis")
-    return Pair(results, false)
 }

@@ -10,6 +10,7 @@ import com.example.remote.shutdown.network.NetworkActions
 import com.example.remote.shutdown.network.NetworkRangeDetector
 import com.example.remote.shutdown.network.NetworkScanner
 import com.example.remote.shutdown.network.NetworkScanner.deviceStatus
+import com.example.remote.shutdown.network.ScanManager
 import com.example.remote.shutdown.repository.DeviceRepository
 import com.example.remote.shutdown.repository.SettingsRepository
 import com.example.remote.shutdown.util.Utils.loadAboutKeys
@@ -17,7 +18,9 @@ import com.example.remote.shutdown.util.Utils.loadRouterIps
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -192,6 +195,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val aboutKeys: Map<String, String> by lazy {
         loadAboutKeys(getApplication())
     }
+
+    /* Network scan manager stuff  */
+
+    // ---- Scan Manager ----
+    private val scanManager by lazy {
+        ScanManager(
+            networkRangeDetector = networkRangeDetector,
+            timeout = socketTimeout.value,
+            maxConcurrent = 30
+        )
+    }
+
+    val scanProgress = scanManager.progress
+    val scanResults = scanManager.results
+    val scanState = scanManager.state
+
+    fun startScan() = scanManager.startScan()
+    fun cancelScan() = scanManager.cancelScan()
 
     // Class initializer. Load list of stored devices
     init {

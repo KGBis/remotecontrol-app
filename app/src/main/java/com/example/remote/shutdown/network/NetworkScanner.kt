@@ -4,16 +4,9 @@ import android.util.Log
 import com.example.remote.shutdown.data.Device
 import com.example.remote.shutdown.data.DeviceStatus
 import com.example.remote.shutdown.data.State
-import com.example.remote.shutdown.network.NetworkActions.sendMessage
 import com.example.remote.shutdown.network.NetworkScanner.portsToScan
-import com.example.remote.shutdown.util.Constants.DEFAULT_SUBNET
 import com.example.remote.shutdown.util.Constants.SHUTDOWN_PORT
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -39,53 +32,7 @@ object NetworkScanner {
     private val portsToScan =
         DEEP_PORTS + GHOST_PORTS // listOf(445, 135, 22, 80, 443, 139, 3389, 6800)
 
-    val networkRangeDetector = NetworkRangeDetector()
-
-    /**
-     * Scans local network (i.e. 192.168.1.1 to 254 range) concurrently.
-     * @return Device list of reachable (online) devices
-     */
-    suspend fun scanLocalNetwork(
-        baseIp: String = DEFAULT_SUBNET,
-        maxConcurrent: Int = 20
-    ): List<Device> = coroutineScope {
-        val semaphore = Semaphore(maxConcurrent)
-        val localAddress = networkRangeDetector.getLocalAddress()
-        val jobs = (1..254).map { i ->
-            async(Dispatchers.IO) {
-                val ip = "$baseIp.$i"
-
-                if(ip == localAddress) {
-                    Log.i("scanLocalNetwork", "*** Skipping $ip as it's local host")
-                    return@async null
-                }
-
-                // Limitar la concurrencia
-                semaphore.withPermit {
-                    if (checkPcStatus(ip)) {
-                        getInfoForIp(ip)
-                    } else null
-                }
-            }
-        }
-
-        jobs.awaitAll().filterNotNull()
-    }
-
-    private suspend fun getInfoForIp(ip: String): Device {
-        val device = Device(ip, ip, "")
-        val now = System.currentTimeMillis()
-        val result = sendMessage(device, "INFO ${device.ip}", ::infoRequest, 1500)
-        if (result != null) {
-            device.name = result.second
-            device.mac = result.third
-        }
-        Log.d(
-            "scanLocalNetwork",
-            "Took ${System.currentTimeMillis() - now} ms. success? ${result?.first ?: false}, Device -> $device"
-        )
-        return device
-    }
+    // val networkRangeDetector = NetworkRangeDetector()
 
     fun infoRequest(message: String, device: Device): Triple<Boolean, String, String> {
         Log.d("infoRequest", "Processing INFO response")
