@@ -75,7 +75,14 @@ class ScanManager(
                                 null
 
                             if (device != null) {
-                                synchronized(devices) { devices.add(device) }
+                                synchronized(devices) {
+                                    devices.add(device)
+                                    devices.sortWith { o1, o2 ->
+                                        val ip1 = o1.ip.split(".").last().toInt()
+                                        val ip2 = o2.ip.split(".").last().toInt()
+                                        ip1.compareTo(ip2)
+                                    }
+                                }
                                 _results.value = devices.toList()
                             }
 

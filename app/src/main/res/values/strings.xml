@@ -57,7 +57,7 @@
     <string name="error_invalid_mac">Invalid MAC address</string>
     <string name="error_empty_fields">⚠️ All required fields must be filled</string>
     <string name="network_scan_button">🔍 Scan local network</string>
-    <string name="network_scan_running">Scanning…</string>
+    <string name="network_scan_running">Scanning… %1$s%% - Click to cancel</string>
     <string name="network_scan_done">✔ Scan completed</string>
     <string name="no_devices_found">No devices found</string>
     <string name="devices_found">Devices found:</string>

@@ -112,7 +112,7 @@ object NetworkActions {
     }
 
     /**
-     * Returns (IP, máscara) if network interface is valid
+     * Returns (IP, mask) if network interface is valid
      */
     fun getLocalIpAndMask(): Pair<String, String>? {
         val interfaces = NetworkInterface.getNetworkInterfaces()

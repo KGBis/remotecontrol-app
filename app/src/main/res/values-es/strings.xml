@@ -56,7 +56,7 @@
     <string name="error_invalid_mac">Dirección MAC no válida</string>
     <string name="error_empty_fields">⚠️ Todos los campos obligatorios deben estar completos</string>
     <string name="network_scan_button">🔍 Escanear red local</string>
-    <string name="network_scan_running">Escaneando…</string>
+    <string name="network_scan_running">Escaneando… %1$s%% - Clic para cancelar</string>
     <string name="network_scan_done">✔ Escaneo completado</string>
     <string name="no_devices_found">Ningún dispositivo encontrado</string>
     <string name="devices_found">Dispositivos detectados:</string>

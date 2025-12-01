@@ -165,13 +165,22 @@ fun AddOrEditDeviceScreen(
                         else viewModel.cancelScan()
                     },
                     enabled = true,
-                    modifier = Modifier.fillMaxWidth(0.75f).align(Alignment.CenterHorizontally)
+                    modifier = Modifier
+                        .fillMaxWidth(0.75f)
+                        .align(Alignment.CenterHorizontally)
                 ) {
                     if (scanning) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                        CircularProgressIndicator(
+                            progress = { scanProgress / total.toFloat() },
+                            modifier = Modifier.size(20.dp)
+                        )
                         Spacer(Modifier.width(8.dp))
-                        // TODO Replace "click to cancel" with i18n!
-                        Text("${stringResource(R.string.network_scan_running)} ${(scanProgress * 100 / total)}% - Click to cancel")
+                        Text(
+                            stringResource(
+                                R.string.network_scan_running,
+                                (scanProgress * 100 / total)
+                            )
+                        )
                     } else {
                         Text(stringResource(R.string.network_scan_button))
                     }
