@@ -97,7 +97,10 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
             while (true) {
                 if (autorefreshEnabled) {
                     Log.d("LaunchedEffect", "Triggered refresh statuses...")
+                    val ini = System.currentTimeMillis()
                     viewModel.refreshStatuses()
+                    val end = System.currentTimeMillis()
+                    Log.d("LaunchedEffect", "Refresh took ${end - ini} milliseconds")
                 }
                 Log.d("LaunchedEffect", "waiting ${autorefreshInterval.toInt()} seconds")
                 delay(autorefreshInterval.toLong() * 1000) // millis here

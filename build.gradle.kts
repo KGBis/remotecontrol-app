@@ -1,3 +1,6 @@
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias(libs.plugins.android.application) apply false
@@ -7,6 +10,7 @@ plugins {
 
 tasks.register("incrementVersion") {
     doLast {
+        logger.lifecycle("[Version Hook] Reading 'gradle.properties'…")
         val file = file("gradle.properties")
         val props = java.util.Properties()
         file.inputStream().use { props.load(it) }
@@ -15,17 +19,27 @@ tasks.register("incrementVersion") {
         val currentCode = props.getProperty("VERSION_CODE")?.toInt() ?: 1
         val newCode = currentCode + 1
         props.setProperty("VERSION_CODE", newCode.toString())
+        logger.lifecycle("[Version Hook] updating 'VERSION_CODE' from $currentCode to $newCode")
 
-        // --- versionName: incrementa solo el patch ---
-        val currentName = props.getProperty("VERSION_NAME") ?: "1.0.0"
-        val parts = currentName.split(".").map { it.toInt() }.toMutableList()
-        parts[2] += 1
-        val newName = parts.joinToString(".")
+        // --- versionName: in yyyy.MM.dd.commit_number ---
+        val currentDateStr = DateTimeFormatter.ofPattern("yyyy.MM.dd").format(LocalDate.now())
+        val currentName = props.getProperty("VERSION_NAME") ?: "$currentDateStr.1"
+
+        val previousDateStr = currentName.substringBeforeLast(".") // just the date
+        val previousCommit = currentName.substringAfterLast(".").toInt() // the revision
+
+        var newName: String
+        if(previousDateStr == currentDateStr) { // when in the same day commit + 1
+            val currentCommit = previousCommit + 1
+            newName = "$currentDateStr.$currentCommit"
+        } else {
+            newName = "$currentDateStr.1"
+        }
         props.setProperty("VERSION_NAME", newName)
 
         // Guardar
         file.outputStream().use { props.store(it, null) }
 
-        println("Updated version → versionCode=$newCode, versionName=$newName")
+        logger.lifecycle("[Version Hook] Updated version → versionCode=$newCode, versionName=$newName")
     }
 }

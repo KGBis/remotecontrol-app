@@ -72,6 +72,7 @@ object NetworkScanner {
             Log.w("deviceStatus", "ip: ${device.ip} switchedOn: $switchedOn, hibernating: $hibernating, shutdown: $shutdown")*/
 
             // If we're not in the same subnet as the device, why bother asking network?
+            Log.d("deviceStatus", "device ip = ${device.ip}, subnet = $subnet... Want to refresh? ${device.ip.startsWith(subnet)} ")
             if (!device.ip.startsWith(subnet)) {
                 return@withContext DeviceStatus()
             }
