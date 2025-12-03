@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
 }
 
+
 tasks.register("incrementVersion") {
     doLast {
         logger.lifecycle("[Version Hook] Reading 'gradle.properties'…")

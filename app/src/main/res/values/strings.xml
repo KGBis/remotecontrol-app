@@ -5,6 +5,7 @@
 
     <!-- Common -->
     <string name="back">Back</string>
+    <string name="ok">Ok</string>
 
     <!-- Main screen -->
     <string name="scan_network">🔍 Scan local network</string>

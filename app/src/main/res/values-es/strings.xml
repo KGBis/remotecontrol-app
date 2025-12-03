@@ -5,6 +5,7 @@
 
     <!-- Common -->
     <string name="back">Atrás</string>
+    <string name="ok">Vale</string>
 
     <!-- Pantalla principal -->
     <string name="scan_network">🔍 Escanear red local</string>

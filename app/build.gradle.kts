@@ -7,15 +7,15 @@ plugins {
 }
 
 android {
-    namespace = "com.example.remote.shutdown"
+    namespace = "io.github.kgbis.remotecontrol.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.remote.shutdown"
-        minSdk = 31
+        applicationId = "io.github.kgbis.remotecontrol.app"
+        minSdk = 30 // Android 11
         targetSdk = 36
         versionCode = (project.properties["VERSION_CODE"] ?: "1").toString().toInt()
-        versionName = (project.properties["VERSION_NAME"] ?: "1.0.0") as String?
+        versionName = (project.properties["VERSION_NAME"] ?: "2025.11.25.1") as String?
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -48,10 +48,6 @@ android {
         }
     }
 
-    /*kotlinOptions {
-        jvmTarget = "11"
-    }*/
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -72,17 +68,24 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+
+    // Material3
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.core.splashscreen)
+
+    // Material icons (Icon.Default.*)
+    implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.material) // solo para compatibilidad con Iconos y componentes legacy
+
+    // Jetpack / Compose
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.ui)
-    implementation(libs.ui.tooling.preview)
-    implementation(libs.gson)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material)
+
+    // others
+    implementation(libs.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -90,8 +93,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.testing)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-    // Material icons (para Icons.Default.*)
-    implementation(libs.androidx.compose.material.icons.core)
-    implementation(libs.androidx.compose.material.icons.extended)
 }
