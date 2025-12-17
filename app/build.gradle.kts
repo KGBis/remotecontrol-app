@@ -75,7 +75,7 @@ dependencies {
     // Material icons (Icon.Default.*)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.compose.material) // solo para compatibilidad con Iconos y componentes legacy
+    implementation(libs.androidx.compose.material)
 
     // Jetpack / Compose
     implementation(libs.androidx.datastore.preferences)

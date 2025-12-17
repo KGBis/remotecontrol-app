@@ -4,7 +4,8 @@ import android.util.Log
 import io.github.kgbis.remotecontrol.app.data.Device
 import io.github.kgbis.remotecontrol.app.data.DeviceStatus
 import io.github.kgbis.remotecontrol.app.data.State
-import io.github.kgbis.remotecontrol.app.network.NetworkScanner.portsToScan
+import kotlinx.coroutines.CoroutineDispatcher
+// import io.github.kgbis.remotecontrol.app.network.NetworkScanner.portsToScan
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
@@ -28,10 +29,9 @@ object NetworkScanner {
         139    // NetBIOS
     )
 
-    private val portsToScan =
-        DEEP_PORTS + GHOST_PORTS // listOf(445, 135, 22, 80, 443, 139, 3389, 6800)
+    private val portsToScan = listOf(SHUTDOWN_PORT) + DEEP_PORTS + GHOST_PORTS
 
-    // val networkRangeDetector = NetworkRangeDetector()
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 
     fun infoRequest(message: String, device: Device): Triple<Boolean, String, String> {
         Log.d("infoRequest", "Processing INFO response")
@@ -63,28 +63,27 @@ object NetworkScanner {
      * 3. Check if device has its MAC filled in the app. If so, Wake-on-LAN can be used.
      */
     suspend fun deviceStatus(device: Device, subnet: String, timeout: Int = 500): DeviceStatus =
-        withContext(Dispatchers.IO) {
-            /*val switchedOn = isPcOnline(device.ip, DEEP_PORTS)
-            val hibernating = isPcOnline(device.ip, GHOST_PORTS)
-            val shutdown = canConnect(device.ip, SHUTDOWN_PORT, timeout)
-
-            Log.w("deviceStatus", "ip: ${device.ip} switchedOn: $switchedOn, hibernating: $hibernating, shutdown: $shutdown")*/
-
+        withContext(dispatcher) {
             // If we're not in the same subnet as the device, why bother asking network?
-            Log.d("deviceStatus", "device ip = ${device.ip}, subnet = $subnet... Want to refresh? ${device.ip.startsWith(subnet)} ")
+            Log.d(
+                "deviceStatus",
+                "device ip = ${device.ip}, subnet = $subnet... Want to refresh? ${
+                    device.ip.startsWith(subnet)
+                } "
+            )
             if (!device.ip.startsWith(subnet)) {
                 return@withContext DeviceStatus()
             }
 
-            when (canConnect(device.ip, SHUTDOWN_PORT, timeout)) {
+            return@withContext when (canConnect(device.ip, SHUTDOWN_PORT, timeout)) {
                 null -> { // network errors: broken DNS, host unreachable, etc.
                     Log.d("deviceStatus", "Status cannot be determined. Network error")
-                    return@withContext DeviceStatus()
+                    DeviceStatus()
                 }
 
                 true -> { // Port 6800 replies → Fully online
                     Log.d("deviceStatus", "${device.ip} is online and can shutdown")
-                    return@withContext DeviceStatus(
+                    DeviceStatus(
                         state = State.Awake,
                         isOnline = true,
                         canShutdown = true
@@ -99,7 +98,7 @@ object NetworkScanner {
                             "deviceStatus",
                             "${device.ip} is online by checking one of $DEEP_PORTS"
                         )
-                        return@withContext DeviceStatus(state = State.Awake, isOnline = true)
+                        DeviceStatus(state = State.Awake, isOnline = true)
                     }
 
                     // try Hibernate/suspend ports that are reachable
@@ -110,16 +109,16 @@ object NetworkScanner {
                             "deviceStatus",
                             "${device.ip} is in standby or hibernating by checking one of $GHOST_PORTS"
                         )
-                        return@withContext DeviceStatus(
+                        DeviceStatus(
                             state = State.HibernateOrStandby,
                             isOnline = false,
                             canWakeup = canWakeup
                         )
                     }
 
-                    // if nothing of the above... it's down
+                    // if nothing of the above... it's probably down
                     Log.d("deviceStatus", "${device.ip} seems to be down")
-                    return@withContext DeviceStatus(state = State.Down, canWakeup = canWakeup)
+                    DeviceStatus(state = State.Down, canWakeup = canWakeup)
                 }
             }
         }
@@ -129,20 +128,20 @@ object NetworkScanner {
      * If none of the ports connect, `false` is returned
      */
     suspend fun isPcOnline(ip: String, portList: List<Int> = portsToScan): Boolean =
-        withContext(Dispatchers.IO) {
+        withContext(dispatcher) {
             val init = System.currentTimeMillis()
-            if (checkPcStatus(ip, portList)) {
+            return@withContext if (checkPcStatus(ip, portList)) {
                 Log.d(
                     "isPcOnline",
                     "$ip ==> END isPcOnline in ${System.currentTimeMillis() - init} ms"
                 )
-                return@withContext true
+                true
             } else {
                 Log.d(
                     "isPcOnline",
                     "$ip ==> END isPcOnline FALSE in ${System.currentTimeMillis() - init} ms"
                 )
-                return@withContext false
+                false
             }
         }
 
@@ -156,7 +155,7 @@ object NetworkScanner {
         timeout: Int = 500
     ): Boolean {
         return portList.any { port ->
-            withContext(Dispatchers.IO) {
+            withContext(dispatcher) {
                 Log.d("checkPcStatus", "Checking $ip @ $port")
                 val result = canConnect(ip, port, timeout) ?: false
                 Log.d("checkPcStatus", "Result in $ip @ $port -> $result")
