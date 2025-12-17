@@ -66,7 +66,10 @@ fun AddOrEditDeviceScreen(
     // scanning
     val total = 255
     val scanProgress by viewModel.scanProgress.collectAsState()
+
+    // TODO: Clean scan results when screen shows up
     val results by viewModel.scanResults.collectAsState()
+
     val scanState by viewModel.scanState.collectAsState()
 
     val scanning = scanState == ScanState.Running
