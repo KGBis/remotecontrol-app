@@ -45,8 +45,6 @@ fun AddOrEditDeviceScreen(
     navController: NavController, viewModel: MainViewModel,
     deviceToEdit: Device? = null
 ) {
-    // val networkRangeDetector = NetworkRangeDetector()
-
     // Fields
     var name by remember {
         if (deviceToEdit == null) mutableStateOf("") else mutableStateOf(
@@ -73,8 +71,6 @@ fun AddOrEditDeviceScreen(
 
     val scanning = scanState == ScanState.Running
 
-    // val scope = rememberCoroutineScope()
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -86,7 +82,10 @@ fun AddOrEditDeviceScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        viewModel.cancelScan()
+                        navController.popBackStack()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
