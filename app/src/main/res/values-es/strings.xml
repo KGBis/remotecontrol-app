@@ -18,9 +18,9 @@
 
     <!-- Delay Options -->
     <string name="delay_now">Sin espera</string>
-    <string name="delay_15s">15 segundos</string>
-    <string name="delay_30s">30 minutos</string>
     <string name="delay_1m">1 minuto</string>
+    <string name="delay_5m">5 minutos</string>
+    <string name="delay_10m">10 minutos</string>
     <string name="delay_15m">15 minutos</string>
     <string name="delay_30m">30 minutos</string>
     <string name="delay_1h">1 hora</string>

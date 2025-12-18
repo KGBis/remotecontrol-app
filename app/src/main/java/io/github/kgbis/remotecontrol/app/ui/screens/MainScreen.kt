@@ -37,19 +37,25 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.data.shutdownDelayOptions
 import io.github.kgbis.remotecontrol.app.ui.components.AppTopBar
 import io.github.kgbis.remotecontrol.app.ui.components.DeviceItem
 import io.github.kgbis.remotecontrol.app.ui.components.ShutdownDelayDropdown
-import io.github.kgbis.remotecontrol.app.viewmodel.MainViewModel
+import io.github.kgbis.remotecontrol.app.viewmodel.DevicesViewModel
+import io.github.kgbis.remotecontrol.app.viewmodel.SettingsViewModel
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavController, viewModel: MainViewModel) {
-    val devices by viewModel.devices.collectAsState()
+fun MainScreen(
+    navController: NavController,
+    devicesVm: DevicesViewModel,
+    settingsVm: SettingsViewModel = viewModel()
+) {
+    val devices by devicesVm.devices.collectAsState()
 
     var showSnackbar by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -60,15 +66,12 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
     val context = LocalContext.current
 
     // for shutdown
-    val delay by viewModel.shutdownDelay.collectAsState()
-    val unit by viewModel.shutdownUnit.collectAsState()
-
-    // for about/settings
-    /*var sheetOpen by remember { mutableStateOf(false) }*/
+    val delay by settingsVm.shutdownDelay.collectAsState()
+    val unit by settingsVm.shutdownUnit.collectAsState()
 
     // for auto-refresh
-    val autorefreshEnabled by viewModel.autoRefreshEnabled.collectAsState()
-    val autorefreshInterval by viewModel.autoRefreshInterval.collectAsState()
+    val autorefreshEnabled = false// by settingsVm.autoRefreshEnabled.collectAsState()
+    val autorefreshInterval by settingsVm.autoRefreshInterval.collectAsState()
 
     // Snackbar autoclose
     LaunchedEffect(showSnackbar) {
@@ -85,9 +88,11 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
     }
 
     // to refresh status when changes occur in device list
-    LaunchedEffect(devices) {
-        if (devices.isNotEmpty()) {
-            viewModel.refreshStatuses()
+    if (autorefreshEnabled) { // TODO Remove when not in BM-162
+        LaunchedEffect(devices) {
+            if (devices.isNotEmpty()) {
+                devicesVm.refreshStatuses()
+            }
         }
     }
 
@@ -99,7 +104,7 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                 if (autorefreshEnabled) {
                     Log.d("LaunchedEffect", "Triggered refresh statuses...")
                     val ini = System.currentTimeMillis()
-                    viewModel.refreshStatuses()
+                    devicesVm.refreshStatuses()
                     val end = System.currentTimeMillis()
                     Log.d("LaunchedEffect", "Refresh took ${end - ini} milliseconds")
                 }
@@ -114,7 +119,7 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
         topBar = {
             AppTopBar(
                 navController = navController,
-                viewModel = viewModel
+                settingsVm = settingsVm
             )
         },
         floatingActionButton = {
@@ -134,7 +139,7 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
             onRefresh = {
                 @Suppress("AssignedValueIsNeverRead")
                 pulltoRefreshIsRefreshing = true
-                viewModel.refreshStatuses()
+                devicesVm.refreshStatuses()
                 @Suppress("AssignedValueIsNeverRead")
                 pulltoRefreshIsRefreshing = false
             }
@@ -154,7 +159,7 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                     textAlign = TextAlign.Center
                 )
                 // Custom dropdown for the shutdown delay option list
-                ShutdownDelayDropdown(viewModel = viewModel, options = shutdownDelayOptions)
+                ShutdownDelayDropdown(viewModel = settingsVm, options = shutdownDelayOptions)
 
                 Spacer(Modifier.height(16.dp))
 
@@ -172,9 +177,9 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                             val device = devices[index]
                             DeviceItem(
                                 device = device,
-                                viewModel = viewModel,
+                                devicesVm = devicesVm,
                                 onShutdown = {
-                                    viewModel.sendShutdownCommand(
+                                    devicesVm.sendShutdownCommand(
                                         device,
                                         delay,
                                         unit.name
@@ -193,7 +198,7 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                                     }
                                 },
                                 onWake = {
-                                    viewModel.wakeOnLan(device) { success ->
+                                    devicesVm.wakeOnLan(device) { success ->
                                         showSnackbar =
                                             if (success)
                                                 context.getString(
@@ -209,7 +214,7 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                                 },
                                 onDelete = {
                                     showSnackbar = context.getString(R.string.device_removed)
-                                    viewModel.removeDevice(device)
+                                    devicesVm.removeDevice(device)
                                 },
                                 onEdit = {
                                     navController.navigate("edit_device/${device.ip}")
@@ -218,20 +223,6 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
                         }
                     }
                 }
-
-                /*if (sheetOpen) {
-                    SettingsBottomSheet(
-                        enabled = autorefreshEnabled,
-                        interval = autorefreshInterval.toFloat(),
-                        onEnabledChange = { viewModel.setAutoRefreshEnabled(it) },
-                        onIntervalChange = { viewModel.setAutoRefreshInterval(it) },
-                        onAboutClick = {
-                            sheetOpen = false
-                            navController.navigate("about")
-                        },
-                        onDismiss = { sheetOpen = false }
-                    )
-                }*/
             }
         }
     }

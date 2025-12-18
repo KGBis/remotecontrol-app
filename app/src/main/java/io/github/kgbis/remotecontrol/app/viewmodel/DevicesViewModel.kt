@@ -9,51 +9,46 @@ import io.github.kgbis.remotecontrol.app.data.DeviceStatus
 import io.github.kgbis.remotecontrol.app.network.NetworkActions
 import io.github.kgbis.remotecontrol.app.network.NetworkRangeDetector
 import io.github.kgbis.remotecontrol.app.network.NetworkScanner
-import io.github.kgbis.remotecontrol.app.network.ScanManager
 import io.github.kgbis.remotecontrol.app.repository.DeviceRepository
-import io.github.kgbis.remotecontrol.app.repository.SettingsRepository
-import io.github.kgbis.remotecontrol.app.util.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.temporal.ChronoUnit
+import kotlin.collections.set
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
-
-    val networkRangeDetector = NetworkRangeDetector()
+class DevicesViewModel(
+    application: Application
+) : AndroidViewModel(application) {
 
     private val repository = DeviceRepository(application)
-
-    private val settingsRepo = SettingsRepository(application)
-
-    /* Device Repository and actions */
+    private val networkRangeDetector = NetworkRangeDetector()
 
     private val _devices = MutableStateFlow<List<Device>>(emptyList())
     val devices = _devices.asStateFlow()
 
-    // Device status
     private val _deviceStatusMap = MutableStateFlow<Map<String, DeviceStatus>>(emptyMap())
     val deviceStatusMap = _deviceStatusMap.asStateFlow()
 
-    val routerIps: List<String> by lazy {
-        Utils.loadRouterIps(getApplication())
+    init {
+        getDevices()
     }
 
-    fun loadDevices() {
+    fun getDevices() {
         viewModelScope.launch {
             _devices.value = repository.getDevices()
         }
+    }
+
+    fun getDeviceByIp(ip: String): Device? {
+        return _devices.value.firstOrNull { it.ip == ip }
     }
 
     fun addDevice(device: Device) {
         device.normalize()
         viewModelScope.launch {
             repository.addDevice(device)
-            loadDevices()
+            getDevices()
         }
     }
 
@@ -61,7 +56,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             devices.forEach { it.normalize() }
             repository.addDevices(devices)
-            loadDevices()
+            getDevices()
         }
     }
 
@@ -70,19 +65,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         updated.normalize()
         viewModelScope.launch {
             repository.updateDevice(original, updated)
-            loadDevices()
+            getDevices()
         }
     }
 
     fun removeDevice(device: Device) {
         viewModelScope.launch {
             repository.removeDevice(device)
-            loadDevices()
+            getDevices()
         }
-    }
-
-    fun getDeviceByIp(ip: String): Device? {
-        return _devices.value.firstOrNull { it.ip == ip }
     }
 
     fun refreshStatuses() {
@@ -126,92 +117,5 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             onResult(success)
         }
-    }
-
-    /* Shutdown settings (quantity and time unit) */
-
-    val shutdownDelay = settingsRepo.shutdownDelayFlow.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000), 15
-    )
-
-    val shutdownUnit = settingsRepo.shutdownUnitFlow.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000), ChronoUnit.SECONDS
-    )
-
-    fun changeDelay(newDelay: Int) {
-        viewModelScope.launch {
-            settingsRepo.saveShutdownDelay(newDelay)
-        }
-    }
-
-    fun changeUnit(newUnit: ChronoUnit) {
-        viewModelScope.launch {
-            settingsRepo.saveShutdownUnit(newUnit)
-        }
-    }
-
-    /* Auto-refresh settings */
-
-    val autoRefreshEnabled = settingsRepo.autoRefreshEnabledFlow.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000), true
-    )
-
-    val autoRefreshInterval = settingsRepo.autoRefreshIntervalFlow.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000), 15
-    )
-
-    fun setAutoRefreshEnabled(value: Boolean) {
-        viewModelScope.launch {
-            settingsRepo.saveAutorefreshEnabled(value)
-        }
-    }
-
-    fun setAutoRefreshInterval(value: Float) {
-        viewModelScope.launch {
-            settingsRepo.saveAutorefreshDelay(value)
-        }
-    }
-
-    /* Network scan (socket) Timeout */
-    val socketTimeout = settingsRepo.socketTimeoutFlow.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000), 500
-    )
-
-    fun setSocketTimeout(value: Float) {
-        viewModelScope.launch {
-            settingsRepo.saveSocketTimeout(value)
-        }
-    }
-
-    val aboutKeys: Map<String, String> by lazy {
-        Utils.loadAboutKeys(getApplication())
-    }
-
-    /* Network scan manager stuff  */
-
-    // ---- Scan Manager ----
-    private val scanManager by lazy {
-        ScanManager(
-            networkRangeDetector = networkRangeDetector,
-            timeout = socketTimeout.value,
-            maxConcurrent = 30
-        )
-    }
-
-    val scanProgress = scanManager.progress
-    val scanResults = scanManager.results
-    val scanState = scanManager.state
-
-    fun startScan() = scanManager.startScan()
-    fun cancelScan() = scanManager.cancelScan()
-
-    // Class initializer. Load list of stored devices
-    init {
-        loadDevices()
     }
 }

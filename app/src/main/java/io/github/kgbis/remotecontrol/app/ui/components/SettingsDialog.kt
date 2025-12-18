@@ -13,6 +13,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,23 +24,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.kgbis.remotecontrol.app.R
-import io.github.kgbis.remotecontrol.app.viewmodel.MainViewModel
+import io.github.kgbis.remotecontrol.app.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsDialog(
-    viewModel: MainViewModel,
-    onDismiss: (Boolean) -> Unit,
+    settingsViewModel: SettingsViewModel,
+    onClose: () -> Unit,
 ) {
-    // basic options
-    val autoRefreshEnabled by viewModel.autoRefreshEnabled.collectAsState()
-    val autoRefreshInterval by viewModel.autoRefreshInterval.collectAsState()
-
     // advanced options
     var showAdvanced by remember { mutableStateOf(false) }
-    val socketTimeout by viewModel.socketTimeout.collectAsState()
+
+    val autoRefreshEnabledVm by settingsViewModel.autoRefreshEnabled.collectAsState()
+    val autoRefreshIntervalVm by settingsViewModel.autoRefreshInterval.collectAsState()
+    val socketTimeoutVm by settingsViewModel.socketTimeout.collectAsState()
+
+    var autoRefreshEnabled by remember { mutableStateOf(autoRefreshEnabledVm) }
+    var autoRefreshInterval by remember { mutableStateOf(autoRefreshIntervalVm.toFloat()) }
+    var socketTimeout by remember { mutableStateOf(socketTimeoutVm.toFloat()) }
+
+    LaunchedEffect(autoRefreshEnabledVm, autoRefreshIntervalVm, socketTimeoutVm) {
+        autoRefreshEnabled = autoRefreshEnabledVm
+        autoRefreshInterval = autoRefreshIntervalVm.toFloat()
+        socketTimeout = socketTimeoutVm.toFloat()
+    }
 
     AlertDialog(
-        onDismissRequest = { onDismiss(false) },
+        onDismissRequest = { onClose() },
         title = { Text(stringResource(R.string.settings)) },
         text = {
             Column {
@@ -51,7 +61,7 @@ fun SettingsDialog(
                     Text(stringResource(R.string.settings_refresh_enabled))
                     Switch(
                         checked = autoRefreshEnabled,
-                        onCheckedChange = { viewModel.setAutoRefreshEnabled(it) }
+                        onCheckedChange = { autoRefreshEnabled = it }
                     )
                 }
 
@@ -60,12 +70,12 @@ fun SettingsDialog(
                 Text(
                     stringResource(
                         R.string.settings_refresh_rate,
-                        autoRefreshInterval
+                        autoRefreshInterval.toInt()
                     )
                 )
                 Slider(
-                    value = autoRefreshInterval.toFloat(),
-                    onValueChange = { viewModel.setAutoRefreshInterval(it) },
+                    value = autoRefreshInterval,
+                    onValueChange = { autoRefreshInterval = it },
                     valueRange = 5f..60f
                 )
 
@@ -77,10 +87,10 @@ fun SettingsDialog(
 
                 if (showAdvanced) {
                     Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.settings_advanced_timeout, socketTimeout))
+                    Text(stringResource(R.string.settings_advanced_timeout, socketTimeout.toInt()))
                     Slider(
-                        value = socketTimeout.toFloat(),
-                        onValueChange = { viewModel.setSocketTimeout(it) },
+                        value = socketTimeout,
+                        onValueChange = { socketTimeout = it },
                         valueRange = 100f..5000f
                     )
                     Text(
@@ -92,7 +102,13 @@ fun SettingsDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onDismiss(false) }) { Text(stringResource(R.string.ok)) }
+            TextButton(onClick = {
+                settingsViewModel.setAutoRefreshEnabled(autoRefreshEnabled)
+                settingsViewModel.setAutoRefreshInterval(autoRefreshInterval)
+                settingsViewModel.setSocketTimeout(socketTimeout)
+                onClose()
+            })
+            { Text(stringResource(R.string.save_device)) }
         }
     )
 }

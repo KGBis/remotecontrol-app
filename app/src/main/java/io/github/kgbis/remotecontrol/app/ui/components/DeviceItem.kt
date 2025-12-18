@@ -34,19 +34,19 @@ import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.data.Device
 import io.github.kgbis.remotecontrol.app.data.DeviceStatus
 import io.github.kgbis.remotecontrol.app.data.State
-import io.github.kgbis.remotecontrol.app.viewmodel.MainViewModel
+import io.github.kgbis.remotecontrol.app.viewmodel.DevicesViewModel
 
 @Composable
 fun DeviceItem(
     device: Device,
-    viewModel: MainViewModel,
+    devicesVm: DevicesViewModel,
     onShutdown: () -> Unit,
     onWake: () -> Unit,
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
     // get device status from viewmodel
-    val deviceStatusMap by viewModel.deviceStatusMap.collectAsState()
+    val deviceStatusMap by devicesVm.deviceStatusMap.collectAsState()
     val deviceStatus = deviceStatusMap.getOrDefault(device.ip, DeviceStatus())
 
     // Online dot

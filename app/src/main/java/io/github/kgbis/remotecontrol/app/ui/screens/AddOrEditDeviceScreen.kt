@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.data.Device
@@ -37,14 +38,19 @@ import io.github.kgbis.remotecontrol.app.network.ScanState
 import io.github.kgbis.remotecontrol.app.ui.components.DetectedDevicesList
 import io.github.kgbis.remotecontrol.app.ui.components.ValidatingTextField
 import io.github.kgbis.remotecontrol.app.util.Utils
-import io.github.kgbis.remotecontrol.app.viewmodel.MainViewModel
+import io.github.kgbis.remotecontrol.app.viewmodel.DevicesViewModel
+import io.github.kgbis.remotecontrol.app.viewmodel.ScanViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddOrEditDeviceScreen(
-    navController: NavController, viewModel: MainViewModel,
-    deviceToEdit: Device? = null
+    navController: NavController,
+    devicesVm: DevicesViewModel,
+    scanVm: ScanViewModel = viewModel(),
+    ipToEdit: String? = null
 ) {
+    val deviceToEdit = if(ipToEdit == null) null else devicesVm.getDeviceByIp(ipToEdit)
+
     // Fields
     var name by remember {
         if (deviceToEdit == null) mutableStateOf("") else mutableStateOf(
@@ -65,12 +71,12 @@ fun AddOrEditDeviceScreen(
 
     // scanning
     val total = 255
-    val scanProgress by viewModel.scanProgress.collectAsState()
+    val scanProgress by scanVm.scanProgress.collectAsState()
 
     // TODO: Clean scan results when screen shows up
-    val results by viewModel.scanResults.collectAsState()
+    val results by scanVm.scanResults.collectAsState()
 
-    val scanState by viewModel.scanState.collectAsState()
+    val scanState by scanVm.scanState.collectAsState()
 
     val scanning = scanState == ScanState.Running
 
@@ -86,7 +92,7 @@ fun AddOrEditDeviceScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        viewModel.cancelScan()
+                        scanVm.cancelScan()
                         navController.popBackStack()
                     }) {
                         Icon(
@@ -142,10 +148,10 @@ fun AddOrEditDeviceScreen(
                 onClick = {
                     if (name.isNotBlank() && ip.isNotBlank()) {
                         when (deviceToEdit) {
-                            null -> viewModel.addDevice(Device(name, ip, mac))
+                            null -> devicesVm.addDevice(Device(name, ip, mac))
                             else -> {
                                 val updated = deviceToEdit.copy(name = name, ip = ip, mac = mac)
-                                viewModel.updateDevice(deviceToEdit, updated)
+                                devicesVm.updateDevice(deviceToEdit, updated)
                             }
                         }
                         navController.popBackStack()
@@ -163,8 +169,8 @@ fun AddOrEditDeviceScreen(
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(
                     onClick = {
-                        if (!scanning) viewModel.startScan()
-                        else viewModel.cancelScan()
+                        if (!scanning) scanVm.startScan()
+                        else scanVm.cancelScan()
                     },
                     enabled = true,
                     modifier = Modifier
@@ -198,7 +204,7 @@ fun AddOrEditDeviceScreen(
                     DetectedDevicesList(
                         results = results,
                         navController = navController,
-                        viewModel = viewModel
+                        devicesVm = devicesVm
                     )
                 }
             }
