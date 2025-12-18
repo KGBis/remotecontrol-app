@@ -27,21 +27,23 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.BuildConfig
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.ui.components.SectionCard
 import io.github.kgbis.remotecontrol.app.util.HtmlText
-import io.github.kgbis.remotecontrol.app.viewmodel.MainViewModel
+import io.github.kgbis.remotecontrol.app.viewmodel.KeysViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutScreen(navController: NavController, viewModel: MainViewModel) {
+fun AboutScreen(
+    navController: NavController,
+    keysViewModel: KeysViewModel = viewModel()
+) {
 
     val versionName = BuildConfig.VERSION_NAME
-
-    val sections = viewModel.aboutKeys
-
+    val sections = keysViewModel.aboutKeys
     val context = LocalContext.current
 
     Scaffold(

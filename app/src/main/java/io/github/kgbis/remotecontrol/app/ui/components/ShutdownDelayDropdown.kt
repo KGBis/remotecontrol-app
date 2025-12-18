@@ -30,11 +30,11 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.data.ShutdownDelayOption
-import io.github.kgbis.remotecontrol.app.viewmodel.MainViewModel
+import io.github.kgbis.remotecontrol.app.viewmodel.SettingsViewModel
 
 @Composable
 fun ShutdownDelayDropdown(
-    viewModel: MainViewModel,
+    viewModel: SettingsViewModel,
     options: List<ShutdownDelayOption>
 ) {
     var expanded by remember { mutableStateOf(false) }

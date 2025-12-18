@@ -11,9 +11,9 @@ data class ShutdownDelayOption(
 
 val shutdownDelayOptions = listOf(
     ShutdownDelayOption(R.string.delay_now, 0, ChronoUnit.SECONDS),
-    ShutdownDelayOption(R.string.delay_15s, 15, ChronoUnit.SECONDS),
-    ShutdownDelayOption(R.string.delay_30s, 30, ChronoUnit.SECONDS),
     ShutdownDelayOption(R.string.delay_1m, 1, ChronoUnit.MINUTES),
+    ShutdownDelayOption(R.string.delay_5m, 5, ChronoUnit.MINUTES),
+    ShutdownDelayOption(R.string.delay_10m, 10, ChronoUnit.MINUTES),
     ShutdownDelayOption(R.string.delay_15m, 15, ChronoUnit.MINUTES),
     ShutdownDelayOption(R.string.delay_30m, 30, ChronoUnit.MINUTES),
     ShutdownDelayOption(R.string.delay_1h, 1, ChronoUnit.HOURS),

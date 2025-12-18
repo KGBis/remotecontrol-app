@@ -36,13 +36,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.data.Device
-import io.github.kgbis.remotecontrol.app.viewmodel.MainViewModel
+import io.github.kgbis.remotecontrol.app.viewmodel.DevicesViewModel
 
 @Composable
 fun DetectedDevicesList(
     results: List<Device>,
     navController: NavController,
-    viewModel: MainViewModel
+    devicesVm: DevicesViewModel
 ) {
     var multiSelectMode by remember { mutableStateOf(false) }
     val selected = remember { mutableStateListOf<String>() } // IP as id
@@ -59,7 +59,7 @@ fun DetectedDevicesList(
                 onClick = {
                     val devicesToAdd = results.filter { it.ip in selected }
                     Log.i("DetectedDevicesList", "Devices to add -> $devicesToAdd")
-                    viewModel.addDevices(devicesToAdd)
+                    devicesVm.addDevices(devicesToAdd)
                     selected.clear()
                     multiSelectMode = false
                     navController.popBackStack()
@@ -85,7 +85,7 @@ fun DetectedDevicesList(
                                 if (selected.isEmpty()) multiSelectMode = false
                             } else {
                                 // NORMAL MODE → add one
-                                viewModel.addDevice(d)
+                                devicesVm.addDevice(d)
                                 navController.popBackStack()
                             }
                         },

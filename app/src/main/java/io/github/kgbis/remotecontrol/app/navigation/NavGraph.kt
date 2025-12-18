@@ -8,35 +8,35 @@ import androidx.navigation.compose.rememberNavController
 import io.github.kgbis.remotecontrol.app.ui.screens.AboutScreen
 import io.github.kgbis.remotecontrol.app.ui.screens.AddOrEditDeviceScreen
 import io.github.kgbis.remotecontrol.app.ui.screens.MainScreen
-import io.github.kgbis.remotecontrol.app.viewmodel.MainViewModel
+import io.github.kgbis.remotecontrol.app.viewmodel.DevicesViewModel
+import io.github.kgbis.remotecontrol.app.viewmodel.KeysViewModel
 
 @Composable
 fun NavGraph() {
     val navController = rememberNavController()
 
-    // shared ViewModel
-    val mainViewModel: MainViewModel = viewModel()
-
     NavHost(navController = navController, startDestination = "main") {
         composable("main") {
-            MainScreen(navController, mainViewModel)
+            val devicesVm: DevicesViewModel = viewModel(navController.getBackStackEntry("main"))
+            MainScreen(navController, devicesVm)
         }
         composable("add_device") {
-            AddOrEditDeviceScreen(navController, mainViewModel)
+            val devicesVm: DevicesViewModel = viewModel(navController.getBackStackEntry("main"))
+            AddOrEditDeviceScreen(navController = navController, devicesVm = devicesVm)
         }
 
         composable("edit_device/{ip}") { backStackEntry ->
             val ip = backStackEntry.arguments?.getString("ip")!!
-            val device = mainViewModel.getDeviceByIp(ip)
+            val devicesVm: DevicesViewModel = viewModel(navController.getBackStackEntry("main"))
             AddOrEditDeviceScreen(
                 navController = navController,
-                viewModel = mainViewModel,
-                deviceToEdit = device
+                devicesVm = devicesVm,
+                ipToEdit = ip
             )
         }
 
         composable("about_screen") {
-            AboutScreen(navController, mainViewModel)
+            AboutScreen(navController)
         }
 
 
