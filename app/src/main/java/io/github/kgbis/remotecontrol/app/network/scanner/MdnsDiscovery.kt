@@ -4,6 +4,10 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 class MDNSDiscovery(context: Context) {
 
@@ -45,7 +49,7 @@ class MDNSDiscovery(context: Context) {
         val txtRecords: Map<String, String> = emptyMap()
     )
 
-    // Listener para el descubrimiento
+    // Discovering Listener
     private val discoveryListener = object : NsdManager.DiscoveryListener {
         override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
             Log.e(TAG, "Error al iniciar discovery: $errorCode")
@@ -69,12 +73,12 @@ class MDNSDiscovery(context: Context) {
         }
 
         override fun onServiceFound(serviceInfo: NsdServiceInfo) {
-            Log.d(TAG, "Servicio encontrado: ${serviceInfo.serviceName}")
+            Log.d(TAG, "Service encontrado: ${serviceInfo.serviceName}")
 
             // Resolver el servicio para obtener detalles
             nsdManager.resolveService(serviceInfo, object : NsdManager.ResolveListener {
                 override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-                    Log.e(TAG, "Error resolviendo ${serviceInfo.serviceName}: $errorCode")
+                    Log.e(TAG, "Error resolving ${serviceInfo.serviceName}: $errorCode")
                 }
 
                 override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
@@ -91,16 +95,16 @@ class MDNSDiscovery(context: Context) {
                         discoveredServices.add(discovered)
                         listener?.onServiceFound(discovered)
 
-                        Log.i(TAG, "✅ Resuelto: ${discovered.name} " +
+                        Log.i(TAG, "✅ Resolved: ${discovered.name} " +
                                 "(${discovered.host}:${discovered.port}) " +
-                                "Tipo: ${discovered.type}")
+                                "Type: ${discovered.type}")
                     }
                 }
             })
         }
 
         override fun onServiceLost(serviceInfo: NsdServiceInfo) {
-            Log.d(TAG, "Servicio perdido: ${serviceInfo.serviceName}")
+            Log.d(TAG, "Service lost: ${serviceInfo.serviceName}")
             discoveredServices.removeAll { it.name == serviceInfo.serviceName }
             listener?.onServiceLost(serviceInfo.serviceName)
         }
@@ -158,14 +162,14 @@ class MDNSDiscovery(context: Context) {
     }
 
     /**
-     * Detiene el descubrimiento de servicios
+     * Stops discovery service
      */
     fun stopDiscovery() {
         try {
             nsdManager.stopServiceDiscovery(discoveryListener)
-            Log.d(TAG, "Discovery detenido")
+            Log.d(TAG, "Discovery stopped")
         } catch (e: Exception) {
-            Log.e(TAG, "Error deteniendo discovery", e)
+            Log.d(TAG, "Error stopping discovery: ${e.message}")
         }
     }
 
@@ -247,11 +251,11 @@ class MDNSDiscovery(context: Context) {
                 }
 
                 override fun onServiceRegistered(serviceInfo: NsdServiceInfo) {
-                    Log.d(TAG, "Servicio registrado: ${serviceInfo.serviceName}")
+                    Log.d(TAG, "Service registered: ${serviceInfo.serviceName}")
                 }
 
                 override fun onServiceUnregistered(serviceInfo: NsdServiceInfo) {
-                    Log.d(TAG, "Servicio desregistrado: ${serviceInfo.serviceName}")
+                    Log.d(TAG, "Service unregistered: ${serviceInfo.serviceName}")
                 }
             }
         )

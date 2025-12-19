@@ -13,9 +13,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,8 +32,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.data.Device
-import io.github.kgbis.remotecontrol.app.ui.components.NetworkScannerSection
-import io.github.kgbis.remotecontrol.app.ui.components.SimpleMDNSDiscovery
 import io.github.kgbis.remotecontrol.app.ui.components.ValidatingTextField
 import io.github.kgbis.remotecontrol.app.util.Utils
 import io.github.kgbis.remotecontrol.app.viewmodel.DevicesViewModel
@@ -76,7 +78,25 @@ fun AddOrEditDeviceScreen(
         }
     }
 
+    var showSnackbar by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Snackbar autoclose
+    LaunchedEffect(showSnackbar) {
+        showSnackbar?.let { msg ->
+            snackbarHostState.showSnackbar(
+                message = msg,
+                actionLabel = "OK",
+                duration = SnackbarDuration.Long
+            )
+
+            @Suppress("AssignedValueIsNeverRead")
+            showSnackbar = null
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -158,7 +178,11 @@ fun AddOrEditDeviceScreen(
                     devicesVm = devicesVm
                 )*/
                 // SimpleMDNSDiscovery()
-                MDNSDiscoveryScreen()
+                MDNSDiscoveryScreen(
+                    navController = navController,
+                    devicesVm = devicesVm,
+                    onShowMessage = { showSnackbar = it }
+                )
             }
         }
     }

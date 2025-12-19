@@ -1,5 +1,6 @@
 package io.github.kgbis.remotecontrol.app.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,12 +44,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph
+import io.github.kgbis.remotecontrol.app.data.Device
 import io.github.kgbis.remotecontrol.app.network.scanner.MDNSDiscovery
+import io.github.kgbis.remotecontrol.app.network.scanner.MDNSDiscovery.Companion.SERVICE_AIRPLAY
+import io.github.kgbis.remotecontrol.app.network.scanner.MDNSDiscovery.Companion.SERVICE_HTTP
+import io.github.kgbis.remotecontrol.app.network.scanner.MDNSDiscovery.Companion.SERVICE_REMOTECONTROL
+import io.github.kgbis.remotecontrol.app.network.scanner.MDNSDiscovery.Companion.SERVICE_SMB
+import io.github.kgbis.remotecontrol.app.ui.components.DetectedDevicesList
+import io.github.kgbis.remotecontrol.app.viewmodel.DevicesViewModel
 import io.github.kgbis.remotecontrol.app.viewmodel.DiscoveredDevice
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @Composable
-fun MDNSDiscoveryScreen() {
+fun MDNSDiscoveryScreen(
+    navController: NavController,
+    devicesVm: DevicesViewModel,
+    onShowMessage: (String) -> Unit
+) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
@@ -55,6 +73,19 @@ fun MDNSDiscoveryScreen() {
     var isDiscovering by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val discoveredDevices = remember { mutableStateListOf<DiscoveredDevice>() }
+
+    // Devices
+    var devices = remember {
+        derivedStateOf {
+            discoveredDevices.map { discovered ->
+                Device(
+                    name = discovered.txtRecords["hostname"] ?: discovered.ip,
+                    ip = discovered.ip,
+                    mac = discovered.txtRecords["mac"] ?: ""
+                )
+            }
+        }
+    }
 
     // Inicializar MDNSDiscovery
     val mdnsDiscovery = remember {
@@ -94,6 +125,18 @@ fun MDNSDiscoveryScreen() {
                     isDiscovering = false
                 }
             })
+        }
+    }
+
+    // Discovery autostop
+    LaunchedEffect(isDiscovering) {
+        if (isDiscovering) {
+            val timeMillis = 5000L
+            delay(timeMillis)
+            onShowMessage("Discover stopped after ${timeMillis / 1000}s")
+            Log.d("discovering", "Stopping discovery after ${timeMillis / 1000}s")
+            mdnsDiscovery.stopDiscovery()
+            isDiscovering = false
         }
     }
 
@@ -182,6 +225,7 @@ fun MDNSDiscoveryScreen() {
         ) {
             Button(
                 onClick = {
+                    discoveredDevices.clear()
                     mdnsDiscovery.startDiscovery("_rpcctl._tcp")
                 },
                 enabled = !isDiscovering,
@@ -239,8 +283,7 @@ fun MDNSDiscoveryScreen() {
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
-
-        // Lista de dispositivos
+        /*
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.weight(1f)
@@ -249,6 +292,12 @@ fun MDNSDiscoveryScreen() {
                 ServiceCard(device = discoveredDevices[device])
             }
         }
+        */
+        DetectedDevicesList(
+            results = devices.value,
+            navController = navController,
+            devicesVm = devicesVm
+        )
     }
 }
 
