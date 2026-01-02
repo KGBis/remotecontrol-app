@@ -5,11 +5,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import io.github.kgbis.remotecontrol.app.ui.screens.AboutScreen
-import io.github.kgbis.remotecontrol.app.ui.screens.AddOrEditDeviceScreen
-import io.github.kgbis.remotecontrol.app.ui.screens.MainScreen
-import io.github.kgbis.remotecontrol.app.viewmodel.DevicesViewModel
-import io.github.kgbis.remotecontrol.app.viewmodel.KeysViewModel
+import io.github.kgbis.remotecontrol.app.features.about.AboutScreen
+import io.github.kgbis.remotecontrol.app.ui.screens.AddDeviceEntryScreen
+import io.github.kgbis.remotecontrol.app.ui.screens.EditDeviceScreen
+import io.github.kgbis.remotecontrol.app.features.devices.ui.MainScreen
+import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
 
 @Composable
 fun NavGraph() {
@@ -20,25 +20,27 @@ fun NavGraph() {
             val devicesVm: DevicesViewModel = viewModel(navController.getBackStackEntry("main"))
             MainScreen(navController, devicesVm)
         }
+
         composable("add_device") {
             val devicesVm: DevicesViewModel = viewModel(navController.getBackStackEntry("main"))
-            AddOrEditDeviceScreen(navController = navController, devicesVm = devicesVm)
+            AddDeviceEntryScreen(
+                navController = navController,
+                devicesVm = devicesVm
+            )
         }
 
-        composable("edit_device/{ip}") { backStackEntry ->
-            val ip = backStackEntry.arguments?.getString("ip")!!
+        composable("edit_device/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id")!!
             val devicesVm: DevicesViewModel = viewModel(navController.getBackStackEntry("main"))
-            AddOrEditDeviceScreen(
+            EditDeviceScreen(
                 navController = navController,
                 devicesVm = devicesVm,
-                ipToEdit = ip
+                idToEdit = id
             )
         }
 
         composable("about_screen") {
             AboutScreen(navController)
         }
-
-
     }
 }

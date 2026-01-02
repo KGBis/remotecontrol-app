@@ -42,6 +42,7 @@ fun ValidatingTextField(
             onValueChange = { onValueChange(it) },
             label = { Text(label) },
             isError = showError && !isValid,
+            singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
 

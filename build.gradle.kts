@@ -10,6 +10,8 @@ plugins {
 
 
 tasks.register("incrementVersion") {
+    description = "Auto incremental vesion hook when commit is triggered"
+    group = "git hooks"
     doLast {
         logger.lifecycle("[Version Hook] Reading 'gradle.properties'…")
         val file = file("gradle.properties")
@@ -22,15 +24,15 @@ tasks.register("incrementVersion") {
         props.setProperty("VERSION_CODE", newCode.toString())
         logger.lifecycle("[Version Hook] updating 'VERSION_CODE' from $currentCode to $newCode")
 
-        // --- versionName: in yyyy.MM.dd.commit_number ---
-        val currentDateStr = DateTimeFormatter.ofPattern("yyyy.MM.dd").format(LocalDate.now())
+        // --- versionName: in yyyy.MM.commit_number ---
+        val currentDateStr = DateTimeFormatter.ofPattern("yyyy.MM").format(LocalDate.now())
         val currentName = props.getProperty("VERSION_NAME") ?: "$currentDateStr.1"
 
-        val previousDateStr = currentName.substringBeforeLast(".") // just the date
+        val previousDateStr = currentName.substringBeforeLast(".") // just the date (YYYY.MM)
         val previousCommit = currentName.substringAfterLast(".").toInt() // the revision
 
         var newName: String
-        if(previousDateStr == currentDateStr) { // when in the same day commit + 1
+        if(previousDateStr == currentDateStr) { // when in the same month commit + 1
             val currentCommit = previousCommit + 1
             newName = "$currentDateStr.$currentCommit"
         } else {

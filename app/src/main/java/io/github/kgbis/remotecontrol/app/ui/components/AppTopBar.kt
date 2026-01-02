@@ -17,7 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.R
-import io.github.kgbis.remotecontrol.app.viewmodel.SettingsViewModel
+import io.github.kgbis.remotecontrol.app.features.settings.ui.SettingsDialog
+import io.github.kgbis.remotecontrol.app.features.settings.SettingsViewModel
 
 @Suppress("AssignedValueIsNeverRead")
 @OptIn(ExperimentalMaterial3Api::class)

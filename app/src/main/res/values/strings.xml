@@ -5,10 +5,10 @@
 
     <!-- Common -->
     <string name="back">Back</string>
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
 
     <!-- Main screen -->
-    <string name="scan_network">🔍 Scan local network</string>
+    <string name="scan_network">🔍 Search for Remote Control Tray</string>
     <string name="refresh">⟳ Refresh</string>
     <string name="time">Time</string>
     <string name="unit">Unit</string>
@@ -57,11 +57,16 @@
     <string name="error_invalid_ip">Invalid IP address</string>
     <string name="error_invalid_mac">Invalid MAC address</string>
     <string name="error_empty_fields">⚠️ All required fields must be filled</string>
-    <string name="network_scan_button">🔍 Scan local network</string>
+    <string name="manual_edit_title">Add manually</string>
+    <string name="manual_edit_desc">Enter IP and other computer data</string>
+    <string name="network_scan_title">Discover devices</string>
+    <string name="network_scan_desc">Find out computers in your local network</string>
+    <string name="network_scan_stop_button">Stop discovering</string>
     <string name="network_scan_running">Scanning… %1$s%% - Click to cancel</string>
+    <string name="network_scan_running_2">Discovering network mDNS services…</string>
     <string name="network_scan_done">✔ Scan completed</string>
-    <string name="no_devices_found">No devices found</string>
-    <string name="devices_found">Devices found:</string>
+    <string name="no_devices_found">No devices found. Click to re-scan</string>
+    <string name="devices_found">Devices were found. Click to re-scan</string>
     <string name="devices_found_add_button">Add %1$s selected</string>
     <string name="select">Select</string>
 
@@ -140,4 +145,20 @@
     <string name="settings_advanced">Advanced options…</string>
     <string name="settings_advanced_timeout">Network scan timeout: %1$s ms</string>
     <string name="settings_advanced_timeout_warning">⚠ Setting it too low may cause scan to skip devices; setting it too high may delay scanning.</string>
+    <string name="no_interfaces">No interfaces</string>
+    <string name="discover_error_no_id">Missing device id</string>
+    <string name="discover_error_id_format">Invalid device id format</string>
+    <string name="discover_warn_old_version">Old Remote Control Tray</string>
+    <string name="discover_error_old_version">Missing network interfaces</string>
+    <string name="discover_upgrade_to">Upgrade to v.%1$s or later</string>
+
+    <string name="device_general_info">Device information</string>
+    <string name="os_name">Operating system</string>
+    <string name="tray_version">Tray version</string>
+    <string name="network_interfaces">Network interfaces</string>
+    <string name="interface_name">Interface</string>
+    <string name="remove_interface">Remove interface</string>
+    <string name="add_interface">Add interface</string>
+    <string name="os_unknown">Unknown</string>
+    <string name="interface_type">Interface type</string>
 </resources>
