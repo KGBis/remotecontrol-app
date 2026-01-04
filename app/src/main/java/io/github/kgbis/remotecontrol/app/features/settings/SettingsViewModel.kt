@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.kgbis.remotecontrol.app.core.repository.SettingsRepository
 import io.github.kgbis.remotecontrol.app.features.devices.model.shutdownDelayOptions
+import io.github.kgbis.remotecontrol.app.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -14,6 +15,12 @@ class SettingsViewModel(
     application: Application
 ) : AndroidViewModel(application) {
     private val settingsRepo = SettingsRepository(application)
+
+    /* Color scheme */
+    val colorScheme = settingsRepo.theme.stateIn(
+        viewModelScope,
+        SharingStarted.Companion.WhileSubscribed(5_000), ThemeMode.SYSTEM
+    )
 
     /* Shutdown delay and time unit */
 
@@ -73,6 +80,12 @@ class SettingsViewModel(
     fun setSocketTimeout(value: Float) {
         viewModelScope.launch {
             settingsRepo.saveSocketTimeout(value)
+        }
+    }
+
+    fun setColorScheme(theme: ThemeMode) {
+        viewModelScope.launch {
+            settingsRepo.saveTheme(theme)
         }
     }
 }

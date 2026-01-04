@@ -32,6 +32,7 @@
 
     <!-- Acciones sobre un dispositivo -->
     <string name="shutdown_action">Apagar</string>
+    <string name="shutdown_cancel_action">Cancelar</string>
     <string name="delete_action">Quitar</string>
     <string name="edit_action">⚙️ Configurar</string>
 
@@ -51,7 +52,8 @@
     <string name="device_wol_sent">Paquete WoL enviado a %1$s</string>
     <string name="device_wol_sent_error">Error enviando paquete Wake-on-LAN a %1$s</string>
     <string name="device_shutdown_sent">Comando de apagado enviado a %1$s</string>
-    <string name="device_shutdown_sent_error">Error al envíar comando de apagado a %1$s</string>
+    <string name="device_shutdown_cancel_sent">Comando de cancelación enviado a %1$s</string>
+    <string name="device_shutdown_sent_error">Error al envíar comando a %1$s</string>
     <string name="generic_validation_error">Error de validación</string>
     <string name="error_invalid_ip">IP no válida</string>
     <string name="error_invalid_mac">Dirección MAC no válida</string>
@@ -169,4 +171,8 @@
     <string name="add_interface">Añadir interfaz de red</string>
     <string name="os_unknown">Desconocido</string>
     <string name="interface_type">Tipo de interfaz</string>
+    <string name="theme_mode">Modo de tema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_system">Sistema</string>
 </resources>

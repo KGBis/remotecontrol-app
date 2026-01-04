@@ -142,7 +142,7 @@ fun MainScreen(
                         items(devices.size) { index ->
                             val device = devices[index]
                             if (device.isRenderable())
-                                DeviceItem(
+                                DeviceListItem(
                                     device = device,
                                     devicesVm = devicesVm,
                                     onShutdown = {
@@ -158,12 +158,26 @@ fun MainScreen(
                                                         device.hostname
                                                     )
                                                     //
-                                                }
-                                                else
+                                                } else
                                                     context.getString(
                                                         R.string.device_shutdown_sent_error,
                                                         device.hostname
                                                     )
+                                        }
+                                    },
+                                    onCancel = {
+                                        devicesVm.sendCancelShutdownCommand(device) { success ->
+                                            showSnackbar = if (success) {
+                                                context.getString(
+                                                    R.string.device_shutdown_cancel_sent,
+                                                    device.hostname
+                                                )
+                                                //
+                                            } else
+                                                context.getString(
+                                                    R.string.device_shutdown_sent_error,
+                                                    device.hostname
+                                                )
                                         }
                                     },
                                     onWake = {

@@ -1,5 +1,6 @@
 package io.github.kgbis.remotecontrol.app.features.settings.ui
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -34,6 +36,9 @@ fun SettingsDialog(
     // advanced options
     var showAdvanced by remember { mutableStateOf(false) }
 
+    val colorSchemeVm by settingsViewModel.colorScheme.collectAsState()
+    var colorScheme by remember { mutableStateOf(colorSchemeVm) }
+
     val autoRefreshEnabledVm by settingsViewModel.autoRefreshEnabled.collectAsState()
     val autoRefreshIntervalVm by settingsViewModel.autoRefreshInterval.collectAsState()
     val socketTimeoutVm by settingsViewModel.socketTimeout.collectAsState()
@@ -53,6 +58,14 @@ fun SettingsDialog(
         title = { Text(stringResource(R.string.settings)) },
         text = {
             Column {
+                ThemeModeSelector(selected = colorScheme) {
+                    colorScheme = it
+                    settingsViewModel.setColorScheme(it)
+                }
+
+                HorizontalDivider()
+                Spacer(Modifier.height(8.dp))
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -61,7 +74,10 @@ fun SettingsDialog(
                     Text(stringResource(R.string.settings_refresh_enabled))
                     Switch(
                         checked = autoRefreshEnabled,
-                        onCheckedChange = { autoRefreshEnabled = it }
+                        onCheckedChange = {
+                            autoRefreshEnabled = it
+                            settingsViewModel.setAutoRefreshEnabled(it)
+                        }
                     )
                 }
 
@@ -75,40 +91,19 @@ fun SettingsDialog(
                 )
                 Slider(
                     value = autoRefreshInterval,
-                    onValueChange = { autoRefreshInterval = it },
-                    valueRange = 5f..60f
+                    onValueChange = {
+                        autoRefreshInterval = it
+                        settingsViewModel.setAutoRefreshInterval(it)
+                    },
+                    valueRange = 10f..60f
                 )
-
-                Spacer(Modifier.height(8.dp))
-
-                TextButton(onClick = { showAdvanced = !showAdvanced }) {
-                    Text(stringResource(R.string.settings_advanced))
-                }
-
-                if (showAdvanced) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.settings_advanced_timeout, socketTimeout.toInt()))
-                    Slider(
-                        value = socketTimeout,
-                        onValueChange = { socketTimeout = it },
-                        valueRange = 100f..5000f
-                    )
-                    Text(
-                        stringResource(R.string.settings_advanced_timeout_warning),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
             }
         },
         confirmButton = {
             TextButton(onClick = {
-                settingsViewModel.setAutoRefreshEnabled(autoRefreshEnabled)
-                settingsViewModel.setAutoRefreshInterval(autoRefreshInterval)
-                settingsViewModel.setSocketTimeout(socketTimeout)
                 onClose()
             })
-            { Text(stringResource(R.string.save_device)) }
+            { Text(stringResource(R.string.back)) }
         }
     )
 }

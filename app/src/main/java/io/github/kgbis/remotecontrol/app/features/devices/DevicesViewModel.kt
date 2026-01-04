@@ -7,13 +7,13 @@ import androidx.lifecycle.viewModelScope
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
+import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import io.github.kgbis.remotecontrol.app.core.network.NetworkActions
 import io.github.kgbis.remotecontrol.app.core.network.NetworkRangeDetector
 import io.github.kgbis.remotecontrol.app.core.network.computeDeviceStatus
 import io.github.kgbis.remotecontrol.app.core.network.probeDeviceFlow
 import io.github.kgbis.remotecontrol.app.core.repository.DeviceRepository
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +22,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class DevicesViewModel(
@@ -236,7 +238,6 @@ class DevicesViewModel(
                         }
                         inFlightProbes.remove(deviceId)
                     }
-                    // return@forEach
                 }
 
                 val job = launch {
@@ -271,18 +272,64 @@ class DevicesViewModel(
         }
     }
 
+    fun sendCancelShutdownCommand(device: Device, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val success = NetworkActions.sendMessage(
+                device = device,
+                command = "CANCEL_SHUTDOWN",
+                NetworkActions::shutdownResponse
+            )
+
+            if (success == true) {
+                val status =
+                    _deviceStatusMap.value[device.id]?.copy(pendingAction = PendingAction.None)
+                val previous = _deviceStatusMap.value
+                _deviceStatusMap.emit(previous + (device.id!! to status!!))
+            }
+
+            onResult(success == true)
+        }
+    }
+
 
     fun sendShutdownCommand(device: Device, delay: Int, unit: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
+            val scheduledAt = Instant.now()
+            val executeAt = scheduledAt.plus(delay.toLong(), ChronoUnit.valueOf(unit))
+            val cancellable = delay != 0
+
             val success = NetworkActions.sendMessage(
                 device = device,
                 command = "SHUTDOWN $delay $unit",
                 NetworkActions::shutdownResponse
             )
             if (success == true) {
-                val s = _deviceStatusMap.value[device.id]?.copy(state = DeviceState.UNKNOWN)
+                val pendingAction = PendingAction.ShutdownScheduled(
+                    scheduledAt = scheduledAt,
+                    executeAt = executeAt,
+                    cancellable = cancellable
+                )
                 val previous = _deviceStatusMap.value
-                _deviceStatusMap.emit(previous + (device.id!! to s!!))
+
+                Log.w("", "Is cancellable shutdown? $cancellable")
+
+                val state = when (cancellable) {
+                    true -> {
+                        Log.w("PREVIOUS_STATE", "${previous[device.id]?.state}")
+                        previous[device.id]?.state ?: DeviceState.UNKNOWN
+                    }
+
+                    false -> {
+                        Log.w("OFFLINE", "OFFLINE")
+                        DeviceState.OFFLINE
+                    }
+                }
+                val status = _deviceStatusMap.value[device.id]?.copy(
+                    pendingAction = pendingAction,
+                    state = state
+                )
+
+                _deviceStatusMap.emit(previous + (device.id!! to status!!))
             }
 
             onResult(success == true)

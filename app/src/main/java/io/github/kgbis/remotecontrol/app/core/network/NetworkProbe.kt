@@ -5,18 +5,18 @@ import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
+import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedSendChannelException
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.ConnectException
 import java.net.InetSocketAddress
 import java.net.NoRouteToHostException
 import java.net.Socket
 import java.net.SocketTimeoutException
+import java.util.Date
 
 data class ProbeResult(
     val ip: String,
@@ -64,13 +64,6 @@ fun probeDeviceFlow(
             break
         }
     }
-
-    /*awaitClose {
-        jobs.forEach {
-            Log.d("probeDeviceFlow", "Cancelling $it")
-            it.cancel()
-        }
-    }*/
 }
 
 private fun connect(device: Device, iface: DeviceInterface): ConnectionResult {
@@ -120,7 +113,8 @@ fun computeDeviceStatus(
                 device = previous.device,
                 state = DeviceState.ONLINE,
                 trayReachable = true,
-                lastSeen = now
+                lastSeen = now,
+                pendingAction = previous.pendingAction
             )
         }
         // Connection to port 6800 was refused
@@ -133,7 +127,8 @@ fun computeDeviceStatus(
                 device = previous.device,
                 state = DeviceState.ONLINE,
                 trayReachable = false,
-                lastSeen = now
+                lastSeen = now,
+                pendingAction = previous.pendingAction
             )
         }
         // Host unreachable
@@ -159,11 +154,14 @@ fun computeDeviceStatus(
                 false -> DeviceState.OFFLINE
             }
 
+            Log.d("computeDeviceStatus", "TIMEOUT_ERROR. Last seen ${Date(previous.lastSeen)}")
+
             DeviceStatus(
                 device = previous.device,
                 state = status,
                 trayReachable = false,
-                lastSeen = previous.lastSeen
+                lastSeen = previous.lastSeen,
+                pendingAction = if(status == DeviceState.ONLINE) previous.pendingAction else PendingAction.None
             )
         }
     }

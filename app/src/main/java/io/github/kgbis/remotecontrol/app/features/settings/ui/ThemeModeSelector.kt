@@ -11,16 +11,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.ui.theme.ThemeMode
 
 @Composable
 fun ThemeModeSelector(
-    selected: ThemeMode,
+    selected: ThemeMode = ThemeMode.SYSTEM,
     onSelected: (ThemeMode) -> Unit
 ) {
     Column {
-        Text("Modo de tema", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.theme_mode), style = MaterialTheme.typography.titleMedium)
 
         ThemeMode.entries.forEach { mode ->
             Row(
@@ -28,7 +30,6 @@ fun ThemeModeSelector(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onSelected(mode) }
-                    .padding(vertical = 8.dp)
             ) {
                 RadioButton(
                     selected = selected == mode,
@@ -36,11 +37,11 @@ fun ThemeModeSelector(
                 )
                 Text(
                     text = when (mode) {
-                        ThemeMode.LIGHT -> "Claro"
-                        ThemeMode.DARK -> "Oscuro"
-                        ThemeMode.SYSTEM -> "Automático"
+                        ThemeMode.LIGHT -> stringResource(R.string.theme_light)
+                        ThemeMode.DARK -> stringResource(R.string.theme_dark)
+                        ThemeMode.SYSTEM -> stringResource(R.string.theme_system)
                     },
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 2.dp)
                 )
             }
         }

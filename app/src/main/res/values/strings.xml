@@ -33,6 +33,7 @@
     <!-- Device actions -->
     <string name="wol_action" translatable="false">Wake-on-LAN</string>
     <string name="shutdown_action">Shutdown</string>
+    <string name="shutdown_cancel_action">Cancel</string>
     <string name="delete_action">Delete</string>
     <string name="edit_action">⚙️ Configure</string>
 
@@ -52,7 +53,8 @@
     <string name="device_wol_sent">Wake-on-LAN packet sent to %1$s</string>
     <string name="device_wol_sent_error">Error sending Wake-on-LAN packet to %1$s</string>
     <string name="device_shutdown_sent">Shutdown command sent to %1$s</string>
-    <string name="device_shutdown_sent_error">Error while sending shutdown command to %1$s</string>
+    <string name="device_shutdown_cancel_sent">Cancel shutdown command sent to %1$s</string>
+    <string name="device_shutdown_sent_error">Error while sending command to %1$s</string>
     <string name="generic_validation_error">Validation error</string>
     <string name="error_invalid_ip">Invalid IP address</string>
     <string name="error_invalid_mac">Invalid MAC address</string>
@@ -161,4 +163,8 @@
     <string name="add_interface">Add interface</string>
     <string name="os_unknown">Unknown</string>
     <string name="interface_type">Interface type</string>
+    <string name="theme_mode">Theme mode</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
 </resources>
