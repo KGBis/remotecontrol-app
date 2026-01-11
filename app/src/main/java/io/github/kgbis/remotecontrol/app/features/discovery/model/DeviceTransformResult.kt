@@ -10,6 +10,7 @@ sealed class DeviceTransformResult {
 
     data class Outdated(
         val discovered: DiscoveredDevice,
+        val device: Device?,
         val reason: Int,
         val reasonText: String,
     ) : DeviceTransformResult()

@@ -5,6 +5,8 @@ import android.util.Log
 
 object Utils {
 
+    val options = listOf("Windows", "Linux", "macOS")
+
     fun isValidIp(ip: String): Boolean {
         val regex = Regex(
             pattern = "^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$"

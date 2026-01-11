@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -18,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,23 +34,20 @@ fun SettingsDialog(
     onClose: () -> Unit,
 ) {
     // advanced options
-    var showAdvanced by remember { mutableStateOf(false) }
+    // var showAdvanced by remember { mutableStateOf(false) }
 
     val colorSchemeVm by settingsViewModel.colorScheme.collectAsState()
     var colorScheme by remember { mutableStateOf(colorSchemeVm) }
 
     val autoRefreshEnabledVm by settingsViewModel.autoRefreshEnabled.collectAsState()
     val autoRefreshIntervalVm by settingsViewModel.autoRefreshInterval.collectAsState()
-    val socketTimeoutVm by settingsViewModel.socketTimeout.collectAsState()
 
     var autoRefreshEnabled by remember { mutableStateOf(autoRefreshEnabledVm) }
-    var autoRefreshInterval by remember { mutableStateOf(autoRefreshIntervalVm.toFloat()) }
-    var socketTimeout by remember { mutableStateOf(socketTimeoutVm.toFloat()) }
+    var autoRefreshInterval by remember { mutableFloatStateOf(autoRefreshIntervalVm.toFloat()) }
 
-    LaunchedEffect(autoRefreshEnabledVm, autoRefreshIntervalVm, socketTimeoutVm) {
+    LaunchedEffect(autoRefreshEnabledVm, autoRefreshIntervalVm) {
         autoRefreshEnabled = autoRefreshEnabledVm
         autoRefreshInterval = autoRefreshIntervalVm.toFloat()
-        socketTimeout = socketTimeoutVm.toFloat()
     }
 
     AlertDialog(

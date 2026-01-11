@@ -3,7 +3,11 @@ package io.github.kgbis.remotecontrol.app.features.discovery.mdns
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.os.Build
+import android.os.ext.SdkExtensions
 import android.util.Log
+import androidx.annotation.RequiresExtension
+import java.net.Inet4Address
 
 class MDNSDiscovery(context: Context) {
 
@@ -59,17 +63,20 @@ class MDNSDiscovery(context: Context) {
         override fun onServiceFound(serviceInfo: NsdServiceInfo) {
             Log.d(TAG, "Service encontrado: ${serviceInfo.serviceName}")
 
-            // Resolver el servicio para obtener detalles
+            // Resolve to get details
+            // Using resolveService intentionally: discovery snapshot only.
+            @Suppress("DEPRECATION")
             nsdManager.resolveService(serviceInfo, object : NsdManager.ResolveListener {
                 override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
                     Log.e(TAG, "Error resolving ${serviceInfo.serviceName}: $errorCode")
                 }
 
+                @RequiresExtension(extension = Build.VERSION_CODES.TIRAMISU, version = 7)
                 override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
                     val discovered = DiscoveredService(
                         name = serviceInfo.serviceName,
                         type = serviceInfo.serviceType,
-                        host = serviceInfo.host?.hostAddress ?: "Unknown",
+                        host = serviceInfo.safeHostAddress(),
                         port = serviceInfo.port,
                         txtRecords = parseTxtRecords(serviceInfo)
                     )
@@ -81,11 +88,7 @@ class MDNSDiscovery(context: Context) {
                         discoveredServices.add(discovered)
                         listener?.onServiceFound(discovered)
 
-                        Log.i(
-                            TAG, "✅ Resolved: ${discovered.name} " +
-                                    "(${discovered.host}:${discovered.port}) " +
-                                    "Type: ${discovered.type}"
-                        )
+                        Log.i(TAG, "✅ Resolved: ${discovered.name} " +"(${discovered.host}:${discovered.port}) " +"Type: ${discovered.type}")
                     }
                 }
             })
@@ -158,4 +161,14 @@ class MDNSDiscovery(context: Context) {
         return records
     }
 
+    @RequiresExtension(extension = Build.VERSION_CODES.TIRAMISU, version = 7)
+    fun NsdServiceInfo.safeHostAddress(): String {
+        val nsdExtVersion = SdkExtensions.getExtensionVersion(Build.VERSION_CODES.TIRAMISU)
+        return if (nsdExtVersion >= 7) {
+            hostAddresses.firstOrNull()?.hostAddress
+        } else {
+            @Suppress("DEPRECATION")
+            host?.hostAddress
+        } ?: "Unknown"
+    }
 }

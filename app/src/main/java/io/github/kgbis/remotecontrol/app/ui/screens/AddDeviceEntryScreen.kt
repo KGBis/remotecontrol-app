@@ -25,8 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -40,12 +38,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.R
+import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
 import io.github.kgbis.remotecontrol.app.features.devices.model.AddDeviceMode
 import io.github.kgbis.remotecontrol.app.features.devices.model.DeviceFormMode
 import io.github.kgbis.remotecontrol.app.features.devices.model.DeviceFormState
 import io.github.kgbis.remotecontrol.app.features.devices.model.toDevice
 import io.github.kgbis.remotecontrol.app.features.discovery.ui.MDNSDiscoveryScreen
-import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,14 +51,10 @@ fun AddDeviceEntryScreen(
     navController: NavController,
     devicesVm: DevicesViewModel,
 ) {
-    var showSnackbar by remember { mutableStateOf<String?>(null) }
-    val snackbarHostState = remember { SnackbarHostState() }
-
     var mode by remember { mutableStateOf(AddDeviceMode.NONE) }
     var formState by remember { mutableStateOf(DeviceFormState()) }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -178,10 +172,8 @@ fun AddDeviceEntryScreen(
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                         navController = navController,
                         devicesVm = devicesVm,
-                        onShowMessage = { showSnackbar = it }
                     )
                 }
-
                 AddDeviceMode.MANUAL -> {
                     Column(
                         modifier = Modifier
@@ -200,7 +192,6 @@ fun AddDeviceEntryScreen(
                         }
                     }
                 }
-
                 AddDeviceMode.NONE -> {
                     // Do nothing
                 }

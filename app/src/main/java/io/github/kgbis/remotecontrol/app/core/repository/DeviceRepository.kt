@@ -1,31 +1,61 @@
 package io.github.kgbis.remotecontrol.app.core.repository
 
 import android.content.Context
+import android.util.Log
 import androidx.core.content.edit
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializer
 import com.google.gson.reflect.TypeToken
 import io.github.kgbis.remotecontrol.app.core.model.Device
+import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
+import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.util.UUID
+import kotlin.collections.emptyMap
 
 class DeviceRepository(context: Context) {
 
-    private val myType = object : TypeToken<List<Device>>() {}.type
+    private val deviceListType = object : TypeToken<List<Device>>() {}.type
+
+    private val deviceStatusMapType = object : TypeToken<Map<UUID, DeviceStatus>>() {}.type
+
+    val pendingActionGson: Gson = GsonBuilder()
+        .registerTypeAdapter(PendingAction::class.java, JsonDeserializer { json, _, _ ->
+            val obj = json.asJsonObject
+            val type = obj["type"]?.asString ?: "None"
+
+            when (type) {
+                "None" -> PendingAction.None
+                "ShutdownScheduled" -> PendingAction.ShutdownScheduled(
+                    scheduledAt = Instant.parse(obj["scheduledAt"].asString),
+                    executeAt = Instant.parse(obj["executeAt"].asString),
+                    cancellable = obj["cancellable"].asBoolean
+                )
+
+                else -> throw IllegalArgumentException("Unknown PendingAction type: $type")
+            }
+        })
+        .create()
+
+
 
     private val prefs = context.getSharedPreferences("stored_devices", Context.MODE_PRIVATE)
 
     // Mutex para proteger la lista
     private val mutex = Mutex()
 
-    suspend fun getDevices(): List<Device> = withContext(Dispatchers.IO) {
+    suspend fun getDevices(): List<Device> = withContext(Dispatchers.IO) { // NOSONAR
         val json = prefs.getString("devices", "[]") ?: "[]"
-        val devices = Gson().fromJson<List<Device>>(json, myType)
+        val devices = Gson().fromJson<List<Device>>(json, deviceListType)
         devices.sortedBy { it.id }
     }
 
-    suspend fun addDevice(device: Device) = withContext(Dispatchers.IO) {
+    suspend fun addDevice(device: Device) = withContext(Dispatchers.IO) { // NOSONAR
         mutex.withLock {
             val devices = getDevices().toMutableList()
             devices.removeAll { it.id == device.id }
@@ -34,7 +64,7 @@ class DeviceRepository(context: Context) {
         }
     }
 
-    suspend fun addDevices(devicesToAdd: List<Device>) = withContext(Dispatchers.IO) {
+    suspend fun addDevices(devicesToAdd: List<Device>) = withContext(Dispatchers.IO) { // NOSONAR
         mutex.withLock {
             val devices = getDevices().toMutableList()
             devicesToAdd.forEach { d ->
@@ -45,7 +75,7 @@ class DeviceRepository(context: Context) {
         }
     }
 
-    suspend fun updateDevice(original: Device, updated: Device) = withContext(Dispatchers.IO) {
+    suspend fun updateDevice(original: Device, updated: Device) = withContext(Dispatchers.IO) { // NOSONAR
         mutex.withLock {
             val devices = getDevices().toMutableList()
             devices.removeAll { it.id == original.id }
@@ -54,7 +84,7 @@ class DeviceRepository(context: Context) {
         }
     }
 
-    suspend fun removeDevice(device: Device) = withContext(Dispatchers.IO) {
+    suspend fun removeDevice(device: Device) = withContext(Dispatchers.IO) { // NOSONAR
         mutex.withLock {
             val devices = getDevices().filterNot { it.id == device.id }
             saveDevices(devices)
@@ -66,17 +96,22 @@ class DeviceRepository(context: Context) {
         prefs.edit { putString("devices", toJson) }
     }
 
-    private fun String.toIpLong(): Long {
-        val parts = this.split(".")
-        if (parts.size != 4) return 0L
-        return try {
-            val a = parts[0].toLong()
-            val b = parts[1].toLong()
-            val c = parts[2].toLong()
-            val d = parts[3].toLong()
-            (a shl 24) or (b shl 16) or (c shl 8) or d
-        } catch (_: NumberFormatException) {
-            0L
-        }
+    /* Device status */
+
+    fun saveDeviceStatuses(statusMap: Map<UUID, DeviceStatus>) {
+        val json = pendingActionGson.toJson(statusMap)
+        Log.d("saveDeviceStatuses", "Generated JSON -> $json")
+        prefs.edit { putString("device_statuses", json) }
     }
+
+    suspend fun loadDeviceStatuses(): Map<UUID, DeviceStatus> =
+        withContext(Dispatchers.IO) { // NOSONAR
+            val json = prefs.getString("device_statuses", "{}") ?: "{}"
+            val map = (pendingActionGson.fromJson(json, deviceStatusMapType)
+                ?: emptyMap<UUID, DeviceStatus>())
+            Log.d("loadDeviceStatuses", "Generated status map -> $map")
+            map
+        }
+
+
 }

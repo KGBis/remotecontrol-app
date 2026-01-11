@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -71,7 +72,7 @@ fun DeviceListItem(
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
+                .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -137,7 +138,7 @@ fun DeviceRow(device: Device, devicesVm: DevicesViewModel, onEdit: () -> Unit) {
             }
             val interfaces = device.interfaces
             @Suppress("SENSELESS_COMPARISON")
-            if (interfaces == null)
+            if (interfaces == null) // NOSONAR
                 Text(
                     stringResource(R.string.no_interfaces),
                     style = MaterialTheme.typography.bodySmall
@@ -187,7 +188,7 @@ fun ActionsRow(
     val wolColor = actionIconColor(deviceStatus.canWakeup)
 
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Shutdown icon + text
@@ -302,7 +303,7 @@ fun dotStatus(
     }
 
 data class ShutdownUi(
-    val click: ()-> Unit,
+    val click: () -> Unit,
     val enabled: Boolean,
     val imageVector: ImageVector,
     val color: Color,
@@ -311,27 +312,39 @@ data class ShutdownUi(
 )
 
 @Composable
-private fun getShutdownUiData(deviceStatus: DeviceStatus, onShutdown: () -> Unit, onCancel: () -> Unit): ShutdownUi {
+private fun getShutdownUiData(
+    deviceStatus: DeviceStatus,
+    onShutdown: () -> Unit,
+    onCancel: () -> Unit
+): ShutdownUi {
+    val shutdownText = stringResource(R.string.shutdown_action)
+    val cancelText = stringResource(R.string.shutdown_cancel_action)
     val shutdownColor = actionIconColor(deviceStatus.canShutdown)
     val cancelShutdownColor = actionIconColor(deviceStatus.canCancelShutdown)
-    val showShutdown = deviceStatus.pendingAction == PendingAction.None
 
-    return when(showShutdown) {
-        true -> ShutdownUi(
-        click = onShutdown,
-        enabled = deviceStatus.canShutdown,
-        imageVector = Icons.Default.PowerOff,
-        color = shutdownColor,
-        textLine1 = stringResource(R.string.shutdown_action),
-        textLine2 = ""
-        )
-        false ->
-        ShutdownUi(click = onCancel,
-        enabled = deviceStatus.canCancelShutdown,
-        imageVector = Icons.Default.Close,
-        color = cancelShutdownColor,
-        textLine1 = stringResource(R.string.shutdown_cancel_action),
-        textLine2 = stringResource(R.string.shutdown_action)
-        )
+    Log.d("getShutdownUiData", "Can cancel= ${deviceStatus.canCancelShutdown}")
+
+    return remember(deviceStatus) {
+        val showShutdown = deviceStatus.pendingAction == PendingAction.None || !deviceStatus.canCancelShutdown
+
+        if (showShutdown) {
+            ShutdownUi(
+                click = onShutdown,
+                enabled = deviceStatus.canShutdown,
+                imageVector = Icons.Default.PowerOff,
+                color = shutdownColor,
+                textLine1 = shutdownText,
+                textLine2 = ""
+            )
+        } else {
+            ShutdownUi(
+                click = onCancel,
+                enabled = deviceStatus.canCancelShutdown,
+                imageVector = Icons.Default.Close,
+                color = cancelShutdownColor,
+                textLine1 = cancelText,
+                textLine2 = shutdownText
+            )
+        }
     }
 }

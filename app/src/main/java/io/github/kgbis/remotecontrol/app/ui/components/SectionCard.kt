@@ -18,7 +18,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SectionCard(title: String, titleAlign: TextAlign? = TextAlign.Unspecified, content: @Composable ColumnScope.() -> Unit) {
+fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Text(
+        text = title,
+        textAlign = TextAlign.Start,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold
+    )
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -28,15 +35,7 @@ fun SectionCard(title: String, titleAlign: TextAlign? = TextAlign.Unspecified, c
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
             Spacer(Modifier.height(12.dp))
-
             content()
         }
     }

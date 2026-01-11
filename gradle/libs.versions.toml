@@ -1,6 +1,7 @@
 [versions]
-activityCompose = "1.12.0"
+activityCompose = "1.12.2"
 agp = "8.13.2"
+commonsText = "1.15.0"
 composeBom = "2025.11.01"
 composeMaterialIcons = "1.7.8"
 composeTesting = "1.9.5"
@@ -10,13 +11,14 @@ foundation = "1.9.5"
 foundationLayout = "1.9.5"
 gson = "2.13.2"
 junit = "4.13.2"
-kotlin = "2.2.21"
+kotlin = "2.3.0"
 lifecycleRuntimeKtx = "2.10.0"
 lifecycleViewmodelCompose = "2.10.0"
 material3 = "1.4.0"
 navigationCompose = "2.9.6"
 ui = "1.9.5"
 uiToolingPreview = "1.9.5"
+lifecycleProcess = "2.10.0"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -45,5 +47,7 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "uiToolingPreview" }
+commons-text = { module = "org.apache.commons:commons-text", version.ref = "commonsText" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }

@@ -4,7 +4,7 @@ import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInfo
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
-import io.github.kgbis.remotecontrol.app.core.network.SHUTDOWN_PORT
+import io.github.kgbis.remotecontrol.app.core.network.REMOTETRAY_PORT
 import java.util.UUID
 
 data class DeviceFormState(
@@ -37,7 +37,7 @@ fun DeviceFormState.toDevice(): Device {
 
 data class InterfaceFormState(
     val ip: String = "",
-    val port: String = "$SHUTDOWN_PORT",
+    val port: String = "$REMOTETRAY_PORT",
     val mac: String = "",
     val type: InterfaceType = InterfaceType.UNKNOWN
 )

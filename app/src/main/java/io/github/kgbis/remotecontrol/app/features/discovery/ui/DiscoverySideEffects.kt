@@ -9,7 +9,6 @@ import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveryState
 @Composable
 fun DiscoverySideEffects(
     state: DiscoveryState,
-    onShowMessage: (String) -> Unit,
     discoveryVm: DiscoveryViewModel
 ) {
     // Autostart
@@ -26,17 +25,6 @@ fun DiscoverySideEffects(
         if (state.isDiscovering) {
             delay(5000L)
             discoveryVm.stopDiscovery()
-            onShowMessage("Discovery stopped after 5 seconds")
-        }
-    }
-
-    // Show errors
-    LaunchedEffect(state.error) {
-        state.error?.let { error ->
-            onShowMessage(error)
-            // Limpiar el error después de mostrarlo
-            delay(1000)
-            discoveryVm.clearError()
         }
     }
 

@@ -50,7 +50,7 @@ fun ColumnScope.DiscoveryScreenContent(
     if (state.discoveringState == DiscoveringState.FINISHED && devices.isEmpty()) {
         Log.i("DiscoveryScreenContent", "FINISHED and Empty")
         MessageAndRescan(
-            text = stringResource(R.string.no_devices_found),
+            text = stringResource(R.string.discovery_no_devices_found),
             modifier = modifier,
             onClick = { discoveryVm.startDiscovery() }
         )
@@ -60,7 +60,7 @@ fun ColumnScope.DiscoveryScreenContent(
     if (devices.isNotEmpty()) {
         if (state.discoveringState == DiscoveringState.FINISHED)
             MessageAndRescan(
-                text = stringResource(R.string.devices_found),
+                text = stringResource(R.string.discovery_devices_found),
                 modifier = modifier,
                 onClick = { discoveryVm.startDiscovery() }
             )
@@ -68,6 +68,17 @@ fun ColumnScope.DiscoveryScreenContent(
             results = devices,
             navController = navController,
             devicesVm = devicesVm
+        )
+    }
+
+    if (state.error != null) {
+        MessageAndRescan(
+            text = stringResource(R.string.discovery_devices_found),
+            modifier = modifier,
+            onClick = {
+                discoveryVm.clearError()
+                discoveryVm.startDiscovery()
+            }
         )
     }
 }

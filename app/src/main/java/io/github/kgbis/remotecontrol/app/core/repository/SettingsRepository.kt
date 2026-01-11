@@ -20,7 +20,6 @@ class SettingsRepository(context: Context) {
         val KEY_SHUTDOWN_DELAY_UNIT = stringPreferencesKey("delay_unit")
         val KEY_AUTO_REFRESH = booleanPreferencesKey("auto_refresh_enabled")
         val KEY_AUTO_REFRESH_DELAY = intPreferencesKey("auto_refresh_delay")
-        val KEY_TIMEOUT = intPreferencesKey("scan_timeout")
         val KEY_THEME = stringPreferencesKey("theme")
     }
 
@@ -66,17 +65,6 @@ class SettingsRepository(context: Context) {
     suspend fun saveAutorefreshDelay(delay: Float) {
         dataStore.edit { prefs ->
             prefs[KEY_AUTO_REFRESH_DELAY] = delay.toInt()
-        }
-    }
-
-    val socketTimeoutFlow: Flow<Int> =
-        dataStore.data.map { prefs ->
-            prefs[KEY_TIMEOUT] ?: 500
-        }
-
-    suspend fun saveSocketTimeout(delay: Float) {
-        dataStore.edit { prefs ->
-            prefs[KEY_TIMEOUT] = delay.toInt()
         }
     }
 

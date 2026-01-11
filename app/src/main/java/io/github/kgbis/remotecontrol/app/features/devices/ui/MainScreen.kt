@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -51,12 +53,13 @@ fun MainScreen(
     settingsVm: SettingsViewModel = viewModel()
 ) {
     val devices by devicesVm.devices.collectAsState()
+    val notInSameNetwork by devicesVm.notInSameNetwork.collectAsState()
 
     var showSnackbar by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var pulltoRefreshIsRefreshing by remember { mutableStateOf(false) }
-    val pulltoRefreshState = rememberPullToRefreshState()
+    var pullToRefreshIsRefreshing by remember { mutableStateOf(false) }
+    val pullToRefreshState = rememberPullToRefreshState()
 
     val context = LocalContext.current
 
@@ -65,6 +68,13 @@ fun MainScreen(
     val unit by settingsVm.shutdownUnit.collectAsState()
 
     MainScreenSideEffects(devicesVm, settingsVm)
+
+    DisposableEffect(Unit) {
+        devicesVm.setMainScreenVisible(true)
+        onDispose {
+            devicesVm.setMainScreenVisible(false)
+        }
+    }
 
     // Snackbar autoclose
     LaunchedEffect(showSnackbar) {
@@ -100,14 +110,14 @@ fun MainScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize(),
-            state = pulltoRefreshState,
-            isRefreshing = pulltoRefreshIsRefreshing,
+            state = pullToRefreshState,
+            isRefreshing = pullToRefreshIsRefreshing,
             onRefresh = {
                 @Suppress("AssignedValueIsNeverRead")
-                pulltoRefreshIsRefreshing = true
+                pullToRefreshIsRefreshing = true
                 devicesVm.probeDevices() //refreshStatuses()
                 @Suppress("AssignedValueIsNeverRead")
-                pulltoRefreshIsRefreshing = false
+                pullToRefreshIsRefreshing = false
             }
         ) {
             Column(
@@ -204,6 +214,13 @@ fun MainScreen(
                                     }
                                 )
                         }
+                    }
+                    if (notInSameNetwork) {
+                        Text(
+                            stringResource(R.string.not_in_same_network),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }

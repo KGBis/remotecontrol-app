@@ -10,7 +10,7 @@ import io.github.kgbis.remotecontrol.app.features.settings.SettingsViewModel
 import io.github.kgbis.remotecontrol.app.navigation.NavGraph
 import io.github.kgbis.remotecontrol.app.ui.theme.RemotePcControlTheme
 
-const val MIN_VERSION = "2025.12.18"
+const val MIN_VERSION = "2026.01.3"
 
 class MainActivity : ComponentActivity() {
 

@@ -40,6 +40,7 @@ import io.github.kgbis.remotecontrol.app.features.devices.model.InterfaceFormSta
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
 import io.github.kgbis.remotecontrol.app.ui.components.ValidatingTextField
 import io.github.kgbis.remotecontrol.app.core.util.Utils
+import io.github.kgbis.remotecontrol.app.core.util.Utils.options
 
 @Composable
 fun AddEditDeviceScreen(
@@ -209,7 +210,6 @@ fun OsDropdown(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val options = listOf("Windows", "Linux", "macOS")
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(

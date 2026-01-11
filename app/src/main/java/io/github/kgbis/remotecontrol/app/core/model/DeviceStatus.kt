@@ -10,9 +10,8 @@ data class DeviceStatus(
     val canShutdown =
         state == DeviceState.ONLINE && trayReachable && pendingAction == PendingAction.None
 
-    val canCancelShutdown = state == DeviceState.ONLINE
-            && trayReachable
-            && (pendingAction is PendingAction.ShutdownScheduled && pendingAction.cancellable)
+    val canCancelShutdown = (state == DeviceState.ONLINE
+            && trayReachable) && (pendingAction is PendingAction.ShutdownScheduled && pendingAction.cancellable)
 
     val canWakeup: Boolean
         get() = state == DeviceState.OFFLINE && device.hasMacAddress()

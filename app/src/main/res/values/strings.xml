@@ -67,8 +67,9 @@
     <string name="network_scan_running">Scanning… %1$s%% - Click to cancel</string>
     <string name="network_scan_running_2">Discovering network mDNS services…</string>
     <string name="network_scan_done">✔ Scan completed</string>
-    <string name="no_devices_found">No devices found. Click to re-scan</string>
-    <string name="devices_found">Devices were found. Click to re-scan</string>
+    <string name="discovery_no_devices_found">No devices found. Click to re-scan</string>
+    <string name="discovery_devices_found">Devices were found. Click to re-scan</string>
+    <string name="discovery_devices_error">There was an error. Click to re-scan</string>
     <string name="devices_found_add_button">Add %1$s selected</string>
     <string name="select">Select</string>
 
@@ -150,9 +151,10 @@
     <string name="no_interfaces">No interfaces</string>
     <string name="discover_error_no_id">Missing device id</string>
     <string name="discover_error_id_format">Invalid device id format</string>
-    <string name="discover_warn_old_version">Old Remote Control Tray</string>
     <string name="discover_error_old_version">Missing network interfaces</string>
-    <string name="discover_upgrade_to">Upgrade to v.%1$s or later</string>
+    <string name="discover_warn_old_version">Upgrade Tray to</string>
+    <string name="discover_upgrade_to">v.%1$s</string>
+    <string name="discover_upgrade_later">or later</string>
 
     <string name="device_general_info">Device information</string>
     <string name="os_name">Operating system</string>
@@ -167,4 +169,5 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_system">System</string>
+    <string name="not_in_same_network">You are not connected to the devices\' network. The status cannot be updated.</string>
 </resources>

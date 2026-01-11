@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -54,6 +55,11 @@ fun DetectedDevicesList(
     var multiSelectMode by remember { mutableStateOf(false) }
     val selected = remember { mutableStateListOf<UUID>() } // IP as id
 
+    Log.d(
+        "Composabe DetectedDevicesList",
+        "List of detected devices (List<DeviceTransformResult>): $results"
+    )
+
     Column(Modifier.fillMaxSize()) {
 
         // Button when multiselect is true
@@ -64,13 +70,18 @@ fun DetectedDevicesList(
                     .padding(vertical = 8.dp)
                     .align(Alignment.CenterHorizontally),
                 onClick = {
-                    val devicesToAdd = results.filter {
+                    val devicesToAdd = results.mapNotNull {
                         when (it) {
-                            is DeviceTransformResult.Ok -> it.device.id in selected
-                            is DeviceTransformResult.Outdated -> false
-                            is DeviceTransformResult.Invalid -> false
+                            is DeviceTransformResult.Ok ->
+                                if (it.device.id in selected) it.device else null
+
+                            is DeviceTransformResult.Outdated ->
+                                if (it.device?.id in selected) it.device else null
+
+                            else -> null
                         }
-                    }.map { (it as DeviceTransformResult.Ok).device }
+                    }
+
                     devicesVm.addDevices(devicesToAdd)
                     selected.clear()
                     multiSelectMode = false
@@ -84,6 +95,7 @@ fun DetectedDevicesList(
         LazyColumn {
             items(results.size) { i ->
                 when (val transformed = results[i]) {
+                    is DeviceTransformResult.Invalid -> InvalidDevice(transformed)
                     is DeviceTransformResult.Ok ->
                         CompatibleDevice(
                             selected = selected,
@@ -96,8 +108,22 @@ fun DetectedDevicesList(
                                 multiSelectMode = it
                             })
 
-                    is DeviceTransformResult.Outdated -> Unit
-                    is DeviceTransformResult.Invalid -> InvalidDevice(transformed)
+                    is DeviceTransformResult.Outdated -> {
+                        if (transformed.device != null) {
+                            CompatibleDevice(
+                                selected = selected,
+                                multi = multiSelectMode,
+                                devicesVm = devicesVm,
+                                navController = navController,
+                                device = transformed.device,
+                                outdatedWarnReason = transformed.reason,
+                                outdatedWarnParam = transformed.reasonText,
+                                onSelected = {
+                                    Log.i("onSelected", "result = $it")
+                                    multiSelectMode = it
+                                })
+                        }
+                    }
                 }
 
 
@@ -151,9 +177,12 @@ fun InvalidDevice(
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(horizontalAlignment = Alignment.End) {
+                        Log.d(
+                            "",
+                            "discover_warn_old_version = ${R.string.discover_warn_old_version}"
+                        )
                         listOf(
-                            "${stringResource(invalid.reason)} ‼\uFE0F",
-                            stringResource(R.string.discover_upgrade_to, MIN_VERSION)
+                            "${stringResource(R.string.discover_upgrade_to, MIN_VERSION)}‼\uFE0F"
                         ).forEach { Text(it, fontWeight = FontWeight.Bold) }
                     }
                 }
@@ -169,6 +198,8 @@ fun CompatibleDevice(
     devicesVm: DevicesViewModel,
     navController: NavController,
     device: Device,
+    outdatedWarnReason: Int = -1,
+    outdatedWarnParam: String = "",
     onSelected: (Boolean) -> Unit
 ) {
     val isSelected = device.id in selected
@@ -222,6 +253,20 @@ fun CompatibleDevice(
                             "✨ ${stringResource(R.string.app_name)}",
                             "v.${device.deviceInfo!!.trayVersion}"
                         ).forEach { Text(it) }
+
+                        if (outdatedWarnReason != -1) {
+                            listOf(
+                                stringResource(outdatedWarnReason),
+                                stringResource(R.string.discover_upgrade_to, outdatedWarnParam),
+                                stringResource(R.string.discover_upgrade_later)
+                            ).forEach {
+                                Text(
+                                    it,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFFF9800)
+                                )
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.width(8.dp))

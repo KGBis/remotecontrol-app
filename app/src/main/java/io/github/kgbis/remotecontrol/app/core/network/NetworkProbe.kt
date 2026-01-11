@@ -6,6 +6,7 @@ import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
+import io.github.kgbis.remotecontrol.app.core.network.NetworkActions.sendMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +17,9 @@ import java.net.InetSocketAddress
 import java.net.NoRouteToHostException
 import java.net.Socket
 import java.net.SocketTimeoutException
-import java.util.Date
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 data class ProbeResult(
     val ip: String,
@@ -24,6 +27,7 @@ data class ProbeResult(
     val mac: String?,
     val result: ConnectionResult,
     val durationMs: Long,
+    val device: Device? = null
 )
 
 private const val WIN_FALLBACK = 135
@@ -36,6 +40,7 @@ fun probeDeviceFlow(
     device: Device,
     subnet: String
 ): Flow<ProbeResult> = channelFlow {
+    // list of device interfaces that are in the same subnet (i.e. 192.168.1.x)
     val ifaces = device.interfaces.filter { it.ip?.startsWith(subnet) == true }
     for (iface in ifaces) {
         val probe = withContext(Dispatchers.IO) { // NOSONAR
@@ -44,16 +49,24 @@ fun probeDeviceFlow(
 
             val result = connect(device = device, iface = iface)
 
+            // if result is Connection.OK get full device info from tray
+            var fullDevice: Device? = null
+            if (result == ConnectionResult.OK) {
+                fullDevice = fetchDeviceInfo(device, iface.ip!!)
+            }
+
             ProbeResult(
                 ip = iface.ip!!,
                 port = iface.port!!,
                 mac = iface.mac,
                 result = result,
-                durationMs = System.currentTimeMillis() - start
+                durationMs = System.currentTimeMillis() - start,
+                device = fullDevice
             )
         }
 
         try {
+            Log.d("probeDeviceFlow", "Probe result = $probe")
             send(probe)
         } catch (e: ClosedSendChannelException) {
             Log.d("probeDeviceFlow", "Channel closed: ${e.message}")
@@ -78,10 +91,7 @@ private fun connect(device: Device, iface: DeviceInterface): ConnectionResult {
         }
 
         if (fallbackPort == -1) {
-            Log.d(
-                "connect",
-                "Target OS is not Windows, no fallback will be tried. Returning $result"
-            )
+            Log.d("connect","Target OS is not Windows, no fallback will be tried. Returning $result")
             return result
         }
 
@@ -97,10 +107,20 @@ private fun connect(device: Device, iface: DeviceInterface): ConnectionResult {
     return result
 }
 
+private suspend fun fetchDeviceInfo(inDevice: Device, ipToSend: String): Device? {
+    val command = "INFO $ipToSend"
+    return sendMessage(
+        device = inDevice,
+        command = command,
+        processor = NetworkActions::deviceInfoResponse
+    )
+}
+
 
 fun computeDeviceStatus(
     previous: DeviceStatus,
     probeResult: ProbeResult,
+    refreshInterval: Int,
     now: Long = System.currentTimeMillis()
 ): DeviceStatus {
     Log.d("computeDeviceStatus", "probe result -> $probeResult")
@@ -108,7 +128,7 @@ fun computeDeviceStatus(
     return when (probeResult.result) {
         // Connection to port 6800 was fine
         ConnectionResult.OK -> {
-            Log.i("computeDeviceStatus", "ConnectionResult.OK")
+            Log.d("computeDeviceStatus", "ALIVE -> ConnectionResult.OK")
             DeviceStatus(
                 device = previous.device,
                 state = DeviceState.ONLINE,
@@ -119,10 +139,7 @@ fun computeDeviceStatus(
         }
         // Connection to port 6800 was refused
         ConnectionResult.OK_FALLBACK, ConnectionResult.CONNECT_ERROR -> {
-            Log.i(
-                "computeDeviceStatus",
-                "ConnectionResult.OK_FALLBACK or ConnectionResult.CONNECT_ERROR"
-            )
+            Log.d("computeDeviceStatus","ALIVE -> ConnectionResult.OK_FALLBACK or ConnectionResult.CONNECT_ERROR")
             DeviceStatus(
                 device = previous.device,
                 state = DeviceState.ONLINE,
@@ -133,7 +150,7 @@ fun computeDeviceStatus(
         }
         // Host unreachable
         ConnectionResult.HOST_UNREACHABLE -> {
-            Log.i("computeDeviceStatus", "ConnectionResult.HOST_UNREACHABLE")
+            Log.d("computeDeviceStatus", "OFFLINE -> ConnectionResult.HOST_UNREACHABLE")
             DeviceStatus(
                 device = previous.device,
                 state = DeviceState.OFFLINE,
@@ -143,26 +160,46 @@ fun computeDeviceStatus(
         }
 
         ConnectionResult.TIMEOUT_ERROR, ConnectionResult.UNKNOWN_ERROR -> {
-            val recentlySeen = now - previous.lastSeen < 3 * 60_000
-            val status = when (recentlySeen) {
-                true -> when (previous.state) {
-                    DeviceState.ONLINE -> DeviceState.ONLINE
-                    DeviceState.UNKNOWN -> DeviceState.OFFLINE
-                    else -> DeviceState.UNKNOWN
-                }
+            Log.d(
+                "computeDeviceStatus", "Last seen = ${
+                    LocalDateTime.ofInstant(
+                        Instant.ofEpochMilli(previous.lastSeen),
+                        ZoneId.systemDefault()
+                    )
+                }"
+            )
+            Log.d(
+                "computeDeviceStatus", "Now = ${LocalDateTime.now()}"
+            )
 
-                false -> DeviceState.OFFLINE
+            val confidenceCycles = when {
+                refreshInterval <= 15 -> 2.4
+                refreshInterval <= 30 -> 1.5
+                refreshInterval <= 45 -> 1.2
+                else -> 1.1
             }
 
-            Log.d("computeDeviceStatus", "TIMEOUT_ERROR. Last seen ${Date(previous.lastSeen)}")
+            val offlineThresholdMs = (confidenceCycles * refreshInterval * 1_000).toLong()
+            Log.d("computeDeviceStatus","\nrefreshInterval=${refreshInterval},\nconfidenceCycles=$confidenceCycles\nofflineThresholdMs=$offlineThresholdMs")
+
+            val recentlySeen = now - previous.lastSeen < offlineThresholdMs
+
+            val newState = when {
+                recentlySeen -> previous.state
+                else -> DeviceState.OFFLINE
+            }
 
             DeviceStatus(
                 device = previous.device,
-                state = status,
+                state = newState,
                 trayReachable = false,
                 lastSeen = previous.lastSeen,
-                pendingAction = if(status == DeviceState.ONLINE) previous.pendingAction else PendingAction.None
+                pendingAction = if (newState == DeviceState.ONLINE)
+                    previous.pendingAction
+                else
+                    PendingAction.None
             )
+
         }
     }
 }
@@ -185,14 +222,21 @@ fun tryConnect(
             ConnectionResult.OK
         }
     } catch (e: Exception) {
-
         Log.w("tryConnect", "Exception ${e.javaClass.simpleName}, msg -> ${e.message}")
         val msg = e.message.orEmpty()
-        when {
-            e is NoRouteToHostException -> ConnectionResult.HOST_UNREACHABLE // host is dead / wrong ip
-            e is ConnectException && msg.contains("ECONNREFUSED") -> ConnectionResult.CONNECT_ERROR   // host alive, port is closed
-            e is ConnectException && msg.contains("ETIMEDOUT") -> ConnectionResult.TIMEOUT_ERROR   // host did not reply (probably OFF)
-            e is SocketTimeoutException -> ConnectionResult.TIMEOUT_ERROR // undetermined
+        when (e) {
+            is NoRouteToHostException -> ConnectionResult.HOST_UNREACHABLE // host is dead / wrong ip
+            is ConnectException -> {
+                if (msg.contains("ECONNREFUSED")) {
+                    ConnectionResult.CONNECT_ERROR   // host alive, port is closed
+                } else
+                    if (msg.contains("ETIMEDOUT")) {
+                        ConnectionResult.TIMEOUT_ERROR   // host did not reply (probably OFF)
+                    } else
+                        ConnectionResult.UNKNOWN_ERROR
+            }
+
+            is SocketTimeoutException -> ConnectionResult.TIMEOUT_ERROR // undetermined
             else -> ConnectionResult.UNKNOWN_ERROR
         }
 

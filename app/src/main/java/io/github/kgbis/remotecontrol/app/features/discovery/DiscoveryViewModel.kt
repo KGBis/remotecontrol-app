@@ -32,7 +32,7 @@ class DiscoveryViewModel(
     }
 
     private fun recomputeDevices(state: DiscoveryState): DiscoveryState {
-        Log.d("recomputeDevices", "state: $state")
+        Log.d("recomputeDevices", "DiscoveryState (state) = $state")
         val merged = state.discoveredServices
             .groupBy { it.deviceId }
             .map { (deviceId, services) ->
@@ -79,7 +79,7 @@ class DiscoveryViewModel(
                     txtRecords = service.txtRecords
                 )
 
-                Log.d("onServiceFound", "entry -> $entry")
+                Log.d("onServiceFound", "DiscoveredServiceEntry (entry) = $entry")
 
                 _state.update { current ->
                     Log.d("update", "current = $current")

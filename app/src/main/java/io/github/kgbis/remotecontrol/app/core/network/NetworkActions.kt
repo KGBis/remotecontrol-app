@@ -2,7 +2,11 @@ package io.github.kgbis.remotecontrol.app.core.network
 
 import android.os.Build
 import android.util.Log
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import com.google.gson.reflect.TypeToken
 import io.github.kgbis.remotecontrol.app.core.model.Device
+import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
@@ -19,33 +23,48 @@ import java.net.Socket
 import kotlin.collections.iterator
 import kotlin.experimental.inv
 
-const val SHUTDOWN_PORT = 6800
+const val REMOTETRAY_PORT = 6800
 
 object NetworkActions {
 
-    fun shutdownResponse(message: String, @Suppress("unused") device: Device): Boolean {
-        Log.d("shutdownRequest", "Computer response: $message")
+    fun simpleAckResponse(message: String): Boolean {
+        Log.d("simpleAckResponse", "Remote PC Control Tray response: $message")
         return message == "ACK"
     }
 
+    fun deviceInfoResponse(trayResponse: String): Device? {
+        Log.d("deviceInfoResponse", "Remote PC Control Tray response: $trayResponse")
+        if (trayResponse.contains("ERROR")) {
+            Log.w("deviceInfoResponse", "Error response: $trayResponse")
+            return null
+        }
+
+        try {
+            return Gson().fromJson<Device>(trayResponse, object : TypeToken<Device>() {}.type)
+        } catch (_: JsonSyntaxException) {
+            Log.w("deviceInfoResponse", "Old version response: $trayResponse")
+            return null
+        }
+    }
+
     /**
-     * Sends a [command] over TCP/IP to the `device.ip` and [SHUTDOWN_PORT]
+     * Sends a [command] over TCP/IP to the `device.ip` and [REMOTETRAY_PORT]
      */
     suspend fun <T> sendMessage(
         device: Device,
         command: String,
-        processor: (String, Device) -> T?,
+        processor: (String) -> T?,
         timeout: Int = 500
     ): T? =
         withContext(Dispatchers.IO) { // NOSONAR
-            var exception = ""
+            var message = ""
             for (iface in device.interfaces) {
                 try {
                     val socket = Socket()
                     socket.soTimeout = timeout
 
                     socket.connect(
-                        InetSocketAddress(iface.ip!!, SHUTDOWN_PORT),
+                        InetSocketAddress(iface.ip!!, REMOTETRAY_PORT),
                         timeout
                     )
                     Log.d("sendMessage", "Connection established to ${iface.ip}")
@@ -65,11 +84,11 @@ object NetworkActions {
                         val message = reader.readLine()
                         Log.d("sendMessage", "Message received: '$message'")
 
-                        return@withContext processor(message, device)
+                        return@withContext processor(message)
                     }
                 } catch (e: Exception) {
                     Log.e("sendMessage", "failed: $e -> ${e.message}")
-                    if(exception.isEmpty()) exception = e.javaClass.simpleName
+                    if (message.isEmpty()) message = e.javaClass.simpleName
                 }
             }
             //
@@ -78,28 +97,46 @@ object NetworkActions {
 
     suspend fun sendWoL(device: Device): Boolean =
         withContext(Dispatchers.IO) { // NOSONAR
-            for (iface in device.interfaces) {
-                try {
-                    val macBytes =
-                        iface.mac!!.split(":").map { it.toInt(16).toByte() }.toByteArray()
-                    val bytes = ByteArray(6 + 16 * macBytes.size)
-                    for (i in 0 until 6) bytes[i] = 0xFF.toByte()
-                    for (i in 6 until bytes.size step macBytes.size)
-                        System.arraycopy(macBytes, 0, bytes, i, macBytes.size)
 
-                    val address = InetAddress.getByName(getBroadcastAddress())
+            var sent = false
 
-                    DatagramSocket().use { socket ->
-                        val packet = DatagramPacket(bytes, bytes.size, address, 9)
-                        socket.send(packet)
-                    }
-                    return@withContext true
-                } catch (e: Exception) {
-                    Log.e("sendWoL", "Error sending Wake-on-LAN to ${device.hostname}. Error: $e")
+            val orderedIfaces = device.interfaces.sortedBy {
+                when (it.type) {
+                    InterfaceType.ETHERNET -> 0
+                    InterfaceType.UNKNOWN -> 1
+                    InterfaceType.WIFI -> 2
                 }
             }
-            return@withContext false
+
+            for (iface in orderedIfaces) {
+                val mac = iface.mac ?: continue
+
+                try {
+                    sendMagicPacket(mac)
+                    sent = true
+                    Log.d("sendWoL", "WoL sent via ${iface.type} (${iface.mac})")
+                } catch (e: Exception) {
+                    Log.w("sendWoL", "Failed WoL via ${iface.type}: ${e.message}")
+                }
+            }
+
+            sent
         }
+
+    private fun sendMagicPacket(mac: String) {
+        val macBytes = mac.split(":").map { it.toInt(16).toByte() }.toByteArray()
+        val bytes = ByteArray(6 + 16 * macBytes.size)
+
+        repeat(6) { bytes[it] = 0xFF.toByte() }
+        for (i in 6 until bytes.size step macBytes.size) {
+            System.arraycopy(macBytes, 0, bytes, i, macBytes.size)
+        }
+
+        val address = InetAddress.getByName(getBroadcastAddress())
+        DatagramSocket().use { socket ->
+            socket.send(DatagramPacket(bytes, bytes.size, address, 9))
+        }
+    }
 
     fun getBroadcastAddress(
         emulatorFallback: String = "192.168.1.255"

@@ -19,7 +19,6 @@ fun ColumnScope.MDNSDiscoveryScreen(
     modifier: Modifier,
     navController: NavController,
     devicesVm: DevicesViewModel,
-    onShowMessage: (String) -> Unit
 ) {
     val discoveryVm: DiscoveryViewModel = viewModel()
 
@@ -39,7 +38,6 @@ fun ColumnScope.MDNSDiscoveryScreen(
     // Side effects
     DiscoverySideEffects(
         state = state,
-        onShowMessage = onShowMessage,
         discoveryVm = discoveryVm
     )
 }

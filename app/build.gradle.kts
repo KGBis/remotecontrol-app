@@ -15,7 +15,7 @@ android {
         minSdk = 30 // Android 11
         targetSdk = 36
         versionCode = (project.properties["VERSION_CODE"] ?: "1").toString().toInt()
-        versionName = (project.properties["VERSION_NAME"] ?: "2025.11.25.1") as String?
+        versionName = (project.properties["VERSION_NAME"] ?: "2025.11.1") as String?
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -86,6 +86,8 @@ dependencies {
 
     // others
     implementation(libs.gson)
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.commons.text)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

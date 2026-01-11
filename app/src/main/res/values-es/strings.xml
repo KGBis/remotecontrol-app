@@ -66,8 +66,9 @@
     <string name="network_scan_running">Escaneando… %1$s%% - Clic para cancelar</string>
     <string name="network_scan_running_2">Descubriendo servicios mDNS…</string>
     <string name="network_scan_done">✔ Escaneo completado</string>
-    <string name="no_devices_found">Sin dispositivos. Buscar de nuevo</string>
-    <string name="devices_found">Dispositivos detectados. Buscar de nuevo</string>
+    <string name="discovery_no_devices_found">Sin dispositivos. Buscar de nuevo</string>
+    <string name="discovery_devices_found">Dispositivos detectados. Buscar de nuevo</string>
+    <string name="discovery_devices_error">Hubo un error. Buscar de nuevo</string>
     <string name="devices_found_add_button">Añadir %1$s seleccionados</string>
     <string name="select">Seleccionar</string>
 
@@ -158,9 +159,10 @@
     <string name="no_interfaces">Sin interfaces</string>
     <string name="discover_error_no_id">Falta Id de dispositivo</string>
     <string name="discover_error_id_format">Formato de Id erróneo</string>
-    <string name="discover_warn_old_version">Versión Remote Control Tray antigua</string>
     <string name="discover_error_old_version">Interfaces de red ausentes</string>
-    <string name="discover_upgrade_to">Actualice a v.%1$s o posterior</string>
+    <string name="discover_warn_old_version">Actualice Tray a</string>
+    <string name="discover_upgrade_to">v.%1$s</string>
+    <string name="discover_upgrade_later">o posterior</string>
 
     <string name="device_general_info">Información del dispositivo</string>
     <string name="os_name">Sistema operativo</string>
@@ -175,4 +177,5 @@
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
     <string name="theme_system">Sistema</string>
+    <string name="not_in_same_network">No estás conectado a la misma red de los dispositivos. No se puede actualizar estado.</string>
 </resources>
