@@ -178,4 +178,6 @@
     <string name="theme_dark">Oscuro</string>
     <string name="theme_system">Sistema</string>
     <string name="not_in_same_network">No estás conectado a la misma red de los dispositivos. No se puede actualizar estado.</string>
+    <string name="iface_type_ethernet">Cableado</string>
+    <string name="iface_type_unknown">Desconocido</string>
 </resources>

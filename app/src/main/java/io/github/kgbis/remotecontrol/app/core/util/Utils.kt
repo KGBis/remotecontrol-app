@@ -2,24 +2,25 @@ package io.github.kgbis.remotecontrol.app.core.util
 
 import android.app.Application
 import android.util.Log
+import java.net.Inet4Address
+import java.net.InetAddress
 
 object Utils {
 
     val options = listOf("Windows", "Linux", "macOS")
 
-    fun isValidIp(ip: String): Boolean {
-        val regex = Regex(
-            pattern = "^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$"
-        )
-        return regex.matches(ip)
-    }
+    fun isValidIpv4(ip: String): Boolean =
+        runCatching { InetAddress.getByName(ip) }
+            .getOrNull() is Inet4Address
+
+    fun isValidMacOptional(mac: String): Boolean =
+        mac.isBlank() || isValidMac(mac)
 
     fun isValidMac(mac: String): Boolean {
-        val regex = Regex(
-            pattern = "^([0-9A-Fa-f]{2}([-:])){5}[0-9A-Fa-f]{2}$"
-        )
+        val regex = Regex("^([0-9A-Fa-f]{2}([-:])){5}[0-9A-Fa-f]{2}$")
         return regex.matches(mac)
     }
+
 
     fun loadAboutKeys(context: Application): Map<String, String> {
         return try {

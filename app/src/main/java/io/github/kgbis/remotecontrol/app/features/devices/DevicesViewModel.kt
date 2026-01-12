@@ -58,7 +58,7 @@ class DevicesViewModel(
     private val _deviceStatusMap = MutableStateFlow<Map<UUID, DeviceStatus>>(emptyMap())
     val deviceStatusMap = _deviceStatusMap.asStateFlow()
 
-    private val _notInSameNetwork = MutableStateFlow<Boolean>(false)
+    private val _notInSameNetwork = MutableStateFlow(false)
     val notInSameNetwork = _notInSameNetwork.asStateFlow()
 
     private val _mainScreenVisible = MutableStateFlow(false)

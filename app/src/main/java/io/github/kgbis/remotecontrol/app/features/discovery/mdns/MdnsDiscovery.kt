@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.ext.SdkExtensions
 import android.util.Log
 import androidx.annotation.RequiresExtension
-import java.net.Inet4Address
 
 class MDNSDiscovery(context: Context) {
 
@@ -88,7 +87,10 @@ class MDNSDiscovery(context: Context) {
                         discoveredServices.add(discovered)
                         listener?.onServiceFound(discovered)
 
-                        Log.i(TAG, "✅ Resolved: ${discovered.name} " +"(${discovered.host}:${discovered.port}) " +"Type: ${discovered.type}")
+                        Log.i(
+                            TAG,
+                            "✅ Resolved: ${discovered.name} " + "(${discovered.host}:${discovered.port}) " + "Type: ${discovered.type}"
+                        )
                     }
                 }
             })

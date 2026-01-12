@@ -44,6 +44,7 @@ import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
 import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
+import io.github.kgbis.remotecontrol.app.features.discovery.model.OutdatedWarn
 import java.util.UUID
 
 @Composable
@@ -116,8 +117,10 @@ fun DetectedDevicesList(
                                 devicesVm = devicesVm,
                                 navController = navController,
                                 device = transformed.device,
-                                outdatedWarnReason = transformed.reason,
-                                outdatedWarnParam = transformed.reasonText,
+                                outdatedWarn = OutdatedWarn(
+                                    transformed.reason,
+                                    transformed.reasonText
+                                ),
                                 onSelected = {
                                     Log.i("onSelected", "result = $it")
                                     multiSelectMode = it
@@ -198,8 +201,7 @@ fun CompatibleDevice(
     devicesVm: DevicesViewModel,
     navController: NavController,
     device: Device,
-    outdatedWarnReason: Int = -1,
-    outdatedWarnParam: String = "",
+    outdatedWarn: OutdatedWarn = OutdatedWarn(),
     onSelected: (Boolean) -> Unit
 ) {
     val isSelected = device.id in selected
@@ -254,10 +256,10 @@ fun CompatibleDevice(
                             "v.${device.deviceInfo!!.trayVersion}"
                         ).forEach { Text(it) }
 
-                        if (outdatedWarnReason != -1) {
+                        if (outdatedWarn.reason != -1) {
                             listOf(
-                                stringResource(outdatedWarnReason),
-                                stringResource(R.string.discover_upgrade_to, outdatedWarnParam),
+                                stringResource(outdatedWarn.reason),
+                                stringResource(R.string.discover_upgrade_to, outdatedWarn.param),
                                 stringResource(R.string.discover_upgrade_later)
                             ).forEach {
                                 Text(

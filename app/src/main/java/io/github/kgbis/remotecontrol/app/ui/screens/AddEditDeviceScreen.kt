@@ -129,9 +129,13 @@ fun AddEditDeviceScreen(
     Spacer(Modifier.height(32.dp))
 
     // ---------- SAVE ----------
+
+    val allIpsValid =
+        state.interfaces.isNotEmpty() && state.interfaces.all { Utils.isValidIpv4(it.ip) }
+
     Button(
         modifier = Modifier.fillMaxWidth(),
-        enabled = state.hostname.isNotBlank() && state.interfaces.any { Utils.isValidIp(it.ip) },
+        enabled = state.hostname.isNotBlank() && allIpsValid,
         onClick = onSave
     ) {
         Text(
@@ -141,6 +145,7 @@ fun AddEditDeviceScreen(
                 stringResource(R.string.save_device)
         )
     }
+
 }
 
 @Composable
@@ -162,7 +167,9 @@ fun InterfaceEditorCard(
                 Text(
                     text = stringResource(R.string.interface_name),
                     style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.weight(1f).padding(12.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(12.dp)
                 )
 
                 if (canRemove) {
@@ -176,19 +183,21 @@ fun InterfaceEditorCard(
             }
 
             ValidatingTextField(
-                value = state.ip,
-                validator = { Utils.isValidIp(state.ip) && state.ip.isNotEmpty() },
+                value = state.ip.trim(),
+                validator = { it.isNotEmpty() && Utils.isValidIpv4(it) },
                 onValueChange = { onChange(state.copy(ip = it)) },
                 label = stringResource(R.string.device_ip),
                 modifier = Modifier.fillMaxWidth(),
+                errorMessage = R.string.error_invalid_ip
             )
 
             ValidatingTextField(
                 value = state.mac,
-                validator = Utils::isValidMac,
+                validator = Utils::isValidMacOptional,
                 onValueChange = { onChange(state.copy(mac = it)) },
                 label = stringResource(R.string.device_mac),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                errorMessage = R.string.error_invalid_mac
             )
 
             InterfaceTypeDropdown(
@@ -267,7 +276,7 @@ fun InterfaceTypeDropdown(
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true)
                 .fillMaxWidth(),
             readOnly = true,
-            value = value.name,
+            value = stringResource(value.labelRes),
             onValueChange = {},
             label = { Text(stringResource(R.string.interface_type)) },
             trailingIcon = {
@@ -281,7 +290,7 @@ fun InterfaceTypeDropdown(
         ) {
             InterfaceType.entries.forEach { type ->
                 DropdownMenuItem(
-                    text = { Text(type.name) },
+                    text = { Text(stringResource(type.labelRes)) },
                     onClick = {
                         onValueChange(type)
                         expanded = false
