@@ -7,6 +7,7 @@ import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInfo
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
+import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDeviceWarning
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDevice
 import org.apache.commons.lang3.StringUtils
 import java.util.UUID
@@ -22,8 +23,10 @@ object DeviceTransformer {
         val uuid = runCatching { UUID.fromString(deviceId) }.getOrNull()
             ?: return DeviceTransformResult.Invalid(
                 discovered,
-                R.string.discover_error_id_format,
-                "INVALID_ID"
+                warning = DiscoveredDeviceWarning.Outdated(
+                    R.string.discover_error_id_format,
+                    "INVALID_ID"
+                )
             )
 
         // host-name or hostname as fallback
@@ -33,8 +36,10 @@ object DeviceTransformer {
                 ?: return DeviceTransformResult.Outdated(
                     discovered,
                     null,
-                    R.string.discover_warn_old_version,
-                    "NO_HOSTNAME"
+                    warning = DiscoveredDeviceWarning.Outdated(
+                        R.string.discover_warn_old_version,
+                        "NO_HOSTNAME"
+                    )
                 )
 
         val interfaces = discovered.endpoints.mapNotNull {
@@ -43,8 +48,10 @@ object DeviceTransformer {
                 ?: return DeviceTransformResult.Outdated(
                     discovered,
                     null,
-                    R.string.discover_warn_old_version,
-                    "NO_MAC_ADDRESS"
+                    warning = DiscoveredDeviceWarning.Outdated(
+                        R.string.discover_warn_old_version,
+                        "NO_MAC_ADDRESS"
+                    )
                 )
             DeviceInterface(it.ip, mac, it.port, type)
         }
@@ -53,8 +60,10 @@ object DeviceTransformer {
         if (interfaces.isEmpty()) {
             return DeviceTransformResult.Invalid(
                 discovered,
-                R.string.discover_error_old_version,
-                "NO_INTERFACES"
+                warning = DiscoveredDeviceWarning.Outdated(
+                    R.string.discover_error_old_version,
+                    "NO_INTERFACES"
+                )
             )
         }
 
@@ -76,8 +85,10 @@ object DeviceTransformer {
             return DeviceTransformResult.Outdated(
                 discovered,
                 device = device,
-                reason = R.string.discover_warn_old_version,
-                reasonText = MIN_VERSION
+                warning = DiscoveredDeviceWarning.Outdated(
+                    R.string.discover_warn_old_version,
+                    MIN_VERSION
+                )
             )
         }
 

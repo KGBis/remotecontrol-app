@@ -1,7 +1,9 @@
 package io.github.kgbis.remotecontrol.app.features.about
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.util.Log
+import androidx.annotation.RawRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,8 +24,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -31,10 +35,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.halilibo.richtext.markdown.Markdown
+import com.halilibo.richtext.ui.material3.RichText
 import io.github.kgbis.remotecontrol.app.BuildConfig
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.ui.components.SectionCard
-import io.github.kgbis.remotecontrol.app.core.util.HtmlText
 
 @SuppressLint("DiscouragedApi", "LocalContextResourcesRead")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +52,8 @@ fun AboutScreen(
     val versionName = BuildConfig.VERSION_NAME
     val sections = aboutViewModel.aboutKeys
     val context = LocalContext.current
+
+    val locale = LocalConfiguration.current.locales[0].language
 
     Scaffold(
         topBar = {
@@ -97,14 +104,26 @@ fun AboutScreen(
             sections.forEach { (key, value) ->
                 val headerId = context.resources.getIdentifier(key, "string", context.packageName)
                 val contentId =
-                    context.resources.getIdentifier(value, "string", context.packageName)
+                    context.resources.getIdentifier("${value}_$locale", "raw", context.packageName)
                 if (headerId == 0 || contentId == 0) {
                     Log.w("AboutScreen", "Missing string for $key = $value")
                     return@forEach
                 }
 
+                val markdown = remember(contentId) {
+                    readRawText(context, contentId)
+                }
+
                 SectionCard(title = stringResource(headerId)) {
-                    HtmlText(stringResource(contentId), modifier = Modifier.fillMaxWidth())
+                    RichText(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 4.dp, end = 4.dp, bottom = 12.dp),
+                    ) {
+                        Markdown(
+                            content = markdown
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(16.dp))
@@ -112,3 +131,8 @@ fun AboutScreen(
         }
     }
 }
+
+fun readRawText(context: Context, @RawRes resId: Int): String =
+    context.resources.openRawResource(resId)
+        .bufferedReader()
+        .use { it.readText() }

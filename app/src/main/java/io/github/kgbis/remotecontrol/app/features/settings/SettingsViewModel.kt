@@ -18,10 +18,8 @@ class SettingsViewModel(
 
     /* Color scheme */
 
-    val colorScheme = settingsRepo.theme.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000), ThemeMode.SYSTEM
-    )
+    val colorScheme =
+        settingsRepo.theme.stateIn(viewModelScope, SharingStarted.Eagerly, ThemeMode.SYSTEM)
 
     /* Shutdown delay and time unit */
 

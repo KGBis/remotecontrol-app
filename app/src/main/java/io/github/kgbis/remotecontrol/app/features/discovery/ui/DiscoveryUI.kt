@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveringState
-import io.github.kgbis.remotecontrol.app.features.discovery.DetectedDevicesList
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
 import io.github.kgbis.remotecontrol.app.features.discovery.DiscoveryViewModel
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveryState

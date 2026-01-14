@@ -4,20 +4,29 @@ import io.github.kgbis.remotecontrol.app.core.model.Device
 
 sealed class DeviceTransformResult {
 
+    interface WithDevice {
+        val device: Device?
+    }
+
+    interface WithWarning {
+        val warning: DiscoveredDeviceWarning
+    }
+
     data class Ok(
-        val device: Device
-    ) : DeviceTransformResult()
+        override val device: Device,
+        override val warning: DiscoveredDeviceWarning = DiscoveredDeviceWarning.None
+    ) : DeviceTransformResult(), WithDevice, WithWarning
 
     data class Outdated(
         val discovered: DiscoveredDevice,
-        val device: Device?,
-        val reason: Int,
-        val reasonText: String,
-    ) : DeviceTransformResult()
+        override val device: Device?,
+        override val warning: DiscoveredDeviceWarning.Outdated
+    ) : DeviceTransformResult(), WithDevice, WithWarning
 
     data class Invalid(
         val discovered: DiscoveredDevice,
-        val reason: Int,
-        val reasonText: String,
-    ) : DeviceTransformResult()
+        // val reason: Int,
+        // val reasonText: String,
+        override val warning: DiscoveredDeviceWarning.Outdated
+    ) : DeviceTransformResult(), WithWarning
 }

@@ -6,7 +6,6 @@
 
 about_info_section=about_info_data
 about_bys_section=about_bys_data
-about_scan_section=about_scan_data
+about_discovery_section=about_discovery_data
 about_status_section=about_status_data
-about_limitations_section=about_limitations_data
 about_legal_section=about_legal_data

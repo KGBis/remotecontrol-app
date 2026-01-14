@@ -31,36 +31,6 @@ class NetworkRangeDetector() {
                 Build.PRODUCT.contains("sdk")
     }
 
-    fun getLocalAddress(): String {
-        try {
-            val networkInterfaces = NetworkInterface.getNetworkInterfaces()
-            while (networkInterfaces.hasMoreElements()) {
-                val networkInterface = networkInterfaces.nextElement()
-
-                // Ignore loopback and non-active interfaces
-                if (networkInterface.isLoopback || !networkInterface.isUp) continue
-
-                val addresses = networkInterface.inetAddresses
-                while (addresses.hasMoreElements()) {
-                    val address = addresses.nextElement()
-
-                    // Filter by private IPv4 addresses
-                    if (!address.isLoopbackAddress &&
-                        address is Inet4Address &&
-                        isPrivateIP(address.hostAddress!!)
-                    ) {
-                        Log.i("getLocalAddress", "Local address is ${address.hostAddress!!}")
-                        return address.hostAddress!!
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("getLocalAddress", "Exception $e")
-        }
-        Log.i("getLocalAddress", "Local IP address not found")
-        return "127.0.0.1"
-    }
-
     fun getLocalSubnet(): String {
         return try {
             val networkInterfaces = NetworkInterface.getNetworkInterfaces()
@@ -85,7 +55,7 @@ class NetworkRangeDetector() {
                 }
             }
             // Fallback if local IP is not found
-            "192.168.1"
+            "0.0.0" //"192.168.1"
         } catch (e: Exception) {
             Log.e("getLocalSubnet", "Exception $e")
             "0.0.0" // Fallback if error

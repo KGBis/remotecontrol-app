@@ -1,6 +1,5 @@
 package io.github.kgbis.remotecontrol.app.features.settings.ui
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,9 +32,6 @@ fun SettingsDialog(
     settingsViewModel: SettingsViewModel,
     onClose: () -> Unit,
 ) {
-    // advanced options
-    // var showAdvanced by remember { mutableStateOf(false) }
-
     val colorSchemeVm by settingsViewModel.colorScheme.collectAsState()
     var colorScheme by remember { mutableStateOf(colorSchemeVm) }
 

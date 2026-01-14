@@ -16,6 +16,8 @@ lifecycleRuntimeKtx = "2.10.0"
 lifecycleViewmodelCompose = "2.10.0"
 material3 = "1.4.0"
 navigationCompose = "2.9.6"
+richtextCommonmark = "0.20.0"
+richtextUiMaterial3 = "0.20.0"
 ui = "1.9.5"
 uiToolingPreview = "1.9.5"
 lifecycleProcess = "2.10.0"
@@ -51,3 +53,5 @@ commons-text = { module = "org.apache.commons:commons-text", version.ref = "comm
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
+richtext-commonmark = { module = "com.halilibo.compose-richtext:richtext-commonmark", version.ref = "richtextCommonmark" }
+richtext-ui-material3 = { module = "com.halilibo.compose-richtext:richtext-ui-material3", version.ref = "richtextUiMaterial3" }

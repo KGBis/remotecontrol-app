@@ -88,6 +88,8 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.commons.text)
+    implementation(libs.richtext.ui.material3)
+    implementation(libs.richtext.commonmark)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
