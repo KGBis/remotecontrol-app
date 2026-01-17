@@ -1,6 +1,5 @@
 package io.github.kgbis.remotecontrol.app.features.devices.ui
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -98,8 +97,6 @@ fun DeviceRow(device: Device, devicesVm: DevicesViewModel, onEdit: () -> Unit) {
     val deviceStatus =
         deviceStatusMap.getOrDefault(device.id, DeviceStatus(device, trayReachable = false))
 
-
-    Log.d("DeviceItem", "Device to paint -> $device")
     val (dotColor, dotContentDescription) = dotStatus(deviceStatus, deviceStatusMap)
 
     Row(modifier = Modifier.clickable { onEdit() }) {
@@ -322,10 +319,9 @@ private fun getShutdownUiData(
     val shutdownColor = actionIconColor(deviceStatus.canShutdown)
     val cancelShutdownColor = actionIconColor(deviceStatus.canCancelShutdown)
 
-    Log.d("getShutdownUiData", "Can cancel= ${deviceStatus.canCancelShutdown}")
-
     return remember(deviceStatus) {
-        val showShutdown = deviceStatus.pendingAction == PendingAction.None || !deviceStatus.canCancelShutdown
+        val showShutdown =
+            deviceStatus.pendingAction == PendingAction.None || !deviceStatus.canCancelShutdown
 
         if (showShutdown) {
             ShutdownUi(
@@ -337,6 +333,7 @@ private fun getShutdownUiData(
                 textLine2 = ""
             )
         } else {
+            @Suppress("KotlinConstantConditions")
             ShutdownUi(
                 click = onCancel,
                 enabled = deviceStatus.canCancelShutdown,

@@ -1,6 +1,5 @@
 package io.github.kgbis.remotecontrol.app.features.discovery.ui
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -43,8 +42,8 @@ import io.github.kgbis.remotecontrol.app.MIN_VERSION
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
-import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDeviceAction
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
+import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDeviceAction
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDeviceWarning
 import java.util.UUID
 
@@ -58,7 +57,7 @@ fun DetectedDevicesList( // NOSONAR complexity is 18 (over max of 15)
     val selected = remember { mutableStateListOf<UUID>() } // IP as id
 
     Column(Modifier.fillMaxSize()) {
-    // Button when multiselect is true
+        // Button when multiselect is true
         if (multiSelectMode && selected.isNotEmpty()) {
             Button(
                 modifier = Modifier
@@ -191,7 +190,6 @@ fun CompatibleDevice(
                 Text(device.interfaces.joinToString("\n") { it.ip.orEmpty() })
             },
             trailingContent = {
-                Log.d("CompatibleDevice", "Warning type = $warning")
                 DeviceTrailingContent(
                     trayVersion = device.deviceInfo!!.trayVersion,
                     isSelected = isSelected,
@@ -214,11 +212,8 @@ private fun DeviceTrailingContent(
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(horizontalAlignment = Alignment.End) {
-
             Text("✨ ${stringResource(R.string.app_name)}")
             Text("v.$trayVersion")
-
-            Log.d("DeviceTrailingContent", "warning -> $warning")
 
             if (warning is DiscoveredDeviceWarning.Outdated) {
                 OutdatedWarning(warning)
@@ -303,10 +298,6 @@ fun InvalidDevice(
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(horizontalAlignment = Alignment.End) {
-                        Log.d(
-                            "",
-                            "discover_warn_old_version = ${R.string.discover_warn_old_version}"
-                        )
                         OutdatedWarning(invalid.warning.copy(param = MIN_VERSION))
                     }
                 }

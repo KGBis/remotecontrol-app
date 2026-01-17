@@ -1,6 +1,5 @@
 package io.github.kgbis.remotecontrol.app.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
@@ -49,11 +48,7 @@ fun ShutdownDelayDropdown(
         it.amount == currentDelay && it.unit == currentUnit
     } ?: options.first()
 
-    Log.d("ShutdownDelayDropdown", "currentDelay = $currentDelay")
-    Log.d("ShutdownDelayDropdown", "currentUnit = $currentUnit")
-    Log.d("ShutdownDelayDropdown", "Selected option = $selectedOption")
-
-    // to center drop down
+    // to center dropdown
     var parentWidth by remember { mutableStateOf(0.dp) }
     var menuWidth by remember { mutableStateOf(0.dp) }
     val density = LocalDensity.current

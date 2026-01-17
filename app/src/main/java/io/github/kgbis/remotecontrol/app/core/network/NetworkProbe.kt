@@ -17,9 +17,6 @@ import java.net.InetSocketAddress
 import java.net.NoRouteToHostException
 import java.net.Socket
 import java.net.SocketTimeoutException
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 data class ProbeResult(
     val ip: String,
@@ -40,20 +37,22 @@ fun probeDeviceFlow(
     device: Device,
     subnet: String
 ): Flow<ProbeResult> = channelFlow {
-    // list of device interfaces that are in the same subnet (i.e. 192.168.1.x)
+    // interfaces that are in the same subnet (i.e. 192.168.1.x)
     val ifaces = device.interfaces.filter { it.ip?.startsWith(subnet) == true }
+
     for (iface in ifaces) {
         val probe = withContext(Dispatchers.IO) { // NOSONAR
             val start = System.currentTimeMillis()
-            Log.i("probeDeviceFlow", "tryConnect for ${device.hostname} (${iface.ip})...")
+            Log.d("probeDeviceFlow", "trying connection to ${device.hostname} (${iface.ip})...")
 
+            // just a connection try
             val result = connect(device = device, iface = iface)
 
-            // if result is Connection.OK get full device info from tray
-            var fullDevice: Device? = null
-            if (result == ConnectionResult.OK) {
-                fullDevice = fetchDeviceInfo(device, iface.ip!!)
-            }
+            // Get full device info from tray if connection was OK
+            val fullDevice =
+                if (result == ConnectionResult.OK) fetchDeviceInfo(device, iface.ip!!) else device
+
+            Log.d("probeDeviceFlow", "connection to ${device.hostname} result $result")
 
             ProbeResult(
                 ip = iface.ip!!,
@@ -66,10 +65,9 @@ fun probeDeviceFlow(
         }
 
         try {
-            Log.d("probeDeviceFlow", "Probe result = $probe")
             send(probe)
-        } catch (e: ClosedSendChannelException) {
-            Log.d("probeDeviceFlow", "Channel closed: ${e.message}")
+        } catch (_: ClosedSendChannelException) {
+            // not interested
         }
 
         if (probe.result == ConnectionResult.OK || probe.result == ConnectionResult.OK_FALLBACK) {
@@ -91,10 +89,10 @@ private fun connect(device: Device, iface: DeviceInterface): ConnectionResult {
         }
 
         if (fallbackPort == -1) {
-            Log.d("connect","Target OS is not Windows, no fallback will be tried. Returning $result")
             return result
         }
 
+        Log.d("connect","Target OS is Windows, fallback will be tried.")
         result = tryConnect(
             ip = iface.ip!!,
             port = fallbackPort,
@@ -103,7 +101,6 @@ private fun connect(device: Device, iface: DeviceInterface): ConnectionResult {
         )
     }
 
-    Log.i("", "Result = $result")
     return result
 }
 
@@ -123,55 +120,22 @@ fun computeDeviceStatus(
     refreshInterval: Int,
     now: Long = System.currentTimeMillis()
 ): DeviceStatus {
-    Log.d("computeDeviceStatus", "probe result -> $probeResult")
-
     return when (probeResult.result) {
         // Connection to port 6800 was fine
         ConnectionResult.OK -> {
-            Log.d("computeDeviceStatus", "ALIVE -> ConnectionResult.OK")
-            DeviceStatus(
-                device = previous.device,
-                state = DeviceState.ONLINE,
-                trayReachable = true,
-                lastSeen = now,
-                pendingAction = previous.pendingAction
-            )
+            previous.copy(state = DeviceState.ONLINE, trayReachable = true, lastSeen = now)
         }
         // Connection to port 6800 was refused
         ConnectionResult.OK_FALLBACK, ConnectionResult.CONNECT_ERROR -> {
-            Log.d("computeDeviceStatus","ALIVE -> ConnectionResult.OK_FALLBACK or ConnectionResult.CONNECT_ERROR")
-            DeviceStatus(
-                device = previous.device,
-                state = DeviceState.ONLINE,
-                trayReachable = false,
-                lastSeen = now,
-                pendingAction = previous.pendingAction
-            )
+            previous.copy(state = DeviceState.ONLINE, trayReachable = false, lastSeen = now)
         }
-        // Host unreachable
+        // Host unreachable. 100% sure it's turned off
         ConnectionResult.HOST_UNREACHABLE -> {
-            Log.d("computeDeviceStatus", "OFFLINE -> ConnectionResult.HOST_UNREACHABLE")
-            DeviceStatus(
-                device = previous.device,
-                state = DeviceState.OFFLINE,
-                trayReachable = false,
-                lastSeen = previous.lastSeen
-            )
+            previous.copy(state = DeviceState.OFFLINE, trayReachable = false)
         }
 
+        // Connection timeout or unknown error. Status not reliable. Calculate!
         ConnectionResult.TIMEOUT_ERROR, ConnectionResult.UNKNOWN_ERROR -> {
-            Log.d(
-                "computeDeviceStatus", "Last seen = ${
-                    LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(previous.lastSeen),
-                        ZoneId.systemDefault()
-                    )
-                }"
-            )
-            Log.d(
-                "computeDeviceStatus", "Now = ${LocalDateTime.now()}"
-            )
-
             val confidenceCycles = when {
                 refreshInterval <= 15 -> 2.4
                 refreshInterval <= 30 -> 1.5
@@ -180,26 +144,20 @@ fun computeDeviceStatus(
             }
 
             val offlineThresholdMs = (confidenceCycles * refreshInterval * 1_000).toLong()
-            Log.d("computeDeviceStatus","\nrefreshInterval=${refreshInterval},\nconfidenceCycles=$confidenceCycles\nofflineThresholdMs=$offlineThresholdMs")
-
             val recentlySeen = now - previous.lastSeen < offlineThresholdMs
-
             val newState = when {
                 recentlySeen -> previous.state
                 else -> DeviceState.OFFLINE
             }
 
-            DeviceStatus(
-                device = previous.device,
+            previous.copy(
                 state = newState,
                 trayReachable = false,
-                lastSeen = previous.lastSeen,
                 pendingAction = if (newState == DeviceState.ONLINE)
                     previous.pendingAction
                 else
                     PendingAction.None
             )
-
         }
     }
 }
@@ -212,9 +170,7 @@ fun tryConnect(
 ): ConnectionResult {
     return try {
         Socket().use { socket ->
-            Log.d("tryConnect", "tryConnect: ip $ip:$port check if can connect")
             socket.connect(InetSocketAddress(ip, port), timeout)
-            Log.d("tryConnect", "ip $ip:$port connected")
         }
         if (isFallback) {
             ConnectionResult.OK_FALLBACK
@@ -222,18 +178,19 @@ fun tryConnect(
             ConnectionResult.OK
         }
     } catch (e: Exception) {
-        Log.w("tryConnect", "Exception ${e.javaClass.simpleName}, msg -> ${e.message}")
         val msg = e.message.orEmpty()
         when (e) {
             is NoRouteToHostException -> ConnectionResult.HOST_UNREACHABLE // host is dead / wrong ip
             is ConnectException -> {
                 if (msg.contains("ECONNREFUSED")) {
-                    ConnectionResult.CONNECT_ERROR   // host alive, port is closed
+                    ConnectionResult.CONNECT_ERROR // host alive, port is closed
                 } else
                     if (msg.contains("ETIMEDOUT")) {
-                        ConnectionResult.TIMEOUT_ERROR   // host did not reply (probably OFF)
-                    } else
+                        ConnectionResult.TIMEOUT_ERROR // host did not reply (probably OFF)
+                    } else {
+                        Log.e("tryConnect", "UNKNOWN ERROR $msg")
                         ConnectionResult.UNKNOWN_ERROR
+                    }
             }
 
             is SocketTimeoutException -> ConnectionResult.TIMEOUT_ERROR // undetermined

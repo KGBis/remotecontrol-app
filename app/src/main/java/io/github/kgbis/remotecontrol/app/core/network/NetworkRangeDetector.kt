@@ -1,7 +1,6 @@
 package io.github.kgbis.remotecontrol.app.core.network
 
 import android.os.Build
-import android.util.Log
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
@@ -12,7 +11,7 @@ class NetworkRangeDetector() {
             "192.168.1" // with Android emulator use this as default subnet
         } else {
             val subnet = getLocalSubnet() // in real device use its subnet
-            Log.i("getScanSubnet", "real subnet is -> $subnet")
+            // Log.i("getScanSubnet", "real subnet is -> $subnet")
             return subnet
         }
     }
@@ -56,8 +55,7 @@ class NetworkRangeDetector() {
             }
             // Fallback if local IP is not found
             "0.0.0" //"192.168.1"
-        } catch (e: Exception) {
-            Log.e("getLocalSubnet", "Exception $e")
+        } catch (_: Exception) {
             "0.0.0" // Fallback if error
         }
     }
@@ -86,7 +84,6 @@ class NetworkRangeDetector() {
     private fun extractSubnet(ip: String): String {
         return when {
             ip.startsWith("192.168.") -> {
-                Log.i("extractSubnet", "ip: $ip -> subnet: ${ip.take(ip.lastIndexOf('.'))}")
                 ip.take(ip.lastIndexOf('.'))
             }
 

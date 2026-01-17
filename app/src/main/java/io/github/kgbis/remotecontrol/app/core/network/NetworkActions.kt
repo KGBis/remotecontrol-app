@@ -20,7 +20,6 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
 import java.net.Socket
-import kotlin.collections.iterator
 import kotlin.experimental.inv
 
 const val REMOTETRAY_PORT = 6800
@@ -28,12 +27,10 @@ const val REMOTETRAY_PORT = 6800
 object NetworkActions {
 
     fun simpleAckResponse(message: String): Boolean {
-        Log.d("simpleAckResponse", "Remote PC Control Tray response: $message")
         return message == "ACK"
     }
 
     fun deviceInfoResponse(trayResponse: String): Device? {
-        Log.d("deviceInfoResponse", "Remote PC Control Tray response: $trayResponse")
         if (trayResponse.contains("ERROR")) {
             Log.w("deviceInfoResponse", "Error response: $trayResponse")
             return null
@@ -67,11 +64,9 @@ object NetworkActions {
                         InetSocketAddress(iface.ip!!, REMOTETRAY_PORT),
                         timeout
                     )
-                    Log.d("sendMessage", "Connection established to ${iface.ip}")
 
                     socket.use { s ->
                         val msg = "$command\n"
-                        Log.d("sendMessage", "Message sent: '$msg'")
 
                         val out = BufferedWriter(OutputStreamWriter(s.getOutputStream()))
                         val reader = BufferedReader(InputStreamReader(s.getInputStream()))
@@ -82,8 +77,6 @@ object NetworkActions {
 
                         // read response
                         val message = reader.readLine()
-                        Log.d("sendMessage", "Message received: '$message'")
-
                         return@withContext processor(message)
                     }
                 } catch (e: Exception) {
@@ -91,7 +84,7 @@ object NetworkActions {
                     if (message.isEmpty()) message = e.javaClass.simpleName
                 }
             }
-            //
+
             return@withContext null
         }
 
@@ -114,7 +107,6 @@ object NetworkActions {
                 try {
                     sendMagicPacket(mac)
                     sent = true
-                    Log.d("sendWoL", "WoL sent via ${iface.type} (${iface.mac})")
                 } catch (e: Exception) {
                     Log.w("sendWoL", "Failed WoL via ${iface.type}: ${e.message}")
                 }

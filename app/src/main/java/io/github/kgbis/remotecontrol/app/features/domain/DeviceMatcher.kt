@@ -1,12 +1,13 @@
 package io.github.kgbis.remotecontrol.app.features.domain
 
-import android.util.Log
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import org.apache.commons.text.similarity.FuzzyScore
 import java.util.Locale
 
 /**
  * Device matching is probabilistic and conservative.
+ * Unmistakable signal:
+ *  - Id
  *
  * Strong signals:
  *  - MAC address
@@ -19,25 +20,19 @@ import java.util.Locale
  * A match is accepted only if the accumulated score
  * exceeds MATCH_THRESHOLD to avoid false positives.
  */
-
-private val TAG: String = "deviceScoreMatch"
-
 class DeviceMatcher(
     private val config: MatchConfig = MatchConfig(),
     private val stored: List<Device>
 ) {
 
     fun findDeviceToAdd(inDevice: Device): Device? {
-        val all = stored // _devices.value
+        val all = stored
 
         val bestMatch = all
             .map { device -> device to deviceScoreMatch(device, inDevice) }
             .maxByOrNull { it.second }
 
         val (device, score) = bestMatch ?: return null
-
-        Log.d(TAG, "Best match score=$score for ${device.hostname}")
-
         val threshold = if (isIdentityUpgrade(device, inDevice)) 30 else 55
 
         return if (score >= threshold) device else null
@@ -52,7 +47,6 @@ class DeviceMatcher(
 
         // UUID
         if (stored.id == incoming.id) {
-            Log.d(TAG, "Ids match")
             return config.idExact // absolute match
         }
 
@@ -60,7 +54,6 @@ class DeviceMatcher(
         val storedMacs = stored.interfaces.mapNotNull { it.mac }.toSet()
         val incomingMacs = incoming.interfaces.mapNotNull { it.mac }.toSet()
         if (storedMacs.intersect(incomingMacs).isNotEmpty()) {
-            Log.d(TAG, "MACs match")
             score += config.macWeight
         }
 
@@ -69,7 +62,6 @@ class DeviceMatcher(
         val incomingHost = normalizeHostname(incoming.hostname)
 
         if (storedHost == incomingHost) {
-            Log.d(TAG, "Hostname match")
             score += config.hostnameExact
         } else {
             val fuzzy = FuzzyScore(Locale.ROOT).fuzzyScore(storedHost, incomingHost)
@@ -77,7 +69,6 @@ class DeviceMatcher(
                 fuzzy >= 8 -> score += config.hostnameFuzzyHigh
                 fuzzy >= 5 -> score += config.hostnameFuzzyLow
             }
-            Log.d(TAG, "Hostname similar")
         }
 
         // OS info
@@ -86,7 +77,6 @@ class DeviceMatcher(
             stored.deviceInfo!!.osName.startsWith(incoming.deviceInfo!!.osName, true) ||
             incoming.deviceInfo!!.osName.startsWith(stored.deviceInfo!!.osName, true)
         ) {
-            Log.d(TAG, "OS family match")
             score += config.osMatch
         }
 
@@ -95,20 +85,17 @@ class DeviceMatcher(
         val incomingIps = incoming.interfaces.mapNotNull { it.ip }.toSet()
 
         if (storedIps.intersect(incomingIps).isNotEmpty()) {
-            Log.d(TAG, "IPs match")
             score += config.ipMatch
         }
 
 
         // OS Version
         if (stored.deviceInfo?.osVersion == incoming.deviceInfo?.osVersion) {
-            Log.d(TAG, "OS version matchs")
             score += config.osVersion
         }
 
         // Interfaces count (low value)
         if (stored.interfaces.size == incoming.interfaces.size) {
-            Log.d(TAG, "Same number of network interfaces")
             score += config.interfaceSize
         }
 

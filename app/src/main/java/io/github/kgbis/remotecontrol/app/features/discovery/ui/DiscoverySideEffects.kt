@@ -1,10 +1,12 @@
 package io.github.kgbis.remotecontrol.app.features.discovery.ui
 
-import androidx.compose.runtime.*
-import kotlinx.coroutines.delay
 import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import io.github.kgbis.remotecontrol.app.features.discovery.DiscoveryViewModel
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveryState
+import kotlinx.coroutines.delay
 
 @Composable
 fun DiscoverySideEffects(

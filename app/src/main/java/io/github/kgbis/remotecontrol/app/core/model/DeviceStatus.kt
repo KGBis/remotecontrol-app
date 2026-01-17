@@ -4,7 +4,7 @@ data class DeviceStatus(
     val device: Device,
     val state: DeviceState = DeviceState.UNKNOWN,
     val trayReachable: Boolean,
-    val lastSeen: Long = 0L,
+    val lastSeen: Long = System.currentTimeMillis(),
     val pendingAction: PendingAction = PendingAction.None
 ) {
     val canShutdown =

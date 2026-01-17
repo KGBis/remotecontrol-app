@@ -1,7 +1,6 @@
 package io.github.kgbis.remotecontrol.app.core.repository
 
 import android.content.Context
-import android.util.Log
 import androidx.core.content.edit
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -16,13 +15,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.util.UUID
-import kotlin.collections.emptyMap
 
 class DeviceRepository(context: Context) {
-
-    private val deviceListType = object : TypeToken<List<Device>>() {}.type
-
-    private val deviceStatusMapType = object : TypeToken<Map<UUID, DeviceStatus>>() {}.type
 
     val pendingActionGson: Gson = GsonBuilder()
         .registerTypeAdapter(PendingAction::class.java, JsonDeserializer { json, _, _ ->
@@ -42,7 +36,9 @@ class DeviceRepository(context: Context) {
         })
         .create()
 
+    private val deviceListType = object : TypeToken<List<Device>>() {}.type
 
+    private val deviceStatusMapType = object : TypeToken<Map<UUID, DeviceStatus>>() {}.type
 
     private val prefs = context.getSharedPreferences("stored_devices", Context.MODE_PRIVATE)
 
@@ -100,17 +96,13 @@ class DeviceRepository(context: Context) {
 
     fun saveDeviceStatuses(statusMap: Map<UUID, DeviceStatus>) {
         val json = pendingActionGson.toJson(statusMap)
-        Log.d("saveDeviceStatuses", "Generated JSON -> $json")
         prefs.edit { putString("device_statuses", json) }
     }
 
     suspend fun loadDeviceStatuses(): Map<UUID, DeviceStatus> =
         withContext(Dispatchers.IO) { // NOSONAR
             val json = prefs.getString("device_statuses", "{}") ?: "{}"
-            val map = (pendingActionGson.fromJson(json, deviceStatusMapType)
-                ?: emptyMap<UUID, DeviceStatus>())
-            Log.d("loadDeviceStatuses", "Generated status map -> $map")
-            map
+            (pendingActionGson.fromJson(json, deviceStatusMapType) ?: emptyMap())
         }
 
 

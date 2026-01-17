@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.isRenderable
+import io.github.kgbis.remotecontrol.app.core.network.NetworkInfo
 import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
 import io.github.kgbis.remotecontrol.app.features.devices.model.shutdownDelayOptions
 import io.github.kgbis.remotecontrol.app.features.settings.SettingsViewModel
@@ -42,7 +43,8 @@ fun BoxScope.MainScreenContent(
     val devices by devicesVm.devices.collectAsState()
 
     // if connected to same network as devices
-    val notInSameNetwork by devicesVm.notInSameNetwork.collectAsState()
+    val sameNetwork by devicesVm.isInLocalNetwork.collectAsState()
+    val networkState by devicesVm.networkState.collectAsState()
 
     // Shutdown delay and unit. i.e. 20 SECONDS
     val delay by settingsVm.shutdownDelay.collectAsState()
@@ -84,12 +86,20 @@ fun BoxScope.MainScreenContent(
                 onShowSnackbar = onShowSnackbar
             )
 
-            if (notInSameNetwork) {
-                Text(
-                    stringResource(R.string.not_in_same_network),
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold
-                )
+            if (!sameNetwork) {
+                val message = when (networkState) {
+                    is NetworkInfo.Disconnected -> stringResource(R.string.not_in_same_network)
+                    is NetworkInfo.Connecting -> stringResource(R.string.connecting_network)
+                    else -> null
+                }
+                message?.let {
+                    Text(
+                        message,
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        textAlign = TextAlign.Start,//Center,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

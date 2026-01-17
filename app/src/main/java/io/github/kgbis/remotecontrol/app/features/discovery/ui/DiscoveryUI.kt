@@ -1,6 +1,5 @@
 package io.github.kgbis.remotecontrol.app.features.discovery.ui
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -21,11 +20,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.R
-import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveringState
-import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
-import io.github.kgbis.remotecontrol.app.features.discovery.DiscoveryViewModel
-import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveryState
 import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
+import io.github.kgbis.remotecontrol.app.features.discovery.DiscoveryViewModel
+import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
+import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveringState
+import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveryState
 
 @Composable
 fun ColumnScope.DiscoveryScreenContent(
@@ -42,12 +41,10 @@ fun ColumnScope.DiscoveryScreenContent(
         .align(Alignment.CenterHorizontally)
 
     if (isDiscovering || state.discoveringState == DiscoveringState.DISCOVERING) {
-        Log.i("DiscoveryScreenContent", "DISCOVERING")
         DiscoveryInProgress(modifier = discoveryModifier)
     }
 
     if (state.discoveringState == DiscoveringState.FINISHED && devices.isEmpty()) {
-        Log.i("DiscoveryScreenContent", "FINISHED and Empty")
         MessageAndRescan(
             text = stringResource(R.string.discovery_no_devices_found),
             modifier = modifier,

@@ -1,15 +1,14 @@
 package io.github.kgbis.remotecontrol.app.features.discovery
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveringState
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
 import io.github.kgbis.remotecontrol.app.features.discovery.mdns.DiscoveredServiceEntry
 import io.github.kgbis.remotecontrol.app.features.discovery.mdns.MDNSDiscovery
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDevice
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredEndpoint
+import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveringState
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveryState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +31,6 @@ class DiscoveryViewModel(
     }
 
     private fun recomputeDevices(state: DiscoveryState): DiscoveryState {
-        Log.d("recomputeDevices", "DiscoveryState (state) = $state")
         val merged = state.discoveredServices
             .groupBy { it.deviceId }
             .map { (deviceId, services) ->
@@ -66,7 +64,6 @@ class DiscoveryViewModel(
         mdnsDiscovery.setDiscoveryListener(object : MDNSDiscovery.DiscoveryListener {
 
             override fun onServiceFound(service: MDNSDiscovery.DiscoveredService) {
-                Log.d("onServiceFound", "se llama?? $service")
                 val deviceId =
                     service.txtRecords["device-id"] ?: uuidFromHostname(service.txtRecords)
 
@@ -79,10 +76,7 @@ class DiscoveryViewModel(
                     txtRecords = service.txtRecords
                 )
 
-                Log.d("onServiceFound", "DiscoveredServiceEntry (entry) = $entry")
-
                 _state.update { current ->
-                    Log.d("update", "current = $current")
                     recomputeDevices(
                         current.copy(
                             discoveredServices = current.discoveredServices + entry

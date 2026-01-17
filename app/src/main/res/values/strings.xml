@@ -111,8 +111,12 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_system">System</string>
-    <string name="not_in_same_network">You are not connected to the devices\' network. The status cannot be updated.</string>
+    <string name="not_in_same_network">
+        Not connected to the devices\' network or connection unstable.
+        Status will be updated as soon as local network connection is available.
+    </string>
     <string name="iface_type_ethernet">Wired</string>
     <string name="iface_type_wifi" translatable="false">Wi-Fi</string>
     <string name="iface_type_unknown">Unknown</string>
+    <string name="connecting_network">Connecting to network, please wait.</string>
 </resources>

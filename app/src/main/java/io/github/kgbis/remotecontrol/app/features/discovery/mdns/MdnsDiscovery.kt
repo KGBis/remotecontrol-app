@@ -39,29 +39,27 @@ class MDNSDiscovery(context: Context) {
     // Discovering Listener
     private val discoveryListener = object : NsdManager.DiscoveryListener {
         override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
-            Log.e(TAG, "Error al iniciar discovery: $errorCode")
-            listener?.onError("Error al iniciar: $errorCode")
+            val msg = "Error starting discovery: $errorCode"
+            Log.e(TAG, msg)
+            listener?.onError(msg)
             nsdManager.stopServiceDiscovery(this)
         }
 
         override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {
-            Log.e(TAG, "Error al detener discovery: $errorCode")
-            listener?.onError("Error al detener: $errorCode")
+            val msg = "Error stopping discovery: $errorCode"
+            Log.e(TAG, msg)
+            listener?.onError(msg)
         }
 
         override fun onDiscoveryStarted(serviceType: String) {
-            Log.d(TAG, "Discovery iniciado para: $serviceType")
             listener?.onDiscoveryStarted()
         }
 
         override fun onDiscoveryStopped(serviceType: String) {
-            Log.d(TAG, "Discovery detenido para: $serviceType")
             listener?.onDiscoveryStopped()
         }
 
         override fun onServiceFound(serviceInfo: NsdServiceInfo) {
-            Log.d(TAG, "Service encontrado: ${serviceInfo.serviceName}")
-
             // Resolve to get details
             // Using resolveService intentionally: discovery snapshot only.
             @Suppress("DEPRECATION")
@@ -80,24 +78,16 @@ class MDNSDiscovery(context: Context) {
                         txtRecords = parseTxtRecords(serviceInfo)
                     )
 
-                    Log.d("onServiceResolved", "Resolved to $discovered")
-
-                    // Filtrar duplicados
+                    // Filter duplicates
                     if (!discoveredServices.any { it.host == discovered.host && it.port == discovered.port }) {
                         discoveredServices.add(discovered)
                         listener?.onServiceFound(discovered)
-
-                        Log.i(
-                            TAG,
-                            "✅ Resolved: ${discovered.name} " + "(${discovered.host}:${discovered.port}) " + "Type: ${discovered.type}"
-                        )
                     }
                 }
             })
         }
 
         override fun onServiceLost(serviceInfo: NsdServiceInfo) {
-            Log.d(TAG, "Service lost: ${serviceInfo.serviceName}")
             discoveredServices.removeAll { it.name == serviceInfo.serviceName }
             listener?.onServiceLost(serviceInfo.serviceName)
         }
@@ -110,8 +100,8 @@ class MDNSDiscovery(context: Context) {
     }
 
     /**
-     * Inicia el descubrimiento de servicios mDNS
-     * @param serviceType Tipo de servicio a descubrir (ej: "_http._tcp")
+     * start mDNS discovery
+     * @param serviceType service type (ej: "_http._tcp")
      */
     fun startDiscovery(serviceType: String = SERVICE_REMOTECONTROL) {
         discoveredServices.clear()
@@ -122,10 +112,8 @@ class MDNSDiscovery(context: Context) {
                 NsdManager.PROTOCOL_DNS_SD,
                 discoveryListener
             )
-            Log.d(TAG, "Buscando servicios: $serviceType")
         } catch (e: Exception) {
-            Log.e(TAG, "Error iniciando discovery", e)
-            listener?.onError(e.message ?: "Error desconocido")
+            listener?.onError(e.message ?: "Unknown Error")
         }
     }
 
@@ -135,15 +123,14 @@ class MDNSDiscovery(context: Context) {
     fun stopDiscovery() {
         try {
             nsdManager.stopServiceDiscovery(discoveryListener)
-            Log.d(TAG, "Discovery stopped")
-        } catch (e: Exception) {
-            Log.d(TAG, "Error stopping discovery: ${e.message}")
+        } catch (_: Exception) {
+            // empty
         }
     }
 
 
     /**
-     * Parsea los registros TXT del servicio
+     * Parse TXT record
      */
     private fun parseTxtRecords(serviceInfo: NsdServiceInfo): Map<String, String> {
         val records = mutableMapOf<String, String>()
@@ -156,8 +143,8 @@ class MDNSDiscovery(context: Context) {
                     records[key] = value?.toString(Charsets.UTF_8) ?: ""
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error parseando TXT records", e)
+        } catch (_: Exception) {
+            // empty
         }
 
         return records
