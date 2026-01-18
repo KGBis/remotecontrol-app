@@ -92,7 +92,7 @@ class DevicesViewModel(
     val isInLocalNetwork: StateFlow<Boolean> = networkMonitor.networkInfo
         .map { it is NetworkInfo.Local }.distinctUntilChanged().stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
+            started = SharingStarted.Eagerly,
             initialValue = false
         )
 
@@ -108,13 +108,12 @@ class DevicesViewModel(
             settingsRepo.autoRefreshEnabledFlow,
             settingsRepo.autoRefreshIntervalFlow,
             mainScreenVisible,
-            appLifecycleObserver.isForegroundFlow
-        ) { enabled, interval, screenVisible, appForeground ->
-            Log.d("observeAutoRefresh", "Auto refresh = $enabled")
-            Log.d("observeAutoRefresh", "Main Screen visible = $screenVisible")
-            Log.d("observeAutoRefresh", "App in foreground = $appForeground")
-            (enabled && screenVisible && appForeground) to interval
+            appLifecycleObserver.isForegroundFlow,
+            networkMonitor.networkInfo
+        ) { enabled, interval, screenVisible, appForeground, netinfo ->
+            (enabled && screenVisible && appForeground && netinfo is NetworkInfo.Local) to interval
         }.flatMapLatest { (shouldRun, interval) ->
+            Log.d("observeAutoRefresh", "Should run = $shouldRun")
             if (!shouldRun) {
                 emptyFlow()
             } else {
@@ -137,9 +136,6 @@ class DevicesViewModel(
     private fun loadInitialDataAndRefresh() {
         Log.d("loadInitialDataAndRefresh", "Load devices from repository")
         getDevices()
-        viewModelScope.launch {
-            onAppForegrounded()
-        }
     }
 
     private fun removeOrphanStatuses() {
@@ -170,13 +166,18 @@ class DevicesViewModel(
 
 
     private suspend fun onAppForegrounded() {
-        Log.d("onAppForegrounded", "Load statuses from repository")
         // Load stored device status
+        Log.d("onAppForegrounded", "Load statuses from repository")
         _deviceStatusMap.value = deviceRepository.loadDeviceStatuses()
         removeOrphanStatuses()
 
-        // Start to observe network
-        // observeNetwork()
+        // refresh network status, just in case...
+        networkMonitor.refresh()
+        Log.d(
+            "onAppForegrounded",
+            "Refreshed network status = ${networkState.value.javaClass.simpleName}"
+        )
+        observeNetwork()
     }
 
     @Suppress("SENSELESS_COMPARISON")
@@ -311,6 +312,7 @@ class DevicesViewModel(
 
     private fun handleNotInSameNetwork() {
         if (networkMonitor.networkInfo.value is NetworkInfo.Local) {
+            Log.d("handleNotInSameNetwork", "Local Network. Return")
             return
         }
 
@@ -386,8 +388,7 @@ class DevicesViewModel(
 
     private fun observeNetwork() {
         viewModelScope.launch {
-            sameNetworkFlow
-                .distinctUntilChanged()
+            sameNetworkFlow.distinctUntilChanged()
                 .collect { sameNetwork ->
                     if (!sameNetwork) {
                         handleNotInSameNetwork()
@@ -472,9 +473,9 @@ class DevicesViewModel(
     /* Init */
 
     init {
+        observeNetwork()
         loadInitialDataAndRefresh()
         observeAppVisibility()
         observeAutoRefresh()
-        observeNetwork()
     }
 }

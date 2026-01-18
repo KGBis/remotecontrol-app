@@ -9,11 +9,14 @@ import android.net.NetworkCapabilities.TRANSPORT_WIFI
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import java.net.Inet4Address
 
@@ -26,43 +29,57 @@ class NetworkMonitor(
     private val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
+    private val manualRefresh = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+
     @OptIn(FlowPreview::class)
     val networkInfo: StateFlow<NetworkInfo> =
-        callbackFlow {
-            val callback = object : ConnectivityManager.NetworkCallback() {
+        merge(
+            callbackFlow {
+                val callback = object : ConnectivityManager.NetworkCallback() {
+                    override fun onAvailable(network: Network) {
+                        trySend(Unit)
+                    }
 
-                override fun onAvailable(network: Network) = emit()
-                override fun onLost(network: Network) = emit()
-                override fun onCapabilitiesChanged(
-                    network: Network,
-                    networkCapabilities: NetworkCapabilities
-                ) = emit()
+                    override fun onLost(network: Network) {
+                        trySend(Unit)
+                    }
 
-                private fun emit() {
-                    trySend(computeNetworkInfo())
+                    override fun onCapabilitiesChanged(
+                        network: Network,
+                        networkCapabilities: NetworkCapabilities
+                    ) {
+                        trySend(Unit)
+                    }
                 }
-            }
 
-            connectivityManager.registerDefaultNetworkCallback(callback)
+                connectivityManager.registerDefaultNetworkCallback(callback)
 
-            // initial state
-            trySend(computeNetworkInfo())
+                // estado inicial
+                trySend(Unit)
 
-            awaitClose {
-                connectivityManager.unregisterNetworkCallback(callback)
-            }
-        }.debounce { info ->
-            when (info) {
-                is NetworkInfo.Connecting -> 800L
-                is NetworkInfo.Disconnected -> 300L
-                is NetworkInfo.Local -> 200L
-            }
-        }.distinctUntilChanged()
+                awaitClose {
+                    connectivityManager.unregisterNetworkCallback(callback)
+                }
+            },
+            manualRefresh
+        ).map { computeNetworkInfo() }
+            .debounce { info ->
+                when (info) {
+                    is NetworkInfo.Connecting -> 800L
+                    is NetworkInfo.Disconnected -> 300L
+                    is NetworkInfo.Local -> 200L
+                }
+            }.distinctUntilChanged()
             .stateIn(
                 scope,
                 SharingStarted.Eagerly,
                 NetworkInfo.Disconnected
             )
+
+    fun refresh() {
+        manualRefresh.tryEmit(Unit)
+    }
 
     private fun computeNetworkInfo(): NetworkInfo {
         // network & capabilities or disconnected
