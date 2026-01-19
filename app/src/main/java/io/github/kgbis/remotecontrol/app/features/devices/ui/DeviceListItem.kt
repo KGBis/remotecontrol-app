@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.kgbis.remotecontrol.app.R
@@ -125,6 +126,7 @@ fun DeviceRow(device: Device, devicesVm: DevicesViewModel, onEdit: () -> Unit) {
             ) {
                 Text(
                     text = device.hostname,
+                    textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium,
