@@ -119,19 +119,27 @@ fun DeviceRow(device: Device, devicesVm: DevicesViewModel, onEdit: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.width(110.dp)
         ) {
-            Row {
-                val hostnameLength = device.hostname.length
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
-                    device.hostname.substring(
-                        0,
-                        if (hostnameLength > 8) 8 else hostnameLength
-                    ),
-                    overflow = TextOverflow.Ellipsis,
+                    text = device.hostname,
                     maxLines = 1,
-                    style = MaterialTheme.typography.titleMedium
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(2.dp))
-                OsIcon(device.deviceInfo?.osName ?: "")
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                OsIcon(
+                    device.deviceInfo?.osName ?: "",
+                    modifier = Modifier
+                        .size(18.dp)
+                        .align(Alignment.CenterVertically)
+                )
+
             }
             val interfaces = device.interfaces
             @Suppress("SENSELESS_COMPARISON")
@@ -265,7 +273,7 @@ fun actionIconColor(value: Boolean): Color {
 }
 
 @Composable
-fun OsIcon(os: String) {
+fun OsIcon(os: String, modifier: Modifier) {
     val iconId = when {
         os.lowercase().contains("win") -> R.drawable.win_logo
         os.lowercase().contains("linux") -> R.drawable.linux_logo
@@ -284,7 +292,7 @@ fun OsIcon(os: String) {
     return Image(
         painter = painterResource(id = iconId),
         contentDescription = os,
-        modifier = Modifier.size(24.dp) // Set icon size
+        modifier = modifier // Icon size
     )
 }
 

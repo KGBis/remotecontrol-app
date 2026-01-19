@@ -11,7 +11,7 @@ data class Device(
     val interfaces: MutableList<DeviceInterface> = mutableListOf()
 ) {
     /**
-     * Trims all the fields and normalizes MAC address to colon separated & lowercase (i.e. 91:75:1a:ec:9a:c7)
+     * Trims fields and normalizes MAC address to colon separated & lowercase (i.e. 91:75:1a:ec:9a:c7)
      */
     fun normalize() {
         hostname = hostname.trim()
@@ -35,6 +35,7 @@ fun Device.isRenderable(): Boolean =
 
 fun Device.toFormState(): DeviceFormState =
     DeviceFormState(
+        id = id,
         hostname = hostname,
         osName = deviceInfo?.osName.orEmpty(),
         osVersion = deviceInfo?.osVersion.orEmpty(),

@@ -8,6 +8,7 @@ import io.github.kgbis.remotecontrol.app.core.network.REMOTETRAY_PORT
 import java.util.UUID
 
 data class DeviceFormState(
+    val id: UUID? = UUID.randomUUID(),
     val hostname: String = "",
     val osName: String = "",
     val osVersion: String = "",
@@ -28,7 +29,7 @@ fun DeviceFormState.toDevice(): Device {
     val info = DeviceInfo(this.osName, this.osVersion, this.trayVersion)
 
     return Device(
-        id = UUID.randomUUID(),
+        id = id,
         hostname = this.hostname,
         deviceInfo = info,
         interfaces = interfaces,

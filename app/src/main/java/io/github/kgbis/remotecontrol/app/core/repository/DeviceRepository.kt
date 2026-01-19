@@ -42,67 +42,38 @@ class DeviceRepository(context: Context) {
 
     private val prefs = context.getSharedPreferences("stored_devices", Context.MODE_PRIVATE)
 
-    // Mutex para proteger la lista
     private val mutex = Mutex()
 
     suspend fun getDevices(): List<Device> = withContext(Dispatchers.IO) { // NOSONAR
-        val json = prefs.getString("devices", "[]") ?: "[]"
-        val devices = Gson().fromJson<List<Device>>(json, deviceListType)
-        devices.sortedBy { it.id }
-    }
-
-    suspend fun addDevice(device: Device) = withContext(Dispatchers.IO) { // NOSONAR
         mutex.withLock {
-            val devices = getDevices().toMutableList()
-            devices.removeAll { it.id == device.id }
-            devices.add(device)
-            saveDevices(devices)
+            val json = prefs.getString("devices", "[]") ?: "[]"
+            val devices = Gson().fromJson<List<Device>>(json, deviceListType)
+            devices.sortedBy { it.id }
         }
     }
 
-    suspend fun addDevices(devicesToAdd: List<Device>) = withContext(Dispatchers.IO) { // NOSONAR
+    suspend fun saveDevices(devices: List<Device>) {
         mutex.withLock {
-            val devices = getDevices().toMutableList()
-            devicesToAdd.forEach { d ->
-                devices.removeAll { it.id == d.id }
-                devices.add(d)
-            }
-            saveDevices(devices)
+            val toJson = Gson().toJson(devices.sortedBy { it.id })
+            prefs.edit { putString("devices", toJson) }
         }
-    }
-
-    suspend fun updateDevice(original: Device, updated: Device) = withContext(Dispatchers.IO) { // NOSONAR
-        mutex.withLock {
-            val devices = getDevices().toMutableList()
-            devices.removeAll { it.id == original.id }
-            devices.add(updated)
-            saveDevices(devices)
-        }
-    }
-
-    suspend fun removeDevice(device: Device) = withContext(Dispatchers.IO) { // NOSONAR
-        mutex.withLock {
-            val devices = getDevices().filterNot { it.id == device.id }
-            saveDevices(devices)
-        }
-    }
-
-    private fun saveDevices(devices: List<Device>) {
-        val toJson = Gson().toJson(devices)
-        prefs.edit { putString("devices", toJson) }
     }
 
     /* Device status */
 
-    fun saveDeviceStatuses(statusMap: Map<UUID, DeviceStatus>) {
-        val json = pendingActionGson.toJson(statusMap)
-        prefs.edit { putString("device_statuses", json) }
+    suspend fun saveDeviceStatuses(statusMap: Map<UUID, DeviceStatus>) {
+        mutex.withLock {
+            val json = pendingActionGson.toJson(statusMap)
+            prefs.edit { putString("device_statuses", json) }
+        }
     }
 
     suspend fun loadDeviceStatuses(): Map<UUID, DeviceStatus> =
         withContext(Dispatchers.IO) { // NOSONAR
-            val json = prefs.getString("device_statuses", "{}") ?: "{}"
-            (pendingActionGson.fromJson(json, deviceStatusMapType) ?: emptyMap())
+            mutex.withLock {
+                val json = prefs.getString("device_statuses", "{}") ?: "{}"
+                (pendingActionGson.fromJson(json, deviceStatusMapType) ?: emptyMap())
+            }
         }
 
 

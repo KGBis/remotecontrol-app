@@ -158,7 +158,7 @@ class DevicesViewModel(
     }
 
 
-    private fun onAppBackgrounded() {
+    private suspend fun onAppBackgrounded() {
         Log.d("onAppBackgrounded", "Canceling active probes & saving device statuses")
         cancelAllProbes()
         deviceRepository.saveDeviceStatuses(_deviceStatusMap.value)
@@ -180,40 +180,54 @@ class DevicesViewModel(
         observeNetwork()
     }
 
-    @Suppress("SENSELESS_COMPARISON")
+    /* Device operations */
+
+    /**
+     * Get all devices stored in the repository
+     */
     fun getDevices() {
         viewModelScope.launch {
             _devices.value = deviceRepository.getDevices()
-            val toRemove = _devices.value.filter { it.interfaces == null } // NOSONAR
-            if (toRemove.isNotEmpty()) {
-                toRemove.forEach { deviceRepository.removeDevice(it) }
-                _devices.value = deviceRepository.getDevices()
-            }
         }
     }
 
+    /**
+     * Get device by ID
+     */
     fun getDeviceById(id: UUID?): Device? {
         return _devices.value.firstOrNull { it.id == id }
     }
 
+    /**
+     * Add a single device. If already exists an update is performed
+     */
     fun addDevice(device: Device) {
         device.normalize()
         viewModelScope.launch {
-            inFlightProbes.remove(device.id)?.cancel()
-            deviceRepository.addDevice(device)
-            getDevices()
+            val currentDevices = _devices.value.toMutableList()
+
+            // check if device already exists
+            val storedDevice = DeviceMatcher(stored = currentDevices).findDeviceToAdd(device)
+
+            if (storedDevice == null) {
+                // Add device in view model
+                currentDevices.add(device)
+                _devices.value = currentDevices
+                // save new list in repository
+                deviceRepository.saveDevices(currentDevices)
+            } else {
+                // update
+                updateDevice(storedDevice, device)
+            }
         }
     }
 
     fun addDiscoveredDevice(discoveredDevice: Device) {
         val found = DeviceMatcher(stored = _devices.value).findDeviceToAdd(discoveredDevice)
-        if (found != null) {
+        if (found != null)
             updateDevice(found, discoveredDevice)
-        } else
-            viewModelScope.launch {
-                deviceRepository.addDevice(discoveredDevice)
-                getDevices()
-            }
+        else
+            addDevice(discoveredDevice)
     }
 
     fun addDevices(devices: List<Device>) {
@@ -231,18 +245,35 @@ class DevicesViewModel(
                 }
             }
 
-            // save new ones
+            // normalize all
             toSave.forEach { it.normalize() }
-            deviceRepository.addDevices(toSave)
-
-            // update the existing ones
-            toUpdate.forEach {
-                val normalized = it.second
-                normalized.normalize()
-                deviceRepository.updateDevice(it.first, normalized)
+            val normalizedToUpdate = toUpdate.map { (orig, toUpdate) ->
+                toUpdate.normalize()
+                orig to toUpdate
             }
 
-            getDevices()
+            // remove any in-flight probe for updated
+            normalizedToUpdate.forEach {
+                inFlightProbes.remove(it.first.id)?.cancel()
+            }
+
+            // get all current devices
+            val list = _devices.value.toMutableList()
+
+            // add new devices to list
+            list.addAll(toSave)
+
+            // update in the list
+            val updatesById = normalizedToUpdate.associateBy { it.second.id }
+            val updatedList = list.map { item ->
+                updatesById[item.id]?.second ?: item
+            }
+
+            // set in view model
+            _devices.value = updatedList
+
+            // save new list in repository
+            deviceRepository.saveDevices(_devices.value)
         }
     }
 
@@ -250,18 +281,30 @@ class DevicesViewModel(
     fun updateDevice(original: Device, updated: Device) {
         updated.normalize()
         viewModelScope.launch {
+            // remove any in-flight probe for device id
             inFlightProbes.remove(original.id)?.cancel()
-            deviceRepository.updateDevice(original, updated)
-            getDevices()
+
+            // update device in view model
+            _devices.value = _devices.value.map { dev ->
+                if (dev.id == updated.id) updated else dev
+            }
+
+            // save new list in repository
+            deviceRepository.saveDevices(_devices.value)
         }
     }
 
     fun removeDevice(device: Device) {
         viewModelScope.launch {
+            // remove any in-flight probe for device id
             inFlightProbes.remove(device.id)?.cancel()
+
+            // remove status and device in view model
             _deviceStatusMap.emit(_deviceStatusMap.value.filter { it.key != device.id })
-            deviceRepository.removeDevice(device)
-            getDevices()
+            _devices.value = _devices.value.filter { dev -> dev.id != device.id }
+
+            // save new list in repository
+            deviceRepository.saveDevices(_devices.value)
         }
     }
 
@@ -375,16 +418,30 @@ class DevicesViewModel(
         val previous = prevMap[deviceId]
             ?: DeviceStatus(device = device, trayReachable = false)
 
+        val effectiveProbeResult = mergeProbeWithStoredDevice(device, probe)
+
         val updated = computeDeviceStatus(
             previous = previous,
-            probeResult = probe,
+            probeResult = effectiveProbeResult,
             refreshInterval = autoRefreshInterval.value
         )
 
-        probe.device?.let { addDevices(listOf(it)) }
-
+        // add/update in view model
+        effectiveProbeResult.device?.let { addDevice(it) }
+        // emit new status
         _deviceStatusMap.emit(prevMap + (deviceId to updated))
     }
+
+    private fun mergeProbeWithStoredDevice(
+        stored: Device,
+        probe: ProbeResult
+    ): ProbeResult {
+        val probedDevice = probe.device ?: return probe
+
+        val mergedDevice = probedDevice.copy(hostname = stored.hostname)
+        return probe.copy(device = mergedDevice)
+    }
+
 
     private fun observeNetwork() {
         viewModelScope.launch {
