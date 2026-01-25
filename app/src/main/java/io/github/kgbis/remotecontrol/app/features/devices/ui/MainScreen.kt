@@ -41,7 +41,7 @@ fun MainScreen(
     val pullToRefreshState = rememberPullToRefreshState()
 
     // All mainscreen side and disposable effects
-    MainScreenSideEffects(devicesVm, settingsVm, showSnackbar, snackbarHostState)
+    MainScreenSideEffects(devicesVm, showSnackbar, snackbarHostState)
     {
         @Suppress("AssignedValueIsNeverRead")
         showSnackbar = null

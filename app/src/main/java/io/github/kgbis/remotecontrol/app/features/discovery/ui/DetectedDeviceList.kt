@@ -75,7 +75,7 @@ fun DetectedDevicesList( // NOSONAR complexity is 18 (over max of 15)
                         }
                     }
 
-                    devicesVm.addDevices(devicesToAdd)
+                    devicesVm.addDiscoveredDevices(devicesToAdd)
                     selected.clear()
                     multiSelectMode = false
                     navController.popBackStack()
@@ -129,7 +129,7 @@ fun handleDeviceAction(
     when (action) {
         // single device selection
         DiscoveredDeviceAction.Click -> {
-            devicesVm.addDiscoveredDevice(device)
+            devicesVm.addDiscoveredDevices(listOf(device))
             navController.popBackStack()
         }
 

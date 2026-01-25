@@ -5,29 +5,15 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
-import io.github.kgbis.remotecontrol.app.features.settings.SettingsViewModel
 
 @Composable
 fun MainScreenSideEffects(
     devicesVm: DevicesViewModel,
-    settingsVm: SettingsViewModel,
     showSnackbar: String?,
     snackbarHostState: SnackbarHostState,
     onSnackbarShown: () -> Unit
 ) {
-    val autorefreshEnabled by settingsVm.autoRefreshEnabled.collectAsState()
-    val devices by devicesVm.devices.collectAsState()
-
-    // to refresh status when changes occur in a non-empty device list
-    LaunchedEffect(devices) {
-        if (autorefreshEnabled && devices.isNotEmpty()) {
-            devicesVm.probeDevices()
-        }
-    }
-
     // to start/stop autorefresh
     DisposableEffect(Unit) {
         devicesVm.setMainScreenVisible(true)

@@ -1,5 +1,30 @@
-RemoteShutdown - Android app skeleton (Complete)
-===============================================
+# Remote PC Control App
+
+Remote PC Control App is an Android application that allows you to **wake up** and
+**shut down** a computer remotely over the local network.
+
+It is designed to be simple, lightweight and reliable, without unnecessary background services or complex configuration.
+
+---
+
+## How does it work?
+
+The application, when configured to do so, tries to connect to target device's port **6800** and, if succeed, retrieve updated information.
+
+Supported commands are:
+
+- `INFO` — Retrieve information about the target computer (hostname, OS, IP and MAC addresses).
+- `SHUTDOWN` — Shut down the computer remotely.
+- `CANCEL_SHUTDOWN` — Cancel a previous delayed shut down command.
+
+On the target computer, a **system tray icon** is available to:
+
+- Display detected network interfaces (Interface type, IP and MAC)
+- Exit the application
+
+That’s all — simple, explicit and enough for the intended use case.
+
+---
 
 Project prepared for Android Studio Otter (2025.2.1).
 Includes:

@@ -13,6 +13,12 @@ object Utils {
         runCatching { InetAddress.getByName(ip) }
             .getOrNull() is Inet4Address
 
+    fun String.ipAsInt(): Int =
+        split('.').fold(0) { acc, part ->
+            (acc shl 8) + part.toInt()
+        }
+
+
     fun isValidMacOptional(mac: String): Boolean =
         mac.isBlank() || isValidMac(mac)
 

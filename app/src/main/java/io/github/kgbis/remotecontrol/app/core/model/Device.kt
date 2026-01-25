@@ -1,5 +1,6 @@
 package io.github.kgbis.remotecontrol.app.core.model
 
+import io.github.kgbis.remotecontrol.app.core.util.Utils.ipAsInt
 import io.github.kgbis.remotecontrol.app.features.devices.model.DeviceFormState
 import io.github.kgbis.remotecontrol.app.features.devices.model.InterfaceFormState
 import java.util.UUID
@@ -21,9 +22,20 @@ data class Device(
         }
     }
 
-    fun hasMacAddress() : Boolean {
+    fun hasMacAddress(): Boolean {
         return this.interfaces.any { !it.mac.isNullOrEmpty() }
     }
+}
+
+fun Device.sortInterfaces(): Device {
+    val ifaces =
+        interfaces.toList()
+            .sortedWith(compareBy({ it.type.ordinal }, { it.ip?.ipAsInt() ?: Int.MAX_VALUE }))
+
+    interfaces.clear()
+    interfaces.addAll(ifaces)
+
+    return this
 }
 
 @Suppress("UselessCallOnNotNull")
@@ -63,3 +75,14 @@ data class DeviceInterface(
     var type: InterfaceType
 )
 
+fun DeviceInterface.refreshKey(): String = "$ip:$port:$type"
+
+fun DeviceInterface.matches(other: DeviceInterface): Boolean {
+    // 1️⃣ MAC if exists in both
+    if (!mac.isNullOrBlank() && !other.mac.isNullOrBlank()) {
+        return mac.equals(other.mac, ignoreCase = true)
+    }
+
+    // 2️⃣ Fallback: IP + port
+    return ip == other.ip && port == other.port
+}

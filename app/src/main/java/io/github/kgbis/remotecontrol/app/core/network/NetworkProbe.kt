@@ -6,11 +6,10 @@ import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
+import io.github.kgbis.remotecontrol.app.core.model.RefreshReason
+import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
 import io.github.kgbis.remotecontrol.app.core.network.NetworkActions.sendMessage
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.ClosedSendChannelException
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.withContext
 import java.net.ConnectException
 import java.net.InetSocketAddress
@@ -32,18 +31,20 @@ private const val WIN_FALLBACK = 135
 private const val PRIMARY_TIMEOUT = 800
 private const val SECONDARY_TIMEOUT = 300
 
+private const val WARMUP_CONFIDENCE_FACTOR = 1.5
 
-fun probeDeviceFlow(
+
+suspend fun probeDeviceBestResult(
     device: Device,
     subnet: String
-): Flow<ProbeResult> = channelFlow {
+): ProbeResult {
     // interfaces that are in the same subnet (i.e. 192.168.1.x)
     val ifaces = device.interfaces.filter { it.ip?.startsWith(subnet) == true }
+    var best: ProbeResult? = null
 
     for (iface in ifaces) {
         val probe = withContext(Dispatchers.IO) { // NOSONAR
             val start = System.currentTimeMillis()
-            Log.d("probeDeviceFlow", "trying connection to ${device.hostname} (${iface.ip})...")
 
             // just a connection try
             val result = connect(device = device, iface = iface)
@@ -52,36 +53,40 @@ fun probeDeviceFlow(
             val fullDevice =
                 if (result == ConnectionResult.OK) fetchDeviceInfo(device, iface.ip!!) else device
 
-            Log.d("probeDeviceFlow", "connection to ${device.hostname} result $result")
-
             ProbeResult(
                 ip = iface.ip!!,
                 port = iface.port!!,
                 mac = iface.mac,
                 result = result,
                 durationMs = System.currentTimeMillis() - start,
-                device = fullDevice
+                device = fullDevice?.sortInterfaces()
             )
         }
 
-        try {
-            send(probe)
-        } catch (_: ClosedSendChannelException) {
-            // not interested
+        if (betterThan(best, probe)) {
+            best = probe
         }
 
-        if (probe.result == ConnectionResult.OK || probe.result == ConnectionResult.OK_FALLBACK) {
-            close()
+        if (probe.result == ConnectionResult.OK) {
             break
         }
     }
+
+    return best!!
 }
+
+private fun betterThan(previous: ProbeResult?, current: ProbeResult): Boolean {
+    if (previous == null) return true
+    if (current.result.value > previous.result.value) return true
+    return false
+}
+
 
 private fun connect(device: Device, iface: DeviceInterface): ConnectionResult {
     var result = tryConnect(iface.ip!!, iface.port!!)
 
-    // only try fallback connection in case of timeout or unknown errors
-    if (result == ConnectionResult.TIMEOUT_ERROR || result == ConnectionResult.UNKNOWN_ERROR) {
+    // only try fallback connection in case of connection errors (value = 0)
+    if (result.value == 0) {
         val osname = device.deviceInfo?.osName ?: ""
         val fallbackPort = when {
             osname.startsWith("win", true) -> WIN_FALLBACK
@@ -92,7 +97,7 @@ private fun connect(device: Device, iface: DeviceInterface): ConnectionResult {
             return result
         }
 
-        Log.d("connect","Target OS is Windows, fallback will be tried.")
+        Log.d("connect", "Target OS is Windows, fallback will be tried.")
         result = tryConnect(
             ip = iface.ip!!,
             port = fallbackPort,
@@ -118,7 +123,8 @@ fun computeDeviceStatus(
     previous: DeviceStatus,
     probeResult: ProbeResult,
     refreshInterval: Int,
-    now: Long = System.currentTimeMillis()
+    now: Long = System.currentTimeMillis(),
+    refreshReason: RefreshReason
 ): DeviceStatus {
     return when (probeResult.result) {
         // Connection to port 6800 was fine
@@ -143,7 +149,11 @@ fun computeDeviceStatus(
                 else -> 1.1
             }
 
-            val offlineThresholdMs = (confidenceCycles * refreshInterval * 1_000).toLong()
+            // cut by 1.5 if WARM-UP
+            val finalConfidence =
+                if (refreshReason == RefreshReason.WARMUP) confidenceCycles / WARMUP_CONFIDENCE_FACTOR else confidenceCycles
+
+            val offlineThresholdMs = (finalConfidence * refreshInterval * 1_000).toLong()
             val recentlySeen = now - previous.lastSeen < offlineThresholdMs
             val newState = when {
                 recentlySeen -> previous.state
@@ -200,11 +210,11 @@ fun tryConnect(
     }
 }
 
-enum class ConnectionResult() {
-    OK,
-    OK_FALLBACK,
-    CONNECT_ERROR,
-    HOST_UNREACHABLE,
-    TIMEOUT_ERROR,
-    UNKNOWN_ERROR
+enum class ConnectionResult(var value: Int) {
+    OK(100),
+    OK_FALLBACK(50),
+    CONNECT_ERROR(0),
+    HOST_UNREACHABLE(0),
+    TIMEOUT_ERROR(0),
+    UNKNOWN_ERROR(0)
 }

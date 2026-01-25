@@ -67,7 +67,7 @@ fun AddEditDeviceScreen(
                 modifier = Modifier.fillMaxWidth(),
                 value = state.hostname,
                 onValueChange = {
-                    onStateChange(state.copy(hostname = it))
+                    onStateChange(state.copy(hostname = it.trim()))
                 },
                 label = { Text(stringResource(R.string.device_name)) },
                 isError = state.hostname.isBlank(),
@@ -185,7 +185,7 @@ fun InterfaceEditorCard(
             ValidatingTextField(
                 value = state.ip.trim(),
                 validator = { it.isNotEmpty() && Utils.isValidIpv4(it) },
-                onValueChange = { onChange(state.copy(ip = it)) },
+                onValueChange = { onChange(state.copy(ip = it.trim())) },
                 label = stringResource(R.string.device_ip),
                 modifier = Modifier.fillMaxWidth(),
                 errorMessage = R.string.error_invalid_ip

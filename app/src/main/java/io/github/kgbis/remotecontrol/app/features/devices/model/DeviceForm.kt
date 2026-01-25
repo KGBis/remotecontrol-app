@@ -4,6 +4,7 @@ import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInfo
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
+import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
 import io.github.kgbis.remotecontrol.app.core.network.REMOTETRAY_PORT
 import java.util.UUID
 
@@ -17,24 +18,31 @@ data class DeviceFormState(
 )
 
 fun DeviceFormState.toDevice(): Device {
-    val interfaces = this.interfaces.map { iface ->
-        DeviceInterface(
-            ip = iface.ip,
-            mac = iface.mac,
-            port = iface.port.toInt(),
-            type = iface.type
-        )
-    }.toMutableList()
+    val interfaces = this.interfaces
+        .map { iface ->
+            DeviceInterface(
+                ip = iface.ip,
+                mac = iface.mac.takeIf { it.isNotBlank() },
+                port = iface.port.toInt(),
+                type = iface.type
+            )
+        }
+        .groupBy { it.ip }
+        .map { (_, sameIpIfaces) ->
+            sameIpIfaces.firstOrNull { !it.mac.isNullOrBlank() }
+                ?: sameIpIfaces.first()
+        }
 
-    val info = DeviceInfo(this.osName, this.osVersion, this.trayVersion)
+    val info = DeviceInfo(osName, osVersion, trayVersion)
 
     return Device(
         id = id,
-        hostname = this.hostname,
+        hostname = hostname,
         deviceInfo = info,
-        interfaces = interfaces,
-    )
+        interfaces = interfaces.toMutableList()
+    ).sortInterfaces()
 }
+
 
 data class InterfaceFormState(
     val ip: String = "",

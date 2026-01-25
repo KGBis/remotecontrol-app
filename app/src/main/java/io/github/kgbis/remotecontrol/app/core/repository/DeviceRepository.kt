@@ -9,6 +9,7 @@ import com.google.gson.reflect.TypeToken
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
+import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -54,7 +55,7 @@ class DeviceRepository(context: Context) {
 
     suspend fun saveDevices(devices: List<Device>) {
         mutex.withLock {
-            val toJson = Gson().toJson(devices.sortedBy { it.id })
+            val toJson = Gson().toJson(devices.sortedBy { it.id }.map { device -> device.sortInterfaces() }.toList())
             prefs.edit { putString("devices", toJson) }
         }
     }

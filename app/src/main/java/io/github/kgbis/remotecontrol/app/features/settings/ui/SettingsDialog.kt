@@ -84,9 +84,11 @@ fun SettingsDialog(
                 )
                 Slider(
                     value = autoRefreshInterval,
-                    onValueChange = {
-                        autoRefreshInterval = it
-                        settingsViewModel.setAutoRefreshInterval(it)
+                    onValueChange = { autoRefreshInterval = it },
+                    onValueChangeFinished = {
+                        settingsViewModel.setAutoRefreshInterval(
+                            autoRefreshInterval
+                        )
                     },
                     valueRange = 10f..60f
                 )

@@ -143,9 +143,7 @@ fun DeviceRow(device: Device, devicesVm: DevicesViewModel, onEdit: () -> Unit) {
                 )
 
             }
-            val interfaces = device.interfaces
-            @Suppress("SENSELESS_COMPARISON")
-            if (interfaces == null) // NOSONAR
+            if (device.interfaces.isEmpty())
                 Text(
                     stringResource(R.string.no_interfaces),
                     style = MaterialTheme.typography.bodySmall
