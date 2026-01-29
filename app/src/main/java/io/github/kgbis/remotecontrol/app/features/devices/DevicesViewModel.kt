@@ -435,10 +435,8 @@ class DevicesViewModel(
                     return@forEach
                 }
 
-                val job = launchProbeJob(device, subnet, refreshReason)
-
                 probeMutex.withLock {
-                    inFlightProbes[deviceId] = job
+                    inFlightProbes[deviceId] = launchProbeJob(device, subnet, refreshReason)
                 }
             }
         }
@@ -462,7 +460,6 @@ class DevicesViewModel(
 
     private fun handleNotInSameNetwork() {
         if (networkMonitor.networkInfo.value is NetworkInfo.Local) {
-            Log.d("handleNotInSameNetwork", "Local Network. Return")
             return
         }
 
@@ -573,8 +570,6 @@ class DevicesViewModel(
 
     private fun scheduleProbeRefresh() {
         viewModelScope.launch {
-            delay(500)
-
             if (networkMonitor.networkInfo.value is NetworkInfo.Local) {
                 probeDevices(refreshReason = RefreshReason.WARMUP)
             }
@@ -651,9 +646,12 @@ class DevicesViewModel(
     /* Init */
 
     init {
-        observeNetwork()
-        loadInitialDataAndRefresh()
-        observeAppVisibility()
-        observeAutoRefresh()
+        viewModelScope.launch {
+            observeNetwork()
+            loadInitialDataAndRefresh()
+            observeAppVisibility()
+            delay(3000)
+            observeAutoRefresh()
+        }
     }
 }
