@@ -6,6 +6,10 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
 android {
     namespace = "io.github.kgbis.remotecontrol.app"
     compileSdk = 36
@@ -91,7 +95,8 @@ dependencies {
     implementation(libs.richtext.ui.material3)
     implementation(libs.richtext.commonmark)
 
-    testImplementation(libs.junit)
+    testImplementation(kotlin("test"))
+    testImplementation(libs.junit.jupiter)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.androidx.compose.testing)

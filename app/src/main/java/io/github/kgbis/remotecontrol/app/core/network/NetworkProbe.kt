@@ -31,7 +31,7 @@ private const val WIN_FALLBACK = 135
 private const val PRIMARY_TIMEOUT = 800
 private const val SECONDARY_TIMEOUT = 300
 
-private const val WARMUP_CONFIDENCE_FACTOR = 1.75
+private const val WARMUP_CONFIDENCE_FACTOR = 2.0
 
 
 suspend fun probeDeviceBestResult(
@@ -143,8 +143,9 @@ fun computeDeviceStatus(
         // Connection timeout or unknown error. Status not reliable. Calculate!
         ConnectionResult.TIMEOUT_ERROR, ConnectionResult.UNKNOWN_ERROR -> {
             val confidenceCycles = when {
-                refreshInterval <= 15 -> 2.1
-                refreshInterval < 30 -> 1.2
+                refreshInterval <= 15 -> 2.4
+                refreshInterval <= 30 -> 1.5
+                refreshInterval <= 45 -> 1.2
                 else -> 1.0
             }
 
@@ -152,17 +153,8 @@ fun computeDeviceStatus(
             val finalConfidence =
                 if (refreshReason == RefreshReason.WARMUP) confidenceCycles / WARMUP_CONFIDENCE_FACTOR else confidenceCycles
 
-            Log.d(
-                "computeDeviceStatus",
-                "refreshReason = $refreshReason, Confidence cycles = $finalConfidence"
-            )
-
-            val offlineThresholdMs = (finalConfidence * refreshInterval * 1_000).toLong()
+            val offlineThresholdMs = (finalConfidence * refreshInterval * 500).toLong()
             val recentlySeen = now - previous.lastSeen <= offlineThresholdMs
-
-            Log.d("computeDeviceStatus", "now - previous.lastSeen = ${now - previous.lastSeen}")
-            Log.d("computeDeviceStatus", "offlineThresholdMs = $offlineThresholdMs")
-            Log.d("computeDeviceStatus", "recentlySeen = $recentlySeen")
 
             val newState = when {
                 recentlySeen -> previous.state

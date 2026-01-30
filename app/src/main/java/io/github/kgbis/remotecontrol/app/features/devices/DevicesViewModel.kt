@@ -24,13 +24,16 @@ import io.github.kgbis.remotecontrol.app.core.network.computeDeviceStatus
 import io.github.kgbis.remotecontrol.app.core.network.probeDeviceBestResult
 import io.github.kgbis.remotecontrol.app.features.domain.DeviceMatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -40,6 +43,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -111,8 +115,9 @@ class DevicesViewModel(
         _mainScreenVisible.value = visible
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     private fun observeAutoRefresh() {
+        Log.d("observeAutoRefresh", "OUT Autorefresh interval=${autoRefreshInterval.value}")
         combine(
             settingsRepo.autoRefreshEnabledFlow,
             settingsRepo.autoRefreshIntervalFlow,
@@ -121,7 +126,7 @@ class DevicesViewModel(
             networkMonitor.networkInfo
         ) { enabled, interval, screenVisible, appForeground, netinfo ->
             (enabled && screenVisible && appForeground && netinfo is NetworkInfo.Local) to interval
-        }.flatMapLatest { (shouldRun, interval) ->
+        }.debounce(500).flatMapLatest { (shouldRun, interval) ->
             Log.d("observeAutoRefresh", "Should run = $shouldRun")
             if (!shouldRun) {
                 emptyFlow()
@@ -135,15 +140,16 @@ class DevicesViewModel(
     }
 
     fun tickerFlow(period: Duration) = flow {
-        while (true) {
-            emit(Unit)
+        while (currentCoroutineContext().isActive) {
             delay(period)
+            emit(Unit)
         }
     }
 
 
-    private fun loadInitialDataAndRefresh() {
-        Log.d("loadInitialDataAndRefresh", "Load devices from repository")
+
+    private fun loadInitialDeviceList() {
+        Log.d("loadInitialDeviceList", "Load devices from repository")
         getDevices()
     }
 
@@ -432,6 +438,7 @@ class DevicesViewModel(
                 val deviceId = device.id ?: return@forEach
 
                 if (!shouldLaunchProbe(deviceId)) {
+                    Log.d("probeDevicesInternal", "Probe in flight for $deviceId")
                     return@forEach
                 }
 
@@ -648,9 +655,9 @@ class DevicesViewModel(
     init {
         viewModelScope.launch {
             observeNetwork()
-            loadInitialDataAndRefresh()
+            loadInitialDeviceList()
             observeAppVisibility()
-            delay(3000)
+            // delay(3000)
             observeAutoRefresh()
         }
     }
