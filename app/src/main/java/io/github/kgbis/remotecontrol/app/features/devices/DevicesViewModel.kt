@@ -12,7 +12,7 @@ import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import io.github.kgbis.remotecontrol.app.core.model.RefreshReason
-import io.github.kgbis.remotecontrol.app.core.model.matches
+import io.github.kgbis.remotecontrol.app.core.model.matches // NOSONAR
 import io.github.kgbis.remotecontrol.app.core.model.refreshKey
 import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
 import io.github.kgbis.remotecontrol.app.core.network.NetworkActions
@@ -78,11 +78,7 @@ class DevicesViewModel(
     val sameNetworkFlow = combine(
         networkMonitor.networkInfo,
         devices
-    ) { networkInfo, devices ->
-        val tag = "sameNetworkFlow"
-        Log.d(
-            tag, "networkInfo = ${networkInfo.javaClass.simpleName}, devices = ${devices.size}"
-        )
+    ) { networkInfo, _ ->
         if (networkInfo !is NetworkInfo.Local) return@combine false
         hasDevicesInSubnet(networkInfo.subnet)
     }
@@ -145,7 +141,6 @@ class DevicesViewModel(
             emit(Unit)
         }
     }
-
 
 
     private fun loadInitialDeviceList() {
