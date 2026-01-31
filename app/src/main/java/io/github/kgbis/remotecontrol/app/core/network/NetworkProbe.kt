@@ -153,7 +153,7 @@ fun computeDeviceStatus(
             val finalConfidence =
                 if (refreshReason == RefreshReason.WARMUP) confidenceCycles / WARMUP_CONFIDENCE_FACTOR else confidenceCycles
 
-            val offlineThresholdMs = (finalConfidence * refreshInterval * 500).toLong()
+            val offlineThresholdMs = (finalConfidence * refreshInterval * 750).toLong()
             val recentlySeen = now - previous.lastSeen <= offlineThresholdMs
 
             val newState = when {
