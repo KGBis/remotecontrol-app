@@ -51,10 +51,34 @@ class DeviceMatcher(
         }
 
         // MAC
-        val storedMacs = stored.interfaces.mapNotNull { it.mac }.toSet()
-        val incomingMacs = incoming.interfaces.mapNotNull { it.mac }.toSet()
+        val storedMacs =
+            stored.interfaces.mapNotNull { it.mac }.map { it.trim() }.filter { it.isNotEmpty() }
+                .toSet()
+        val incomingMacs =
+            incoming.interfaces.mapNotNull { it.mac }.map { it.trim() }.filter { it.isNotEmpty() }
+                .toSet()
         if (storedMacs.intersect(incomingMacs).isNotEmpty()) {
             score += config.macWeight
+        }
+
+        // IPs
+        val storedIps = stored.interfaces.mapNotNull { it.ip }.toSet()
+        val incomingIps = incoming.interfaces.mapNotNull { it.ip }.toSet()
+
+        if (storedIps.intersect(incomingIps).isNotEmpty()) {
+            score += config.ipMatch
+        }
+
+        // IP + MAC mismatch
+        val macConflict =
+            storedMacs.isNotEmpty() &&
+                    incomingMacs.isNotEmpty() &&
+                    storedMacs.intersect(incomingMacs).isEmpty()
+
+        val ipMatch = storedIps.intersect(incomingIps).isNotEmpty()
+
+        if (macConflict && ipMatch) {
+            score -= config.macConflictPenalty
         }
 
         // Hostname
@@ -78,14 +102,6 @@ class DeviceMatcher(
             incoming.deviceInfo!!.osName.startsWith(stored.deviceInfo!!.osName, true)
         ) {
             score += config.osMatch
-        }
-
-        // IPs
-        val storedIps = stored.interfaces.mapNotNull { it.ip }.toSet()
-        val incomingIps = incoming.interfaces.mapNotNull { it.ip }.toSet()
-
-        if (storedIps.intersect(incomingIps).isNotEmpty()) {
-            score += config.ipMatch
         }
 
 

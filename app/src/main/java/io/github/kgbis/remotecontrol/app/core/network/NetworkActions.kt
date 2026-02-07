@@ -27,7 +27,22 @@ const val REMOTETRAY_PORT = 6800
 object NetworkActions {
 
     fun simpleAckResponse(message: String): Boolean {
+        Log.d("simpleAckResponse", "message=$message")
         return message == "ACK"
+    }
+
+    fun shutdownResponse(message: String): Boolean {
+        Log.d("shutdownResponse", "message=$message")
+        return when (message) {
+            "ACK" -> true
+
+            // Expected errors after immediate shutdown
+            "SocketTimeoutException",
+            "SocketException",
+            "EOFException" -> true
+
+            else -> false
+        }
     }
 
     fun deviceInfoResponse(trayResponse: String): Device? {

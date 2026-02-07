@@ -1,6 +1,7 @@
 package io.github.kgbis.remotecontrol.app.core.repository
 
 import android.content.Context
+import android.util.Log
 import androidx.core.content.edit
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -10,10 +11,8 @@ import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.util.UUID
 
@@ -45,17 +44,18 @@ class DeviceRepository(context: Context) {
 
     private val mutex = Mutex()
 
-    suspend fun getDevices(): List<Device> = withContext(Dispatchers.IO) { // NOSONAR
-        mutex.withLock {
-            val json = prefs.getString("devices", "[]") ?: "[]"
-            val devices = Gson().fromJson<List<Device>>(json, deviceListType)
-            devices.sortedBy { it.id }
-        }
+    fun loadDevices(): List<Device> {
+        val json = prefs.getString("devices", "[]") ?: "[]"
+        Log.d("loadDevices", "json=$json")
+        val devices = Gson().fromJson<List<Device>>(json, deviceListType)
+        return devices.map { device -> device.sortInterfaces() }.toList().sortedBy { it.id }
     }
 
     suspend fun saveDevices(devices: List<Device>) {
         mutex.withLock {
-            val toJson = Gson().toJson(devices.sortedBy { it.id }.map { device -> device.sortInterfaces() }.toList())
+            val toJson =
+                Gson().toJson(devices.sortedBy { it.id }.map { device -> device.sortInterfaces() }
+                    .toList())
             prefs.edit { putString("devices", toJson) }
         }
     }
@@ -69,13 +69,13 @@ class DeviceRepository(context: Context) {
         }
     }
 
-    suspend fun loadDeviceStatuses(): Map<UUID, DeviceStatus> =
-        withContext(Dispatchers.IO) { // NOSONAR
-            mutex.withLock {
-                val json = prefs.getString("device_statuses", "{}") ?: "{}"
-                (pendingActionGson.fromJson(json, deviceStatusMapType) ?: emptyMap())
-            }
-        }
+    fun loadDeviceStatuses(): Map<UUID, DeviceStatus> {
+        val json = prefs.getString("device_statuses", "{}") ?: "{}"
+
+        Log.d("loadDeviceStatuses", "json=$json")
+        return (pendingActionGson.fromJson(json, deviceStatusMapType) ?: emptyMap())
+
+    }
 
 
 }

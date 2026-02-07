@@ -10,6 +10,7 @@ data class MatchConfig(
     val ipMatch: Int = 10,
     val osVersion: Int = 5,
     val interfaceSize: Int = 5,
-    val threshold: Int = 55
+    val threshold: Int = 55,
+    val macConflictPenalty: Int = 40
 )
 

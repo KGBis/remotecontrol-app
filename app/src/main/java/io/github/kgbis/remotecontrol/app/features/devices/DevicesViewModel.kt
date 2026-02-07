@@ -11,7 +11,6 @@ import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
-import io.github.kgbis.remotecontrol.app.core.model.RefreshReason
 import io.github.kgbis.remotecontrol.app.core.model.matches // NOSONAR
 import io.github.kgbis.remotecontrol.app.core.model.refreshKey
 import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
@@ -71,7 +70,7 @@ class DevicesViewModel(
 
     private val probeMutex = Mutex()
 
-    private val _devices = MutableStateFlow<List<Device>>(emptyList())
+    private val _devices = MutableStateFlow(deviceRepository.loadDevices())
 
     val devices = _devices.asStateFlow()
 
@@ -90,7 +89,7 @@ class DevicesViewModel(
     val autoRefreshEnable =
         settingsRepo.autoRefreshEnabledFlow.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
-    private val _deviceStatusMap = MutableStateFlow<Map<UUID, DeviceStatus>>(emptyMap())
+    private val _deviceStatusMap = MutableStateFlow(deviceRepository.loadDeviceStatuses())
 
     val deviceStatusMap = _deviceStatusMap.asStateFlow()
 
@@ -113,7 +112,6 @@ class DevicesViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     private fun observeAutoRefresh() {
-        Log.d("observeAutoRefresh", "OUT Autorefresh interval=${autoRefreshInterval.value}")
         combine(
             settingsRepo.autoRefreshEnabledFlow,
             settingsRepo.autoRefreshIntervalFlow,
@@ -143,10 +141,11 @@ class DevicesViewModel(
     }
 
 
-    private fun loadInitialDeviceList() {
-        Log.d("loadInitialDeviceList", "Load devices from repository")
-        getDevices()
+    private fun loadDeviceStatusList() {
+        _deviceStatusMap.value = deviceRepository.loadDeviceStatuses()
+        removeOrphanStatuses()
     }
+
 
     private fun removeOrphanStatuses() {
         val validIds = _devices.value.map { it.id }.toSet()
@@ -175,32 +174,21 @@ class DevicesViewModel(
     }
 
 
-    private suspend fun onAppForegrounded() {
+    private fun onAppForegrounded() {
         // Load stored device status
         Log.d("onAppForegrounded", "Load statuses from repository")
-        _deviceStatusMap.value = deviceRepository.loadDeviceStatuses()
-        removeOrphanStatuses()
+        loadDeviceStatusList()
 
         // refresh network status, just in case...
+        Log.d("onAppForegrounded", "Refresh network monitor")
         networkMonitor.refresh()
-        Log.d(
-            "onAppForegrounded",
-            "Refreshed network status = ${networkState.value.javaClass.simpleName}"
-        )
+
+        // Observe network changes
+        Log.d("onAppForegrounded", "Observe network changes")
         observeNetwork()
     }
 
     /* Device operations */
-
-    /**
-     * Get all devices stored in the repository
-     */
-    fun getDevices() {
-        viewModelScope.launch {
-            _devices.value =
-                deviceRepository.getDevices().map { device -> device.sortInterfaces() }.toList()
-        }
-    }
 
     /**
      * Get device by ID
@@ -417,13 +405,13 @@ class DevicesViewModel(
     }
 
 
-    fun probeDevices(refreshReason: RefreshReason = RefreshReason.NORMAL) {
+    fun probeDevices() {
         viewModelScope.launch {
-            probeDevicesInternal(refreshReason)
+            probeDevicesInternal()
         }
     }
 
-    private fun probeDevicesInternal(refreshReason: RefreshReason) {
+    private fun probeDevicesInternal() {
         // if we're not in local network do nothing
         val subnet = (networkMonitor.networkInfo.value as? NetworkInfo.Local)?.subnet
             ?: return
@@ -438,7 +426,7 @@ class DevicesViewModel(
                 }
 
                 probeMutex.withLock {
-                    inFlightProbes[deviceId] = launchProbeJob(device, subnet, refreshReason)
+                    inFlightProbes[deviceId] = launchProbeJob(device, subnet)
                 }
             }
         }
@@ -501,7 +489,6 @@ class DevicesViewModel(
     private fun launchProbeJob(
         device: Device,
         subnet: String,
-        refreshReason: RefreshReason
     ): Job = viewModelScope.launch {
         val deviceId = device.id ?: return@launch
 
@@ -510,7 +497,6 @@ class DevicesViewModel(
                 device,
                 deviceId,
                 probeDeviceBestResult(device, subnet),
-                refreshReason
             )
         } finally {
             probeMutex.withLock {
@@ -522,8 +508,7 @@ class DevicesViewModel(
     private suspend fun handleProbeResult(
         device: Device,
         deviceId: UUID,
-        probe: ProbeResult,
-        refreshReason: RefreshReason
+        probe: ProbeResult
     ) {
         val prevMap = _deviceStatusMap.value
         val previous = prevMap[deviceId]
@@ -532,10 +517,9 @@ class DevicesViewModel(
         val effectiveProbeResult = mergeProbeWithStoredDevice(device, probe)
 
         val updated = computeDeviceStatus(
-            previous = previous,
+            previous = previous.copy(device = effectiveProbeResult.device ?: previous.device), // check
             probeResult = effectiveProbeResult,
             refreshInterval = autoRefreshInterval.value,
-            refreshReason = refreshReason
         )
 
         // add/update in view model
@@ -573,7 +557,7 @@ class DevicesViewModel(
     private fun scheduleProbeRefresh() {
         viewModelScope.launch {
             if (networkMonitor.networkInfo.value is NetworkInfo.Local) {
-                probeDevices(refreshReason = RefreshReason.WARMUP)
+                probeDevices()
             }
         }
     }
@@ -588,7 +572,7 @@ class DevicesViewModel(
             val success = NetworkActions.sendMessage(
                 device = device,
                 command = "SHUTDOWN $delay $unit",
-                NetworkActions::simpleAckResponse
+                NetworkActions::shutdownResponse
             )
             if (success == true) {
                 val pendingAction = PendingAction.ShutdownScheduled(
@@ -598,7 +582,7 @@ class DevicesViewModel(
                 )
                 val previous = _deviceStatusMap.value
 
-                val state = when (cancellable) {
+                /*val state = when (cancellable) {
                     true -> previous[device.id]?.state ?: DeviceState.UNKNOWN
                     false -> {
                         if (device.deviceInfo?.osName?.lowercase() == "windows 7") {
@@ -607,10 +591,10 @@ class DevicesViewModel(
                             DeviceState.OFFLINE
                         }
                     }
-                }
+                }*/
                 val status = _deviceStatusMap.value[device.id]?.copy(
                     pendingAction = pendingAction,
-                    state = state
+                    state = /*state*/ previous[device.id]?.state ?: DeviceState.UNKNOWN
                 )
 
                 _deviceStatusMap.emit(previous + (device.id!! to status!!))
@@ -650,9 +634,7 @@ class DevicesViewModel(
     init {
         viewModelScope.launch {
             observeNetwork()
-            loadInitialDeviceList()
             observeAppVisibility()
-            // delay(3000)
             observeAutoRefresh()
         }
     }

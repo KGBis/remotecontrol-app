@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.temporal.ChronoUnit
 
-class SettingsRepository(context: Context) {
+class SettingsRepository(context: Context) : SettingsRepositoryContract {
 
     private val dataStore = context.applicationContext.settingsDataStore
 
@@ -23,57 +23,57 @@ class SettingsRepository(context: Context) {
         val KEY_THEME = stringPreferencesKey("theme")
     }
 
-    val shutdownDelayFlow: Flow<Int> =
+    override val shutdownDelayFlow: Flow<Int> =
         dataStore.data.map { prefs ->
             prefs[KEY_SHUTDOWN_DELAY_AMOUNT] ?: shutdownDelayOptions[0].amount
         }
 
-    val shutdownUnitFlow: Flow<ChronoUnit> =
+    override val shutdownUnitFlow: Flow<ChronoUnit> =
         dataStore.data.map { prefs ->
             prefs[KEY_SHUTDOWN_DELAY_UNIT]?.let { ChronoUnit.valueOf(it) }
                 ?: shutdownDelayOptions[0].unit
         }
 
-    suspend fun saveShutdownDelay(delay: Int) {
+    override suspend fun saveShutdownDelay(delay: Int) {
         dataStore.edit { prefs ->
             prefs[KEY_SHUTDOWN_DELAY_AMOUNT] = delay
         }
     }
 
-    suspend fun saveShutdownUnit(unit: ChronoUnit) {
+    override suspend fun saveShutdownUnit(unit: ChronoUnit) {
         dataStore.edit { prefs ->
             prefs[KEY_SHUTDOWN_DELAY_UNIT] = unit.name
         }
     }
 
-    val autoRefreshEnabledFlow: Flow<Boolean> =
+    override val autoRefreshEnabledFlow: Flow<Boolean> =
         dataStore.data.map { prefs ->
             prefs[KEY_AUTO_REFRESH] ?: true
         }
 
-    val autoRefreshIntervalFlow: Flow<Int> =
+    override val autoRefreshIntervalFlow: Flow<Int> =
         dataStore.data.map { prefs ->
             prefs[KEY_AUTO_REFRESH_DELAY] ?: 15
         }
 
-    suspend fun saveAutorefreshEnabled(status: Boolean) {
+    override suspend fun saveAutorefreshEnabled(status: Boolean) {
         dataStore.edit { prefs ->
             prefs[KEY_AUTO_REFRESH] = status
         }
     }
 
-    suspend fun saveAutorefreshDelay(delay: Float) {
+    override suspend fun saveAutorefreshDelay(delay: Float) {
         dataStore.edit { prefs ->
             prefs[KEY_AUTO_REFRESH_DELAY] = delay.toInt()
         }
     }
 
-    val theme: Flow<ThemeMode> =
+    override val theme: Flow<ThemeMode> =
         dataStore.data.map { prefs ->
             prefs[KEY_THEME]?.let { ThemeMode.valueOf(it) } ?: ThemeMode.SYSTEM
         }
 
-    suspend fun saveTheme(theme: ThemeMode) {
+    override suspend fun saveTheme(theme: ThemeMode) {
         dataStore.edit { prefs ->
             prefs[KEY_THEME] = theme.name
         }

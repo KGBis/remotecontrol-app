@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.kgbis.remotecontrol.app.RemotePcControlApp
+import io.github.kgbis.remotecontrol.app.core.repository.SettingsRepositoryContract
 import io.github.kgbis.remotecontrol.app.features.devices.model.shutdownDelayOptions
 import io.github.kgbis.remotecontrol.app.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.SharingStarted
@@ -12,9 +13,10 @@ import kotlinx.coroutines.launch
 import java.time.temporal.ChronoUnit
 
 class SettingsViewModel(
-    application: Application
-) : AndroidViewModel(application) {
-    private val settingsRepo = (application as RemotePcControlApp).settingsRepository
+    application: Application,
+    val settingsRepo: SettingsRepositoryContract
+) : AndroidViewModel(application)
+ {
 
     /* Color scheme */
 
@@ -25,13 +27,16 @@ class SettingsViewModel(
 
     val shutdownDelay = settingsRepo.shutdownDelayFlow.stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(5_000), shutdownDelayOptions[0].amount
+        SharingStarted.Eagerly,
+        shutdownDelayOptions[0].amount
     )
 
     val shutdownUnit = settingsRepo.shutdownUnitFlow.stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(5_000), shutdownDelayOptions[0].unit
+        SharingStarted.Eagerly,
+        shutdownDelayOptions[0].unit
     )
+
 
     /* Auto-refresh settings */
 

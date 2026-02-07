@@ -32,7 +32,7 @@ import io.github.kgbis.remotecontrol.app.ui.components.AppTopBar
 fun MainScreen(
     navController: NavController,
     devicesVm: DevicesViewModel,
-    settingsVm: SettingsViewModel = viewModel()
+    settingsVm: SettingsViewModel
 ) {
     var showSnackbar by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }

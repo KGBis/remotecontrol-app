@@ -10,15 +10,20 @@ import io.github.kgbis.remotecontrol.app.ui.screens.AddDeviceEntryScreen
 import io.github.kgbis.remotecontrol.app.ui.screens.EditDeviceScreen
 import io.github.kgbis.remotecontrol.app.features.devices.ui.MainScreen
 import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
+import io.github.kgbis.remotecontrol.app.features.settings.SettingsViewModel
 
 @Composable
-fun NavGraph() {
+fun NavGraph(settingsVm: SettingsViewModel) {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "main") {
         composable("main") {
             val devicesVm: DevicesViewModel = viewModel(navController.getBackStackEntry("main"))
-            MainScreen(navController, devicesVm)
+            MainScreen(
+                navController = navController,
+                devicesVm = devicesVm,
+                settingsVm = settingsVm
+            )
         }
 
         composable("add_device") {

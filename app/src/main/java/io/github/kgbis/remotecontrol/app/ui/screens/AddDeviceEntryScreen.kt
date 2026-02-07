@@ -1,5 +1,6 @@
 package io.github.kgbis.remotecontrol.app.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +46,7 @@ import io.github.kgbis.remotecontrol.app.features.devices.model.DeviceFormMode
 import io.github.kgbis.remotecontrol.app.features.devices.model.DeviceFormState
 import io.github.kgbis.remotecontrol.app.features.devices.model.toDevice
 import io.github.kgbis.remotecontrol.app.features.discovery.ui.MDNSDiscoveryScreen
+import io.github.kgbis.remotecontrol.app.features.domain.DeviceConflictChecker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +56,9 @@ fun AddDeviceEntryScreen(
 ) {
     var mode by remember { mutableStateOf(AddDeviceMode.NONE) }
     var formState by remember { mutableStateOf(DeviceFormState()) }
+
+    // Device list
+    val devices by devicesVm.devices.collectAsState()
 
     Scaffold(
         topBar = {
@@ -174,7 +180,10 @@ fun AddDeviceEntryScreen(
                         devicesVm = devicesVm,
                     )
                 }
+
                 AddDeviceMode.MANUAL -> {
+                    val checker = DeviceConflictChecker(devices)
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -186,12 +195,17 @@ fun AddDeviceEntryScreen(
                             state = formState,
                             onStateChange = { formState = it }
                         ) {
+                            val result = checker.check(form = formState, currentId = null)
+
+                            Log.d("AddEditDeviceScreen", "Checker result -> $result")
+
                             val device = formState.toDevice()
                             devicesVm.addDevice(device)
                             navController.popBackStack()
                         }
                     }
                 }
+
                 AddDeviceMode.NONE -> {
                     // Do nothing
                 }

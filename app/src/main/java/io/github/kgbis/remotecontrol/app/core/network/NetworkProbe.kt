@@ -6,7 +6,6 @@ import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
-import io.github.kgbis.remotecontrol.app.core.model.RefreshReason
 import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
 import io.github.kgbis.remotecontrol.app.core.network.NetworkActions.sendMessage
 import kotlinx.coroutines.Dispatchers
@@ -30,9 +29,6 @@ private const val WIN_FALLBACK = 135
 
 private const val PRIMARY_TIMEOUT = 800
 private const val SECONDARY_TIMEOUT = 300
-
-private const val WARMUP_CONFIDENCE_FACTOR = 2.0
-
 
 suspend fun probeDeviceBestResult(
     device: Device,
@@ -123,8 +119,7 @@ fun computeDeviceStatus(
     previous: DeviceStatus,
     probeResult: ProbeResult,
     refreshInterval: Int,
-    now: Long = System.currentTimeMillis(),
-    refreshReason: RefreshReason
+    now: Long = System.currentTimeMillis()
 ): DeviceStatus {
     return when (probeResult.result) {
         // Connection to port 6800 was fine
@@ -143,18 +138,17 @@ fun computeDeviceStatus(
         // Connection timeout or unknown error. Status not reliable. Calculate!
         ConnectionResult.TIMEOUT_ERROR, ConnectionResult.UNKNOWN_ERROR -> {
             val confidenceCycles = when {
-                refreshInterval <= 15 -> 2.4
-                refreshInterval <= 30 -> 1.5
-                refreshInterval <= 45 -> 1.2
-                else -> 1.0
+                refreshInterval <= 15 -> 1.5
+                refreshInterval <= 30 -> 1.0
+                else -> 0.5
             }
 
-            // cut down if warmup
-            val finalConfidence =
-                if (refreshReason == RefreshReason.WARMUP) confidenceCycles / WARMUP_CONFIDENCE_FACTOR else confidenceCycles
-
-            val offlineThresholdMs = (finalConfidence * refreshInterval * 750).toLong()
+            val offlineThresholdMs = (confidenceCycles * refreshInterval * 1000).toLong()
             val recentlySeen = now - previous.lastSeen <= offlineThresholdMs
+
+            Log.d("computeDeviceStatus", "confidence=$confidenceCycles, threshold=$offlineThresholdMs")
+            Log.d("computeDeviceStatus", "${now - previous.lastSeen} <= $offlineThresholdMs? $recentlySeen")
+            Log.d("computeDeviceStatus", "Device=${previous.device.hostname}, state=${previous.state}")
 
             val newState = when {
                 recentlySeen -> previous.state
