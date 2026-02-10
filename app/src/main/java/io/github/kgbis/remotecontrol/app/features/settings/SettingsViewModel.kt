@@ -3,7 +3,6 @@ package io.github.kgbis.remotecontrol.app.features.settings
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.kgbis.remotecontrol.app.RemotePcControlApp
 import io.github.kgbis.remotecontrol.app.core.repository.SettingsRepositoryContract
 import io.github.kgbis.remotecontrol.app.features.devices.model.shutdownDelayOptions
 import io.github.kgbis.remotecontrol.app.ui.theme.ThemeMode
@@ -15,8 +14,7 @@ import java.time.temporal.ChronoUnit
 class SettingsViewModel(
     application: Application,
     val settingsRepo: SettingsRepositoryContract
-) : AndroidViewModel(application)
- {
+) : AndroidViewModel(application) {
 
     /* Color scheme */
 

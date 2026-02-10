@@ -3,8 +3,8 @@ package io.github.kgbis.remotecontrol.app.core.network
 import android.util.Log
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
-import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
+import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
 import io.github.kgbis.remotecontrol.app.core.network.NetworkActions.sendMessage
@@ -95,7 +95,7 @@ private fun connect(device: Device, iface: DeviceInterface): ConnectionResult {
 
         Log.d("connect", "Target OS is Windows, fallback will be tried.")
         result = tryConnect(
-            ip = iface.ip!!,
+            ip = iface.ip,
             port = fallbackPort,
             timeout = SECONDARY_TIMEOUT,
             isFallback = true
@@ -146,9 +146,14 @@ fun computeDeviceStatus(
             val offlineThresholdMs = (confidenceCycles * refreshInterval * 1000).toLong()
             val recentlySeen = now - previous.lastSeen <= offlineThresholdMs
 
-            Log.d("computeDeviceStatus", "confidence=$confidenceCycles, threshold=$offlineThresholdMs")
-            Log.d("computeDeviceStatus", "${now - previous.lastSeen} <= $offlineThresholdMs? $recentlySeen")
-            Log.d("computeDeviceStatus", "Device=${previous.device.hostname}, state=${previous.state}")
+            Log.d(
+                "computeDeviceStatus",
+                "confidence=$confidenceCycles, threshold=$offlineThresholdMs"
+            )
+            Log.d(
+                "computeDeviceStatus",
+                "${now - previous.lastSeen} <= $offlineThresholdMs? $recentlySeen"
+            )
 
             val newState = when {
                 recentlySeen -> previous.state

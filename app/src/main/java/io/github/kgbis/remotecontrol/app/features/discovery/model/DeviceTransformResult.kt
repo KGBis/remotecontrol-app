@@ -25,8 +25,6 @@ sealed class DeviceTransformResult {
 
     data class Invalid(
         val discovered: DiscoveredDevice,
-        // val reason: Int,
-        // val reasonText: String,
         override val warning: DiscoveredDeviceWarning.Outdated
     ) : DeviceTransformResult(), WithWarning
 }

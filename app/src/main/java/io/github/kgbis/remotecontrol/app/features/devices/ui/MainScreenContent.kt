@@ -30,7 +30,6 @@ import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
 import io.github.kgbis.remotecontrol.app.features.devices.model.shutdownDelayOptions
 import io.github.kgbis.remotecontrol.app.features.settings.SettingsViewModel
 import io.github.kgbis.remotecontrol.app.ui.components.ShutdownDelayDropdown
-import java.time.temporal.ChronoUnit
 
 @Composable
 fun BoxScope.MainScreenContent(
@@ -40,15 +39,11 @@ fun BoxScope.MainScreenContent(
     onShowSnackbar: (String) -> Unit
 ) {
     // Device list
-    val devices by devicesVm.devices.collectAsState()
+    val advDevices by devicesVm.devices.collectAsState()
 
     // if connected to same network as devices
     val sameNetwork by devicesVm.isInLocalNetwork.collectAsState()
     val networkState by devicesVm.networkState.collectAsState()
-
-    // Shutdown delay and unit. i.e. 20 SECONDS
-    val delay by settingsVm.shutdownDelay.collectAsState()
-    val unit by settingsVm.shutdownUnit.collectAsState()
 
     Column(
         Modifier
@@ -69,7 +64,7 @@ fun BoxScope.MainScreenContent(
 
         Spacer(Modifier.height(16.dp))
 
-        if (devices.isEmpty()) {
+        if (advDevices.isEmpty()) {
             Text(
                 stringResource(R.string.no_devices_yet),
                 modifier = Modifier.fillMaxWidth(),
@@ -78,10 +73,9 @@ fun BoxScope.MainScreenContent(
             )
         } else {
             DevicesList(
-                devices = devices,
+                devices = advDevices,
                 devicesVm = devicesVm,
-                delay = delay,
-                unit = unit,
+                settingsVm = settingsVm,
                 navController = navController,
                 onShowSnackbar = onShowSnackbar
             )
@@ -123,12 +117,15 @@ fun ActionMessage.resolve(context: Context): String =
 private fun DevicesList(
     devices: List<Device>,
     devicesVm: DevicesViewModel,
-    delay: Int,
-    unit: ChronoUnit,
+    settingsVm: SettingsViewModel,
     navController: NavController,
     onShowSnackbar: (String) -> Unit
 ) {
     val context = LocalContext.current
+
+    // Shutdown delay and unit. i.e. 30 MINUTES
+    val delay by settingsVm.shutdownDelay.collectAsState()
+    val unit by settingsVm.shutdownUnit.collectAsState()
 
     LazyColumn {
         items(devices.size) { index ->
@@ -136,7 +133,6 @@ private fun DevicesList(
             if (device.isRenderable())
                 DeviceListItem(
                     device = device,
-                    devicesVm = devicesVm,
                     onShutdown = {
                         devicesVm.sendShutdownCommand(
                             device,

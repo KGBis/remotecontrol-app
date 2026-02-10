@@ -3,7 +3,10 @@ package io.github.kgbis.remotecontrol.app.features.domain
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInfo
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
+import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
+import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
+import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -29,6 +32,12 @@ class DeviceMatcherTest {
                 )
             ),
             id = UUID.randomUUID(),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
+            ),
         )
 
         val incoming = Device(
@@ -47,6 +56,12 @@ class DeviceMatcherTest {
                 )
             ),
             id = UUID.randomUUID(),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
+            )
         )
 
         val matcher = DeviceMatcher(MatchConfig(), listOf(stored))
@@ -72,6 +87,12 @@ class DeviceMatcherTest {
                 )
             ),
             id = UUID.randomUUID(),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
+            )
         )
 
         val incoming = Device(
@@ -90,6 +111,12 @@ class DeviceMatcherTest {
                 )
             ),
             id = UUID.randomUUID(),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
+            )
         )
 
         val matcher = DeviceMatcher(MatchConfig(), listOf(stored))
@@ -116,6 +143,12 @@ class DeviceMatcherTest {
                 )
             ),
             id = UUID.randomUUID(),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
+            )
         )
 
         val incoming = Device(
@@ -134,6 +167,12 @@ class DeviceMatcherTest {
                 )
             ),
             id = UUID.randomUUID(),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
+            )
         )
 
         val matcher = DeviceMatcher(MatchConfig(), listOf(stored))
@@ -160,6 +199,12 @@ class DeviceMatcherTest {
                 )
             ),
             id = UUID.randomUUID(),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
+            )
         )
 
         val incoming = Device(
@@ -174,6 +219,12 @@ class DeviceMatcherTest {
                 )
             ),
             id = UUID.randomUUID(),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
+            )
         )
 
         val matcher = DeviceMatcher(MatchConfig(), listOf(stored))

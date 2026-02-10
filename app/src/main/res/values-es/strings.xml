@@ -117,4 +117,12 @@
     <string name="iface_type_ethernet">Cableado</string>
     <string name="iface_type_unknown">Desconocido</string>
     <string name="connecting_network">Conectando a la red, por favor espere.</string>
+    <string name="device_duplicate">Posible Duplicado</string>
+    <string name="device_duplicate_text">Este dispositivo parece ser el mismo que %1$s.</string>
+    <string name="device_same_ip">Conflicto de IP</string>
+    <string name="device_same_ip_text">IPs ya asignadas a %1$s:\n%2$s</string>
+    <string name="device_same_mac">Conflicto de MAC</string>
+    <string name="device_same_mac_text">MACs ya asignadas a %1$s:\n%2$s</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save_anyway">Guardar igualmente</string>
 </resources>

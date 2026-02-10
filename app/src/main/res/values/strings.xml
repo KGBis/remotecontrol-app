@@ -119,4 +119,12 @@
     <string name="iface_type_wifi" translatable="false">Wi-Fi</string>
     <string name="iface_type_unknown">Unknown</string>
     <string name="connecting_network">Connecting to network, please wait.</string>
+    <string name="device_duplicate">Possibly Duplicate</string>
+    <string name="device_duplicate_text">This device appears to be the same as %1$s.</string>
+    <string name="device_same_ip">IP Conflict</string>
+    <string name="device_same_ip_text">IPs is already assigned to %1$s:\n%2$s</string>
+    <string name="device_same_mac">MAC Conflict</string>
+    <string name="device_same_mac_text">MACs already assigned to %1$s:\n%2$s</string>
+    <string name="cancel">Cancel</string>
+    <string name="save_anyway">Save anyway</string>
 </resources>

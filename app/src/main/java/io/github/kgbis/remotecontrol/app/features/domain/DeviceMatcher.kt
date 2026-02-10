@@ -98,7 +98,7 @@ class DeviceMatcher(
         // OS info
         if (
             stored.deviceInfo?.osName != null && incoming.deviceInfo?.osName != null &&
-            stored.deviceInfo!!.osName.startsWith(incoming.deviceInfo!!.osName, true) ||
+            stored.deviceInfo.osName.startsWith(incoming.deviceInfo.osName, true) ||
             incoming.deviceInfo!!.osName.startsWith(stored.deviceInfo!!.osName, true)
         ) {
             score += config.osMatch
@@ -106,7 +106,7 @@ class DeviceMatcher(
 
 
         // OS Version
-        if (stored.deviceInfo?.osVersion == incoming.deviceInfo?.osVersion) {
+        if (stored.deviceInfo.osVersion == incoming.deviceInfo.osVersion) {
             score += config.osVersion
         }
 
