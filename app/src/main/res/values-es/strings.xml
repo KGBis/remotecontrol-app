@@ -1,5 +1,128 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="devices_title">Dispositivos</string>
-    <string name="scan_devices">Buscar dispositivos</string>
+
+    <!-- Nombre de la app -->
+    <!--<string name="app_name">Wake &amp; Shutdown</string>-->
+
+    <!-- Common -->
+    <string name="back">Atrás</string>
+    <string name="ok">Vale</string>
+
+    <!-- Pantalla principal -->
+    <string name="scan_network">🔍 Buscar Remote Control Tray</string>
+    <string name="refresh">⟳ Actualizar</string>
+    <string name="time">Tiempo</string>
+    <string name="unit">Unidad</string>
+    <string name="shutdown_delay">Apagar el dispositivo tras</string>
+    <string name="shutdown_delay_desc">Espera hasta apagado</string>
+    <string name="no_devices_yet">No hay dispositivos aún, use ➕ Añadir dispositivo</string>
+
+    <!-- Delay Options -->
+    <string name="delay_now">Sin espera</string>
+    <string name="delay_1m">1 minuto</string>
+    <string name="delay_5m">5 minutos</string>
+    <string name="delay_10m">10 minutos</string>
+    <string name="delay_15m">15 minutos</string>
+    <string name="delay_30m">30 minutos</string>
+    <string name="delay_1h">1 hora</string>
+
+    <!-- Estado de dispositivos -->
+    <string name="status_online">🟢 En línea</string>
+    <string name="status_offline">🔴 Desconectado</string>
+    <string name="status_unknown">⚪ Desconocido</string>
+
+    <!-- Acciones sobre un dispositivo -->
+    <string name="shutdown_action">Apagar</string>
+    <string name="shutdown_cancel_action">Cancelar</string>
+    <string name="delete_action">Quitar</string>
+    <string name="edit_action">⚙️ Configurar</string>
+
+    <!-- Añadir dispositivo -->
+    <string name="add_device">Añadir dispositivo</string>
+    <string name="edit_device">Editar dispositivo</string>
+    <string name="device_name">Nombre</string>
+    <string name="device_ip">Dirección IP</string>
+    <string name="device_mac">Dirección MAC</string>
+    <string name="save_device">💾 Guardar</string>
+    <string name="update_device">💾 Actualizar</string>
+
+    <!-- Mensajes / Snackbars -->
+    <string name="device_no_mac">[añada una MAC]</string>
+    <string name="device_added">Dispositivo añadido</string>
+    <string name="device_removed">Dispositivo eliminado</string>
+    <string name="device_wol_sent">Paquete WoL enviado a %1$s</string>
+    <string name="device_wol_sent_error">Error enviando paquete Wake-on-LAN a %1$s</string>
+    <string name="device_shutdown_sent">Comando de apagado enviado a %1$s</string>
+    <string name="device_shutdown_cancel_sent">Comando de cancelación enviado a %1$s</string>
+    <string name="device_shutdown_sent_error">Error al envíar comando a %1$s</string>
+    <string name="generic_validation_error">Error de validación</string>
+    <string name="error_invalid_ip">IP no válida</string>
+    <string name="error_invalid_mac">Dirección MAC no válida</string>
+    <string name="error_empty_fields">⚠️ Todos los campos obligatorios deben estar completos</string>
+    <string name="manual_edit_title">Añadir manualmente</string>
+    <string name="manual_edit_desc">Introduce IP y datos del dispositivo</string>
+    <string name="network_scan_title">Detectar dispositivos</string>
+    <string name="network_scan_desc">Busca PCs disponibles en tu red local</string>
+    <string name="network_scan_stop_button">Parar descubrimiento</string>
+    <string name="network_scan_running">Escaneando… %1$s%% - Clic para cancelar</string>
+    <string name="network_scan_running_2">Descubriendo servicios mDNS…</string>
+    <string name="network_scan_done">✔ Escaneo completado</string>
+    <string name="discovery_no_devices_found">Sin dispositivos. Buscar de nuevo</string>
+    <string name="discovery_devices_found">Dispositivos detectados. Buscar de nuevo</string>
+    <string name="discovery_devices_error">Hubo un error. Buscar de nuevo</string>
+    <string name="devices_found_add_button">Añadir %1$s seleccionados</string>
+    <string name="select">Seleccionar</string>
+
+    <!-- about -->
+    <string name="about">Acerca de / Ayuda</string>
+    <string name="about_info_section">🧩 Información</string>
+    <string name="about_bys_section">⚙️ Antes de empezar</string>
+    <string name="about_discovery_section">📡 Descubrimiento &amp; requerimientos</string>
+    <string name="about_status_section">📊 Estado de los dispositivos</string>
+    <string name="about_legal_section">🔐 Privacidad y Licencia 📜</string>
+
+    <string name="settings">Ajustes</string>
+    <string name="settings_refresh_enabled">Autorefresco de dispositivos</string>
+    <string name="settings_refresh_rate">Intervalo de autorefresco: %1$s segundos</string>
+    <string name="label_seconds">segundos</string>
+    <string name="label_milliseconds">milisegundos</string>
+    <string name="label_menu">Menú</string>
+    <string name="settings_advanced">Opciones avanzadas…</string>
+    <string name="settings_advanced_timeout">Timeout escaneo de red: %1$s ms</string>
+    <string name="settings_advanced_timeout_warning">⚠ Ajustar demasiado bajo puede perder equipos; demasiado alto puede retrasar el escaneo.</string>
+    <string name="no_interfaces">Sin interfaces</string>
+    <string name="discover_error_no_id">Falta Id de dispositivo</string>
+    <string name="discover_error_id_format">Formato de Id erróneo</string>
+    <string name="discover_error_old_version">Interfaces de red ausentes</string>
+    <string name="discover_warn_old_version">Actualice Tray a</string>
+    <string name="discover_upgrade_to">v.%1$s</string>
+    <string name="discover_upgrade_later">o posterior</string>
+
+    <string name="device_general_info">Información del dispositivo</string>
+    <string name="os_name">Sistema operativo</string>
+    <string name="tray_version">Versión del Tray</string>
+    <string name="network_interfaces">Interfaces de red</string>
+    <string name="interface_name">Interfaz de red</string>
+    <string name="remove_interface">Eliminar interfaz de red</string>
+    <string name="add_interface">Añadir interfaz de red</string>
+    <string name="os_unknown">Desconocido</string>
+    <string name="interface_type">Tipo de interfaz</string>
+    <string name="theme_mode">Modo de tema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_system">Sistema</string>
+    <string name="not_in_same_network">
+        No conectado a la red de los dispositivos o conexión inestable.
+        El estado se actualizará tan pronto como la conexión a red local esté disponible.
+    </string>
+    <string name="iface_type_ethernet">Cableado</string>
+    <string name="iface_type_unknown">Desconocido</string>
+    <string name="connecting_network">Conectando a la red, por favor espere.</string>
+    <string name="device_duplicate">Posible Duplicado</string>
+    <string name="device_duplicate_text">Este dispositivo parece ser el mismo que %1$s.</string>
+    <string name="device_same_ip">Conflicto de IP</string>
+    <string name="device_same_ip_text">IPs ya asignadas a %1$s:\n%2$s</string>
+    <string name="device_same_mac">Conflicto de MAC</string>
+    <string name="device_same_mac_text">MACs ya asignadas a %1$s:\n%2$s</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save_anyway">Guardar igualmente</string>
 </resources>
