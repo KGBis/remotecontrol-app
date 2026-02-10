@@ -52,7 +52,10 @@ object NetworkActions {
         }
 
         try {
-            return Gson().fromJson<Device>(trayResponse, object : TypeToken<Device>() {}.type)
+            return Gson().fromJson<Device>(
+                trayResponse,
+                object : TypeToken<Device>() {}.type
+            )
         } catch (_: JsonSyntaxException) {
             Log.w("deviceInfoResponse", "Old version response: $trayResponse")
             return null

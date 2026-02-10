@@ -26,8 +26,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,28 +39,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.core.model.Device
-import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
+import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
-import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
-import java.util.UUID
 
 @Composable
 fun DeviceListItem(
     device: Device,
-    devicesVm: DevicesViewModel,
     onShutdown: () -> Unit,
     onCancel: () -> Unit,
     onWake: () -> Unit,
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
-    // get device status from viewmodel
-    val deviceStatusMap by devicesVm.deviceStatusMap.collectAsState()
-    val deviceStatus =
-        deviceStatusMap.getOrDefault(device.id, DeviceStatus(device, trayReachable = false))
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -76,12 +66,13 @@ fun DeviceListItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            DeviceRow(device = device, devicesVm = devicesVm, onEdit = onEdit)
+            DeviceRow(device = device, onEdit = onEdit)
 
             Spacer(Modifier.width(8.dp))
 
             ActionsRow(
-                deviceStatus = deviceStatus,
+                // deviceStatus = device.status,
+                device = device,
                 onDelete = onDelete,
                 onWake = onWake,
                 onShutdown = onShutdown,
@@ -92,13 +83,8 @@ fun DeviceListItem(
 }
 
 @Composable
-fun DeviceRow(device: Device, devicesVm: DevicesViewModel, onEdit: () -> Unit) {
-    // get device status from viewmodel
-    val deviceStatusMap by devicesVm.deviceStatusMap.collectAsState()
-    val deviceStatus =
-        deviceStatusMap.getOrDefault(device.id, DeviceStatus(device, trayReachable = false))
-
-    val (dotColor, dotContentDescription) = dotStatus(deviceStatus, deviceStatusMap)
+fun DeviceRow(device: Device, onEdit: () -> Unit) {
+    val (dotColor, dotContentDescription) = dotStatus(device.status)
 
     Row(modifier = Modifier.clickable { onEdit() }) {
         Column(
@@ -180,17 +166,17 @@ fun DeviceRow(device: Device, devicesVm: DevicesViewModel, onEdit: () -> Unit) {
 
 @Composable
 fun ActionsRow(
-    deviceStatus: DeviceStatus,
+    device: Device,
     onShutdown: () -> Unit,
     onWake: () -> Unit,
     onDelete: () -> Unit,
     onCancel: () -> Unit,
 ) {
     // shutdown (greyed and disabled?)
-    val shutdownUiData = getShutdownUiData(deviceStatus, onShutdown, onCancel)
+    val shutdownUiData = getShutdownUiData(device, onShutdown, onCancel)
 
     // Wake-on-LAN (greyed and disabled?)
-    val wolColor = actionIconColor(deviceStatus.canWakeup)
+    val wolColor = actionIconColor(device.canWakeup())
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -224,7 +210,7 @@ fun ActionsRow(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             IconButton(
                 onClick = onWake,
-                enabled = deviceStatus.canWakeup
+                enabled = device.canWakeup()
             ) {
                 Icon(
                     Icons.Default.PowerSettingsNew,
@@ -297,13 +283,10 @@ fun OsIcon(os: String, modifier: Modifier) {
 }
 
 @Composable
-fun dotStatus(
-    deviceStatus: DeviceStatus,
-    deviceStatusMap: Map<UUID, DeviceStatus>
-): Pair<Color, Int> =
-    when {
-        deviceStatus.state == DeviceState.UNKNOWN || deviceStatusMap.isEmpty() -> Color.Gray to R.string.status_unknown
-        deviceStatus.state == DeviceState.ONLINE -> Color.Green to R.string.status_online
+fun dotStatus(deviceStatus: DeviceStatus): Pair<Color, Int> =
+    when (deviceStatus.state) {
+        DeviceState.UNKNOWN -> Color.Gray to R.string.status_unknown
+        DeviceState.ONLINE -> Color.Green to R.string.status_online
         else -> Color.Red to R.string.status_offline
     }
 
@@ -318,33 +301,32 @@ data class ShutdownUi(
 
 @Composable
 private fun getShutdownUiData(
-    deviceStatus: DeviceStatus,
+    device: Device,
     onShutdown: () -> Unit,
     onCancel: () -> Unit
 ): ShutdownUi {
     val shutdownText = stringResource(R.string.shutdown_action)
     val cancelText = stringResource(R.string.shutdown_cancel_action)
-    val shutdownColor = actionIconColor(deviceStatus.canShutdown)
-    val cancelShutdownColor = actionIconColor(deviceStatus.canCancelShutdown)
+    val shutdownColor = actionIconColor(device.canShutdown())
+    val cancelShutdownColor = actionIconColor(device.canCancelShutdown())
 
-    return remember(deviceStatus) {
+    return remember(device) {
         val showShutdown =
-            deviceStatus.pendingAction == PendingAction.None || !deviceStatus.canCancelShutdown
+            device.status.pendingAction == PendingAction.None || !device.canCancelShutdown()
 
         if (showShutdown) {
             ShutdownUi(
                 click = onShutdown,
-                enabled = deviceStatus.canShutdown,
+                enabled = device.canShutdown(),
                 imageVector = Icons.Default.PowerOff,
                 color = shutdownColor,
                 textLine1 = shutdownText,
                 textLine2 = ""
             )
         } else {
-            @Suppress("KotlinConstantConditions")
             ShutdownUi(
                 click = onCancel,
-                enabled = deviceStatus.canCancelShutdown,
+                enabled = device.canCancelShutdown(),
                 imageVector = Icons.Default.Close,
                 color = cancelShutdownColor,
                 textLine1 = cancelText,

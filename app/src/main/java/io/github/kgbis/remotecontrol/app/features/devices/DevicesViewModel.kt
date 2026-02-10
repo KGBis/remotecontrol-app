@@ -9,7 +9,6 @@ import io.github.kgbis.remotecontrol.app.core.AppVisibilityEvent
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
-import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import io.github.kgbis.remotecontrol.app.core.model.matches // NOSONAR
 import io.github.kgbis.remotecontrol.app.core.model.refreshKey
@@ -89,10 +88,6 @@ class DevicesViewModel(
     val autoRefreshEnable =
         settingsRepo.autoRefreshEnabledFlow.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
-    private val _deviceStatusMap = MutableStateFlow(deviceRepository.loadDeviceStatuses())
-
-    val deviceStatusMap = _deviceStatusMap.asStateFlow()
-
     private val _mainScreenVisible = MutableStateFlow(false)
 
     val mainScreenVisible = _mainScreenVisible.asStateFlow()
@@ -140,19 +135,8 @@ class DevicesViewModel(
         }
     }
 
-
-    private fun loadDeviceStatusList() {
-        _deviceStatusMap.value = deviceRepository.loadDeviceStatuses()
-        removeOrphanStatuses()
-    }
-
-
-    private fun removeOrphanStatuses() {
-        val validIds = _devices.value.map { it.id }.toSet()
-        _deviceStatusMap.value =
-            _deviceStatusMap.value
-                .filterKeys { it in validIds }
-                .toMutableMap()
+    private fun loadDevicesList() {
+        _devices.value = deviceRepository.loadDevices()
     }
 
     private fun observeAppVisibility() {
@@ -170,14 +154,13 @@ class DevicesViewModel(
     private suspend fun onAppBackgrounded() {
         Log.d("onAppBackgrounded", "Canceling active probes & saving device statuses")
         cancelAllProbes()
-        deviceRepository.saveDeviceStatuses(_deviceStatusMap.value)
+        deviceRepository.saveDevices(_devices.value)
     }
 
 
     private fun onAppForegrounded() {
-        // Load stored device status
-        Log.d("onAppForegrounded", "Load statuses from repository")
-        loadDeviceStatusList()
+        // Load stored devices
+        loadDevicesList()
 
         // refresh network status, just in case...
         Log.d("onAppForegrounded", "Refresh network monitor")
@@ -280,14 +263,28 @@ class DevicesViewModel(
     }
 
     fun updateDeviceFromProbe(deviceId: UUID, probe: ProbeResult) {
-        val org = getDeviceById(deviceId)
-        val mergedInterfaces = mergeInterfaces(org!!.interfaces, probe.device!!.interfaces)
+        val storedDevice = getDeviceById(deviceId)
 
-        val updated = org.copy(interfaces = mergedInterfaces, deviceInfo = probe.device.deviceInfo)
+        Log.d("updateDeviceFromProbe", "stored=$storedDevice")
+        Log.d("updateDeviceFromProbe", "probe =${probe.device}")
+
+        val mergedInterfaces = mergeInterfaces(storedDevice!!.interfaces, probe.device!!.interfaces)
+
+        Log.d("updateDeviceFromProbe", "merged interfaces=${mergedInterfaces}")
+
+        val updated = storedDevice.copy(
+            interfaces = mergedInterfaces,
+            deviceInfo = probe.device.deviceInfo,
+            status = probe.device.status
+        )
+
+        Log.d("updateDeviceFromProbe", "updated=${updated}")
 
         _devices.update { current ->
             current.map { if (it.id == deviceId) updated else it }
         }
+
+        Log.d("updateDeviceFromProbe", "_devices=${_devices.value}")
     }
 
     fun mergeInterfaces(
@@ -325,28 +322,20 @@ class DevicesViewModel(
 
 
     private fun setStatusOnline(uuids: List<UUID>) {
-        _deviceStatusMap.update { current ->
-            val updated = current.toMutableMap()
-
-            for (uuid in uuids) {
-                val device = getDeviceById(uuid) ?: continue
-                val existing = updated[uuid]
-
-                updated[uuid] =
-                    existing?.copy(
-                        state = DeviceState.ONLINE,
-                        trayReachable = true,
-                        lastSeen = System.currentTimeMillis()
-                    )
-                        ?: DeviceStatus(
-                            device = device,
+        _devices.update { list ->
+            list.map { device ->
+                if (device.id in uuids) {
+                    device.copy(
+                        status = device.status.copy(
                             state = DeviceState.ONLINE,
                             trayReachable = true,
                             lastSeen = System.currentTimeMillis()
                         )
+                    )
+                } else {
+                    device
+                }
             }
-
-            updated
         }
     }
 
@@ -396,7 +385,6 @@ class DevicesViewModel(
             inFlightProbes.remove(device.id)?.cancel()
 
             // remove status and device in view model
-            _deviceStatusMap.emit(_deviceStatusMap.value.filter { it.key != device.id })
             _devices.value = _devices.value.filter { dev -> dev.id != device.id }
 
             // save new list in repository
@@ -457,12 +445,10 @@ class DevicesViewModel(
         cancelAllProbes()
 
         // set status as unknown
-        _deviceStatusMap.value = _deviceStatusMap.value.mapValues {
-            it.value.copy(
-                state = DeviceState.UNKNOWN,
-                trayReachable = false,
-                pendingAction = PendingAction.None
-            )
+        _devices.update { list ->
+            list.map { device ->
+                device.copy(status = device.status.copy(state = DeviceState.UNKNOWN))
+            }
         }
     }
 
@@ -505,29 +491,26 @@ class DevicesViewModel(
         }
     }
 
-    private suspend fun handleProbeResult(
+    private fun handleProbeResult(
         device: Device,
         deviceId: UUID,
         probe: ProbeResult
     ) {
-        val prevMap = _deviceStatusMap.value
-        val previous = prevMap[deviceId]
-            ?: DeviceStatus(device = device, trayReachable = false)
-
+        val previousStatus = device.status
         val effectiveProbeResult = mergeProbeWithStoredDevice(device, probe)
-
-        val updated = computeDeviceStatus(
-            previous = previous.copy(device = effectiveProbeResult.device ?: previous.device), // check
+        val updatedStatus = computeDeviceStatus(
+            previous = previousStatus,
             probeResult = effectiveProbeResult,
             refreshInterval = autoRefreshInterval.value,
         )
 
         // add/update in view model
         effectiveProbeResult.device?.let {
-            updateDeviceFromProbe(deviceId, probe)
+            updateDeviceFromProbe(
+                deviceId,
+                probe.copy(device = probe.device?.copy(status = updatedStatus))
+            )
         }
-        // emit new status
-        _deviceStatusMap.emit(prevMap + (deviceId to updated))
     }
 
     private fun mergeProbeWithStoredDevice(
@@ -536,7 +519,7 @@ class DevicesViewModel(
     ): ProbeResult {
         val probedDevice = probe.device ?: return probe
 
-        val mergedDevice = probedDevice.copy(hostname = stored.hostname)
+        val mergedDevice = probedDevice.copy(hostname = stored.hostname, status = stored.status)
         return probe.copy(device = mergedDevice)
     }
 
@@ -563,7 +546,12 @@ class DevicesViewModel(
     }
 
     /* Commands to trigger */
-    fun sendShutdownCommand(device: Device, delay: Int, unit: String, onResult: (Boolean) -> Unit) {
+    fun sendShutdownCommand(
+        device: Device,
+        delay: Int,
+        unit: String,
+        onResult: (Boolean) -> Unit
+    ) {
         viewModelScope.launch {
             val scheduledAt = Instant.now()
             val executeAt = scheduledAt.plus(delay.toLong(), ChronoUnit.valueOf(unit))
@@ -580,24 +568,16 @@ class DevicesViewModel(
                     executeAt = executeAt,
                     cancellable = cancellable
                 )
-                val previous = _deviceStatusMap.value
 
-                /*val state = when (cancellable) {
-                    true -> previous[device.id]?.state ?: DeviceState.UNKNOWN
-                    false -> {
-                        if (device.deviceInfo?.osName?.lowercase() == "windows 7") {
-                            previous[device.id]?.state ?: DeviceState.UNKNOWN
+                _devices.update { devices ->
+                    devices.map {
+                        if (it.id == device.id) {
+                            it.copy(status = it.status.copy(pendingAction = pendingAction))
                         } else {
-                            DeviceState.OFFLINE
+                            it
                         }
                     }
-                }*/
-                val status = _deviceStatusMap.value[device.id]?.copy(
-                    pendingAction = pendingAction,
-                    state = /*state*/ previous[device.id]?.state ?: DeviceState.UNKNOWN
-                )
-
-                _deviceStatusMap.emit(previous + (device.id!! to status!!))
+                }
             }
 
             onResult(success == true)
@@ -613,10 +593,15 @@ class DevicesViewModel(
             )
 
             if (success == true) {
-                val status =
-                    _deviceStatusMap.value[device.id]?.copy(pendingAction = PendingAction.None)
-                val previous = _deviceStatusMap.value
-                _deviceStatusMap.emit(previous + (device.id!! to status!!))
+                _devices.update { devices ->
+                    devices.map {
+                        if (it.id == device.id) {
+                            it.copy(status = it.status.copy(pendingAction = PendingAction.None))
+                        } else {
+                            it
+                        }
+                    }
+                }
             }
 
             onResult(success == true)

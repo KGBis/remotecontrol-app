@@ -6,27 +6,48 @@ import io.github.kgbis.remotecontrol.app.features.devices.model.InterfaceFormSta
 import java.util.UUID
 
 data class Device(
-    var id: UUID?,
+    val id: UUID?,
     var hostname: String,
-    var deviceInfo: DeviceInfo?,
-    val interfaces: MutableList<DeviceInterface> = mutableListOf()
+    val deviceInfo: DeviceInfo?,
+    val interfaces: MutableList<DeviceInterface> = mutableListOf(),
+    val status: DeviceStatus
 ) {
     /**
      * Trims fields and normalizes MAC address to colon separated & lowercase (i.e. 91:75:1a:ec:9a:c7)
      */
     fun normalize() {
         hostname = hostname.trim()
-        interfaces.forEach {
-            it.mac = it.mac?.trim()?.replace('-', ':')?.lowercase()
-            it.ip = it.ip?.trim()
-        }
+        val ifaces = interfaces.map {
+            val mac = it.mac?.trim()?.replace('-', ':')?.lowercase()
+            val ip = it.ip?.trim()
+            it.copy(mac = mac, ip = ip)
+        }.toList()
+
+        interfaces.clear()
+        interfaces.addAll(ifaces)
     }
 
     fun hasMacAddress(): Boolean {
         return this.interfaces.any { !it.mac.isNullOrEmpty() }
     }
+
+    fun canShutdown(): Boolean {
+        return status.state == DeviceState.ONLINE && status.trayReachable && status.pendingAction == PendingAction.None
+    }
+
+    fun canCancelShutdown(): Boolean {
+        return (status.state == DeviceState.ONLINE && status.trayReachable)
+                && (status.pendingAction is PendingAction.ShutdownScheduled && status.pendingAction.cancellable)
+    }
+
+    fun canWakeup(): Boolean {
+        return status.state == DeviceState.OFFLINE && hasMacAddress()
+    }
 }
 
+/**
+ * Sorts interfaces IN PLACE and returns this for chaining.
+ */
 fun Device.sortInterfaces(): Device {
     val ifaces =
         interfaces.toList()
@@ -63,16 +84,16 @@ fun Device.toFormState(): DeviceFormState =
     )
 
 data class DeviceInfo(
-    var osName: String,
-    var osVersion: String,
-    var trayVersion: String,
+    val osName: String,
+    val osVersion: String,
+    val trayVersion: String,
 )
 
 data class DeviceInterface(
-    var ip: String?,
-    var mac: String?,
-    var port: Int?,
-    var type: InterfaceType
+    val ip: String?,
+    val mac: String?,
+    val port: Int?,
+    val type: InterfaceType
 )
 
 fun DeviceInterface.refreshKey(): String = "$ip:$port:$type"
@@ -86,3 +107,10 @@ fun DeviceInterface.matches(other: DeviceInterface): Boolean {
     // 2️⃣ Fallback: IP + port
     return ip == other.ip && port == other.port
 }
+
+data class DeviceStatus(
+    val state: DeviceState = DeviceState.UNKNOWN,
+    val trayReachable: Boolean,
+    val lastSeen: Long = System.currentTimeMillis(),
+    val pendingAction: PendingAction = PendingAction.None
+)

@@ -21,6 +21,12 @@ class DeviceTest {
                     port = 8000,
                     type = InterfaceType.ETHERNET
                 )
+            ),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
             )
         )
 
@@ -50,6 +56,12 @@ class DeviceTest {
                     port = 1234,
                     type = InterfaceType.ETHERNET
                 )
+            ),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
             )
         )
 
@@ -69,6 +81,12 @@ class DeviceTest {
                     port = 1234,
                     type = InterfaceType.WIFI
                 )
+            ),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
             )
         )
 
@@ -88,6 +106,11 @@ class DeviceTest {
                     port = 1234,
                     type = InterfaceType.ETHERNET
                 )
+            ), status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
             )
         )
 
@@ -107,6 +130,11 @@ class DeviceTest {
                     port = 1234,
                     type = InterfaceType.ETHERNET
                 )
+            ), status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
             )
         )
 

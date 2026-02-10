@@ -6,9 +6,12 @@ import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInfo
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
+import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
+import io.github.kgbis.remotecontrol.app.core.model.DeviceState
+import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
-import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDeviceWarning
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDevice
+import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDeviceWarning
 import org.apache.commons.lang3.StringUtils
 import java.util.UUID
 
@@ -67,15 +70,24 @@ object DeviceTransformer {
             )
         }
 
+        val osName = discovered.txtRecords["os-name"] ?: discovered.txtRecords["os"].orEmpty()
+        val tray =
+            discovered.txtRecords["tray-version"] ?: discovered.txtRecords["version"].orEmpty()
+
         val device = Device(
             id = uuid,
             hostname = hostname,
             deviceInfo = DeviceInfo(
-                osName = discovered.txtRecords["os-name"] ?: discovered.txtRecords["os"].orEmpty(),
+                osName = osName,
                 osVersion = discovered.txtRecords["os-version"].orEmpty(),
-                trayVersion = discovered.txtRecords["tray-version"]
-                    ?: discovered.txtRecords["version"].orEmpty()
+                trayVersion = tray
             ),
+            status = DeviceStatus(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = System.currentTimeMillis(),
+                pendingAction = PendingAction.None
+            )
         ).also {
             it.interfaces.addAll(interfaces)
         }

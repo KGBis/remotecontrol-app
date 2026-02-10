@@ -1,6 +1,5 @@
 package io.github.kgbis.remotecontrol.app.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,12 +39,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.R
+import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
 import io.github.kgbis.remotecontrol.app.features.devices.model.AddDeviceMode
 import io.github.kgbis.remotecontrol.app.features.devices.model.DeviceFormMode
 import io.github.kgbis.remotecontrol.app.features.devices.model.DeviceFormState
-import io.github.kgbis.remotecontrol.app.features.devices.model.toDevice
+import io.github.kgbis.remotecontrol.app.features.devices.model.toNewDevice
 import io.github.kgbis.remotecontrol.app.features.discovery.ui.MDNSDiscoveryScreen
+import io.github.kgbis.remotecontrol.app.features.domain.ConflictResult
 import io.github.kgbis.remotecontrol.app.features.domain.DeviceConflictChecker
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,6 +60,9 @@ fun AddDeviceEntryScreen(
 
     // Device list
     val devices by devicesVm.devices.collectAsState()
+
+    var conflict by remember { mutableStateOf<ConflictResult?>(null) }
+    var pendingDevice by remember { mutableStateOf<Device?>(null) }
 
     Scaffold(
         topBar = {
@@ -182,7 +186,7 @@ fun AddDeviceEntryScreen(
                 }
 
                 AddDeviceMode.MANUAL -> {
-                    val checker = DeviceConflictChecker(devices)
+                    val conflictChecker = DeviceConflictChecker(devices)
 
                     Column(
                         modifier = Modifier
@@ -195,13 +199,35 @@ fun AddDeviceEntryScreen(
                             state = formState,
                             onStateChange = { formState = it }
                         ) {
-                            val result = checker.check(form = formState, currentId = null)
+                            val result = conflictChecker.check(formState, currentId = null)
+                            val device = formState.toNewDevice()
 
-                            Log.d("AddEditDeviceScreen", "Checker result -> $result")
+                            if (result == ConflictResult.None) {
+                                devicesVm.addDevice(device)
+                                navController.popBackStack()
+                            } else {
+                                conflict = result
+                                pendingDevice = device
+                            }
 
-                            val device = formState.toDevice()
-                            devicesVm.addDevice(device)
-                            navController.popBackStack()
+                        }
+
+                        conflict?.let { result ->
+                            DeviceConflictDialog(
+                                conflict = result,
+                                onConfirm = {
+                                    pendingDevice?.let {
+                                        devicesVm.addDevice(it)
+                                        navController.popBackStack()
+                                    }
+                                    pendingDevice = null
+                                    conflict = null
+                                },
+                                onDismiss = {
+                                    pendingDevice = null
+                                    conflict = null
+                                }
+                            )
                         }
                     }
                 }

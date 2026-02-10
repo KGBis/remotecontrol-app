@@ -20,19 +20,38 @@ class DeviceConflictChecker(
         Log.d("check", "macConflictDevice = $macConflictDevice")
         Log.d("check", "ipConflictDevice = $ipConflictDevice")
 
-        if((macConflictDevice != null && ipConflictDevice != null) && (macConflictDevice.id == ipConflictDevice.id)) {
+        if ((macConflictDevice != null && ipConflictDevice != null) && (macConflictDevice.id == ipConflictDevice.id)) {
             return ConflictResult.PossibleDuplicate(macConflictDevice)
         }
 
-        if(macConflictDevice != null) {
-            return ConflictResult.MacConflict(macConflictDevice)
+        if (macConflictDevice != null) {
+            val deviceMacs =
+                macConflictDevice.interfaces.map { it.mac }.filter { it?.isNotEmpty() == true }
+                    .toSet()
+            return ConflictResult.MacConflict(
+                macConflictDevice,
+                conflictsToString(formMacs, deviceMacs)
+            )
         }
 
-        if(ipConflictDevice != null) {
-            return ConflictResult.IpConflict(ipConflictDevice)
+        if (ipConflictDevice != null) {
+            val deviceIps =
+                ipConflictDevice.interfaces.map { it.ip }.filter { it?.isNotEmpty() == true }
+                    .toSet()
+            return ConflictResult.IpConflict(
+                ipConflictDevice,
+                conflictsToString(formIps, deviceIps)
+            )
         }
 
         return ConflictResult.None
+    }
+
+    private fun conflictsToString(formSet: Set<String>, deviceSet: Set<String?>): String {
+        val mutable = formSet.toMutableSet()
+        mutable.retainAll(deviceSet)
+        val array = Array(mutable.size) { mutable.elementAt(it) }
+        return array.joinToString(separator = "\n")
     }
 
     private fun findMacConflicts(
@@ -54,6 +73,4 @@ class DeviceConflictChecker(
             device.id != currentId &&
                     device.interfaces.any { it.ip in ips }
         }
-
-
 }
