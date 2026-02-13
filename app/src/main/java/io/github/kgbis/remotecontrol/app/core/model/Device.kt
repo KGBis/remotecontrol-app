@@ -70,7 +70,7 @@ fun Device.toFormState(): DeviceFormState =
     DeviceFormState(
         id = id,
         hostname = hostname,
-        osName = deviceInfo?.osName.orEmpty(),
+        osName = normalizeOsFamily(deviceInfo?.osName),
         osVersion = deviceInfo?.osVersion.orEmpty(),
         trayVersion = deviceInfo?.trayVersion.orEmpty(),
         interfaces = interfaces.map {
@@ -82,6 +82,15 @@ fun Device.toFormState(): DeviceFormState =
             )
         }
     )
+
+private fun normalizeOsFamily(osName: String?): String =
+    when {
+        osName == null -> ""
+        osName.startsWith("Windows", true) -> "Windows"
+        osName.startsWith("Linux", true) -> "Linux"
+        osName.startsWith("mac", true) -> "macOS"
+        else -> osName
+    }
 
 data class DeviceInfo(
     val osName: String,

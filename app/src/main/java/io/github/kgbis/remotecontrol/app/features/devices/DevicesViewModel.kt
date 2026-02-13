@@ -20,6 +20,7 @@ import io.github.kgbis.remotecontrol.app.core.network.NetworkRangeDetector
 import io.github.kgbis.remotecontrol.app.core.network.ProbeResult
 import io.github.kgbis.remotecontrol.app.core.network.computeDeviceStatus
 import io.github.kgbis.remotecontrol.app.core.network.probeDeviceBestResult
+import io.github.kgbis.remotecontrol.app.core.repository.DeviceRepositoryContract
 import io.github.kgbis.remotecontrol.app.features.domain.DeviceMatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -52,14 +53,13 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class DevicesViewModel(
-    application: Application
+    application: Application,
+    val deviceRepository: DeviceRepositoryContract
 ) : AndroidViewModel(application) {
 
     private val appLifecycleObserver = (application as RemotePcControlApp).appLifecycleObserver
 
     private val settingsRepo = (application as RemotePcControlApp).settingsRepository
-
-    private val deviceRepository = (application as RemotePcControlApp).devicesRepository
 
     private val networkRangeDetector = NetworkRangeDetector()
 
@@ -221,7 +221,10 @@ class DevicesViewModel(
                 if (storedDevice == null) {
                     toSave.add(device)
                 } else {
-                    toUpdate.add(storedDevice to device)
+                    // If a discovered device matches an existing one, we treat it as the same
+                    // logical device and force the stored ID to avoid duplicates (e.g. dual-boot PCs)
+                    val merged = device.copy(id = storedDevice.id)
+                    toUpdate.add(storedDevice to merged)
                 }
             }
 
@@ -264,27 +267,16 @@ class DevicesViewModel(
 
     fun updateDeviceFromProbe(deviceId: UUID, probe: ProbeResult) {
         val storedDevice = getDeviceById(deviceId)
-
-        Log.d("updateDeviceFromProbe", "stored=$storedDevice")
-        Log.d("updateDeviceFromProbe", "probe =${probe.device}")
-
         val mergedInterfaces = mergeInterfaces(storedDevice!!.interfaces, probe.device!!.interfaces)
-
-        Log.d("updateDeviceFromProbe", "merged interfaces=${mergedInterfaces}")
-
         val updated = storedDevice.copy(
             interfaces = mergedInterfaces,
             deviceInfo = probe.device.deviceInfo,
             status = probe.device.status
         )
 
-        Log.d("updateDeviceFromProbe", "updated=${updated}")
-
         _devices.update { current ->
             current.map { if (it.id == deviceId) updated else it }
         }
-
-        Log.d("updateDeviceFromProbe", "_devices=${_devices.value}")
     }
 
     fun mergeInterfaces(

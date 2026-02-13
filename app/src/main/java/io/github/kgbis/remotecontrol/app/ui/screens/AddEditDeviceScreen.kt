@@ -211,7 +211,6 @@ fun InterfaceEditorCard(
     }
 }
 
-@Suppress("AssignedValueIsNeverRead")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OsDropdown(
@@ -256,7 +255,6 @@ fun OsDropdown(
     }
 }
 
-@Suppress("AssignedValueIsNeverRead")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InterfaceTypeDropdown(

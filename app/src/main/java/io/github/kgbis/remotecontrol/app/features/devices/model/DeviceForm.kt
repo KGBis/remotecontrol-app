@@ -3,8 +3,8 @@ package io.github.kgbis.remotecontrol.app.features.devices.model
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInfo
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
-import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
+import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
@@ -36,9 +36,12 @@ fun DeviceFormState.applyTo(device: Device): Device {
                 ?: sameIpIfaces.first()
         }
 
+    // Little adjustment (cleaning) when OS is changed
+    val actualOsVersion = if (osName != device.deviceInfo?.osName) "" else osVersion
+
     return device.copy(
         hostname = hostname,
-        deviceInfo = DeviceInfo(osName, osVersion, trayVersion),
+        deviceInfo = DeviceInfo(osName, actualOsVersion, trayVersion),
         interfaces = interfaces.toMutableList()
     ).sortInterfaces()
 }
