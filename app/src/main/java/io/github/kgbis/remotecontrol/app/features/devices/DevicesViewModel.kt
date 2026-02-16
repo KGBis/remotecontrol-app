@@ -4,7 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.kgbis.remotecontrol.app.RemotePcControlApp
+import io.github.kgbis.remotecontrol.app.core.AppLifecycleObserver
 import io.github.kgbis.remotecontrol.app.core.AppVisibilityEvent
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
@@ -16,12 +16,14 @@ import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
 import io.github.kgbis.remotecontrol.app.core.network.NetworkActions
 import io.github.kgbis.remotecontrol.app.core.network.NetworkInfo
 import io.github.kgbis.remotecontrol.app.core.network.NetworkMonitor
-import io.github.kgbis.remotecontrol.app.core.network.NetworkRangeDetector
 import io.github.kgbis.remotecontrol.app.core.network.ProbeResult
 import io.github.kgbis.remotecontrol.app.core.network.computeDeviceStatus
 import io.github.kgbis.remotecontrol.app.core.network.probeDeviceBestResult
-import io.github.kgbis.remotecontrol.app.core.repository.DeviceRepositoryContract
+import io.github.kgbis.remotecontrol.app.core.repository.DeviceRepository
+import io.github.kgbis.remotecontrol.app.core.repository.SettingsRepository
 import io.github.kgbis.remotecontrol.app.features.domain.DeviceMatcher
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -54,16 +56,12 @@ import kotlin.time.Duration.Companion.seconds
 
 class DevicesViewModel(
     application: Application,
-    val deviceRepository: DeviceRepositoryContract
+    val deviceRepository: DeviceRepository,
+    val settingsRepository: SettingsRepository,
+    val networkMonitor: NetworkMonitor,
+    val appLifecycleObserver: AppLifecycleObserver,
+    val dispatcher: CoroutineDispatcher = Dispatchers.Main
 ) : AndroidViewModel(application) {
-
-    private val appLifecycleObserver = (application as RemotePcControlApp).appLifecycleObserver
-
-    private val settingsRepo = (application as RemotePcControlApp).settingsRepository
-
-    private val networkRangeDetector = NetworkRangeDetector()
-
-    private val networkMonitor = NetworkMonitor(application, viewModelScope, networkRangeDetector)
 
     private val inFlightProbes = mutableMapOf<UUID, Job>()
 
@@ -83,10 +81,18 @@ class DevicesViewModel(
 
 
     val autoRefreshInterval =
-        settingsRepo.autoRefreshIntervalFlow.stateIn(viewModelScope, SharingStarted.Eagerly, 30)
+        settingsRepository.autoRefreshIntervalFlow.stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            30
+        )
 
     val autoRefreshEnable =
-        settingsRepo.autoRefreshEnabledFlow.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+        settingsRepository.autoRefreshEnabledFlow.stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            true
+        )
 
     private val _mainScreenVisible = MutableStateFlow(false)
 
@@ -108,8 +114,8 @@ class DevicesViewModel(
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     private fun observeAutoRefresh() {
         combine(
-            settingsRepo.autoRefreshEnabledFlow,
-            settingsRepo.autoRefreshIntervalFlow,
+            settingsRepository.autoRefreshEnabledFlow,
+            settingsRepository.autoRefreshIntervalFlow,
             mainScreenVisible,
             appLifecycleObserver.isForegroundFlow,
             networkMonitor.networkInfo
@@ -152,7 +158,7 @@ class DevicesViewModel(
 
 
     private suspend fun onAppBackgrounded() {
-        Log.d("onAppBackgrounded", "Canceling active probes & saving device statuses")
+        Log.d("onAppBackgrounded", "Canceling active probes & saving devices")
         cancelAllProbes()
         deviceRepository.saveDevices(_devices.value)
     }
@@ -185,7 +191,7 @@ class DevicesViewModel(
      */
     fun addDevice(device: Device) {
         device.normalize()
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             val currentDevices = _devices.value.toMutableList()
 
             // check if device already exists
@@ -211,7 +217,7 @@ class DevicesViewModel(
     }
 
     fun addDiscoveredDevices(detected: List<Device>) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             val toUpdate = mutableListOf<Pair<Device, Device>>()
             val toSave = mutableListOf<Device>()
 
@@ -337,7 +343,7 @@ class DevicesViewModel(
 
         val needsRefresh = shouldRefresh(original, updated)
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             // remove any in-flight probe for device id (just in case autorefresh is on)
             inFlightProbes.remove(original.id)?.cancel()
 
@@ -372,7 +378,7 @@ class DevicesViewModel(
     }
 
     fun removeDevice(device: Device) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             // remove any in-flight probe for device id
             inFlightProbes.remove(device.id)?.cancel()
 
@@ -386,7 +392,7 @@ class DevicesViewModel(
 
 
     fun probeDevices() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             probeDevicesInternal()
         }
     }
@@ -396,7 +402,7 @@ class DevicesViewModel(
         val subnet = (networkMonitor.networkInfo.value as? NetworkInfo.Local)?.subnet
             ?: return
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             _devices.value.forEach { device ->
                 val deviceId = device.id ?: return@forEach
 
@@ -445,7 +451,7 @@ class DevicesViewModel(
     }
 
     private fun cancelAllProbes() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             probeMutex.withLock {
                 inFlightProbes.values.forEach { it.cancel() }
                 inFlightProbes.clear()
@@ -467,7 +473,7 @@ class DevicesViewModel(
     private fun launchProbeJob(
         device: Device,
         subnet: String,
-    ): Job = viewModelScope.launch {
+    ): Job = viewModelScope.launch(dispatcher) {
         val deviceId = device.id ?: return@launch
 
         try {
@@ -517,7 +523,7 @@ class DevicesViewModel(
 
 
     private fun observeNetwork() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             sameNetworkFlow.distinctUntilChanged()
                 .collect { sameNetwork ->
                     if (!sameNetwork) {
@@ -530,7 +536,7 @@ class DevicesViewModel(
     }
 
     private fun scheduleProbeRefresh() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             if (networkMonitor.networkInfo.value is NetworkInfo.Local) {
                 probeDevices()
             }
@@ -544,7 +550,7 @@ class DevicesViewModel(
         unit: String,
         onResult: (Boolean) -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             val scheduledAt = Instant.now()
             val executeAt = scheduledAt.plus(delay.toLong(), ChronoUnit.valueOf(unit))
             val cancellable = delay != 0
@@ -577,7 +583,7 @@ class DevicesViewModel(
     }
 
     fun sendCancelShutdownCommand(device: Device, onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             val success = NetworkActions.sendMessage(
                 device = device,
                 command = "CANCEL_SHUTDOWN",
@@ -601,7 +607,7 @@ class DevicesViewModel(
     }
 
     fun wakeOnLan(device: Device, onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             onResult(NetworkActions.sendWoL(device))
         }
     }
@@ -609,7 +615,7 @@ class DevicesViewModel(
     /* Init */
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             observeNetwork()
             observeAppVisibility()
             observeAutoRefresh()

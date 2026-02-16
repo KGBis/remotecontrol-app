@@ -1,6 +1,6 @@
 [versions]
 activityCompose = "1.12.3"
-agp = "9.0.0"
+agp = "9.0.1"
 commonsText = "1.15.0"
 composeBom = "2025.11.01"
 composeMaterialIcons = "1.7.8"

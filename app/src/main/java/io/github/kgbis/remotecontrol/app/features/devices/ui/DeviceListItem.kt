@@ -26,7 +26,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,8 +38,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.core.model.Device
-import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
+import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 
@@ -71,7 +70,6 @@ fun DeviceListItem(
             Spacer(Modifier.width(8.dp))
 
             ActionsRow(
-                // deviceStatus = device.status,
                 device = device,
                 onDelete = onDelete,
                 onWake = onWake,
@@ -309,29 +307,26 @@ private fun getShutdownUiData(
     val cancelText = stringResource(R.string.shutdown_cancel_action)
     val shutdownColor = actionIconColor(device.canShutdown())
     val cancelShutdownColor = actionIconColor(device.canCancelShutdown())
+    val showShutdown =
+        device.status.pendingAction == PendingAction.None || !device.canCancelShutdown()
 
-    return remember(device) {
-        val showShutdown =
-            device.status.pendingAction == PendingAction.None || !device.canCancelShutdown()
-
-        if (showShutdown) {
-            ShutdownUi(
-                click = onShutdown,
-                enabled = device.canShutdown(),
-                imageVector = Icons.Default.PowerOff,
-                color = shutdownColor,
-                textLine1 = shutdownText,
-                textLine2 = ""
-            )
-        } else {
-            ShutdownUi(
-                click = onCancel,
-                enabled = device.canCancelShutdown(),
-                imageVector = Icons.Default.Close,
-                color = cancelShutdownColor,
-                textLine1 = cancelText,
-                textLine2 = shutdownText
-            )
-        }
+    return if (showShutdown) {
+        ShutdownUi(
+            click = onShutdown,
+            enabled = device.canShutdown(),
+            imageVector = Icons.Default.PowerOff,
+            color = shutdownColor,
+            textLine1 = shutdownText,
+            textLine2 = ""
+        )
+    } else {
+        ShutdownUi(
+            click = onCancel,
+            enabled = device.canCancelShutdown(),
+            imageVector = Icons.Default.Close,
+            color = cancelShutdownColor,
+            textLine1 = cancelText,
+            textLine2 = shutdownText
+        )
     }
 }

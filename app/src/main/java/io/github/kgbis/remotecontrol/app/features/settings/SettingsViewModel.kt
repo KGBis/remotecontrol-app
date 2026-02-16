@@ -3,7 +3,7 @@ package io.github.kgbis.remotecontrol.app.features.settings
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.kgbis.remotecontrol.app.core.repository.SettingsRepositoryContract
+import io.github.kgbis.remotecontrol.app.core.repository.SettingsRepository
 import io.github.kgbis.remotecontrol.app.features.devices.model.shutdownDelayOptions
 import io.github.kgbis.remotecontrol.app.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit
 
 class SettingsViewModel(
     application: Application,
-    val settingsRepo: SettingsRepositoryContract
+    val settingsRepo: SettingsRepository
 ) : AndroidViewModel(application) {
 
     /* Color scheme */

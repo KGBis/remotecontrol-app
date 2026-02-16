@@ -1,13 +1,13 @@
 package io.github.kgbis.remotecontrol.app.features.settings
 
-import io.github.kgbis.remotecontrol.app.core.repository.SettingsRepositoryContract
+import io.github.kgbis.remotecontrol.app.core.repository.SettingsRepository
 import io.github.kgbis.remotecontrol.app.features.devices.model.shutdownDelayOptions
 import io.github.kgbis.remotecontrol.app.ui.theme.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.temporal.ChronoUnit
 
-class FakeSettingsRepository : SettingsRepositoryContract {
+class FakeSettingsRepository : SettingsRepository {
 
     private val _delay = MutableStateFlow(shutdownDelayOptions[0].amount)
     private val _unit = MutableStateFlow(shutdownDelayOptions[0].unit)
