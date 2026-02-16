@@ -23,7 +23,7 @@ class DeviceMatcherTest {
                 osVersion = "6.1",
                 trayVersion = "2026.01.1"
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "aa:aa:aa:aa:aa:aa",
@@ -47,7 +47,7 @@ class DeviceMatcherTest {
                 osVersion = "6.1",
                 trayVersion = "2026.01.1"
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "bb:bb:bb:cc:dd:ee",
@@ -78,7 +78,7 @@ class DeviceMatcherTest {
                 osVersion = "6.1",
                 trayVersion = "2026.01.1"
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "aa:aa:aa:aa:aa:aa",
@@ -102,7 +102,7 @@ class DeviceMatcherTest {
                 osVersion = "6.1",
                 trayVersion = "2026.01.1"
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.20",
                     mac = "aa:aa:aa:aa:aa:aa",
@@ -134,7 +134,7 @@ class DeviceMatcherTest {
                 osVersion = "",
                 trayVersion = ""
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = null,
@@ -158,7 +158,7 @@ class DeviceMatcherTest {
                 osVersion = "6.1",
                 trayVersion = "2026.01.1"
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "00:11:22:33:44:55",
@@ -190,7 +190,7 @@ class DeviceMatcherTest {
                 osVersion = "",
                 trayVersion = ""
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "",
@@ -210,7 +210,7 @@ class DeviceMatcherTest {
         val incoming = Device(
             hostname = "Incoming PC",
             deviceInfo = DeviceInfo(osName = "", osVersion = "", trayVersion = ""),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "",

@@ -6,6 +6,8 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import io.github.kgbis.remotecontrol.app.core.model.Device
+import io.github.kgbis.remotecontrol.app.core.model.DeviceState
+import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -52,10 +54,15 @@ object NetworkActions {
         }
 
         try {
-            return Gson().fromJson<Device>(
-                trayResponse,
-                object : TypeToken<Device>() {}.type
+            val dev = Gson().fromJson<Device>(trayResponse, object : TypeToken<Device>() {}.type)
+            return dev.copy(
+                status = DeviceStatus(
+                    state = DeviceState.ONLINE,
+                    trayReachable = true,
+                    lastSeen = System.currentTimeMillis()
+                )
             )
+
         } catch (_: JsonSyntaxException) {
             Log.w("deviceInfoResponse", "Old version response: $trayResponse")
             return null

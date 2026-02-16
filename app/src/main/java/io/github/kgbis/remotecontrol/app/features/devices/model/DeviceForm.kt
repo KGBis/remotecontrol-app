@@ -42,7 +42,7 @@ fun DeviceFormState.applyTo(device: Device): Device {
     return device.copy(
         hostname = hostname,
         deviceInfo = DeviceInfo(osName, actualOsVersion, trayVersion),
-        interfaces = interfaces.toMutableList()
+        interfaces = interfaces
     ).sortInterfaces()
 }
 
@@ -69,7 +69,7 @@ fun DeviceFormState.toNewDevice(): Device {
         id = id,
         hostname = hostname,
         deviceInfo = info,
-        interfaces = interfaces.toMutableList(),
+        interfaces = interfaces,
         status = DeviceStatus(
             state = DeviceState.UNKNOWN,
             trayReachable = false,

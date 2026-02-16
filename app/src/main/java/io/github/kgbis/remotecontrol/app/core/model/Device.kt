@@ -7,26 +7,11 @@ import java.util.UUID
 
 data class Device(
     val id: UUID?,
-    var hostname: String,
+    val hostname: String,
     val deviceInfo: DeviceInfo?,
-    val interfaces: MutableList<DeviceInterface> = mutableListOf(),
+    val interfaces: List<DeviceInterface> = listOf(),
     val status: DeviceStatus
 ) {
-    /**
-     * Trims fields and normalizes MAC address to colon separated & lowercase (i.e. 91:75:1a:ec:9a:c7)
-     */
-    fun normalize() {
-        hostname = hostname.trim()
-        val ifaces = interfaces.map {
-            val mac = it.mac?.trim()?.replace('-', ':')?.lowercase()
-            val ip = it.ip?.trim()
-            it.copy(mac = mac, ip = ip)
-        }.toList()
-
-        interfaces.clear()
-        interfaces.addAll(ifaces)
-    }
-
     fun hasMacAddress(): Boolean {
         return this.interfaces.any { !it.mac.isNullOrEmpty() }
     }
@@ -46,18 +31,33 @@ data class Device(
 }
 
 /**
- * Sorts interfaces IN PLACE and returns this for chaining.
+ * Trims fields and normalizes MAC address to colon separated & lowercase (i.e. 91:75:1a:ec:9a:c7)
  */
-fun Device.sortInterfaces(): Device {
-    val ifaces =
-        interfaces.toList()
-            .sortedWith(compareBy({ it.type.ordinal }, { it.ip?.ipAsInt() ?: Int.MAX_VALUE }))
+fun Device.normalize(): Device =
+    copy(
+        hostname = hostname.trim(),
+        interfaces = interfaces.map {
+            it.copy(
+                mac = it.mac?.trim()?.replace('-', ':')?.lowercase(),
+                ip = it.ip?.trim()
+            )
+        }
+    )
 
-    interfaces.clear()
-    interfaces.addAll(ifaces)
 
-    return this
-}
+/**
+ * Sorts interfaces by type and IP (if more than one of same type exists)
+ */
+fun Device.sortInterfaces(): Device =
+    copy(
+        interfaces = interfaces.sortedWith(
+            compareBy(
+                { it.type.ordinal },
+                { it.ip?.ipAsInt() ?: Int.MAX_VALUE }
+            )
+        )
+    )
+
 
 @Suppress("UselessCallOnNotNull")
 fun Device.isRenderable(): Boolean =

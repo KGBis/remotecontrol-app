@@ -14,7 +14,7 @@ class DeviceTest {
             id = UUID.randomUUID(),
             hostname = "  My-PC  ",
             deviceInfo = null,
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = " 192.168.1.10 ",
                     mac = "91-75-1A-EC-9A-C7",
@@ -30,11 +30,11 @@ class DeviceTest {
             )
         )
 
-        device.normalize()
+        val normalized = device.normalize()
 
-        assertEquals("My-PC", device.hostname)
-        assertEquals("192.168.1.10", device.interfaces[0].ip)
-        assertEquals("91:75:1a:ec:9a:c7", device.interfaces[0].mac)
+        assertEquals("My-PC", normalized.hostname)
+        assertEquals("192.168.1.10", normalized.interfaces[0].ip)
+        assertEquals("91:75:1a:ec:9a:c7", normalized.interfaces[0].mac)
     }
 
     @Test
@@ -43,7 +43,7 @@ class DeviceTest {
             id = null,
             hostname = "pc",
             deviceInfo = null,
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "10.0.0.1",
                     mac = null,
@@ -74,7 +74,7 @@ class DeviceTest {
             id = null,
             hostname = "pc",
             deviceInfo = null,
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "10.0.0.1",
                     mac = null,
@@ -99,7 +99,7 @@ class DeviceTest {
             id = UUID.randomUUID(),
             hostname = "pc",
             deviceInfo = null,
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.20",
                     mac = null,
@@ -123,7 +123,7 @@ class DeviceTest {
             id = UUID.randomUUID(),
             hostname = "pc",
             deviceInfo = null,
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = null,
                     mac = "aa:bb",

@@ -6,8 +6,8 @@ import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInfo
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
-import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
+import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDevice
@@ -87,10 +87,11 @@ object DeviceTransformer {
                 trayReachable = true,
                 lastSeen = System.currentTimeMillis(),
                 pendingAction = PendingAction.None
-            )
-        ).also {
+            ),
+            interfaces = interfaces
+        )/*.also {
             it.interfaces.addAll(interfaces)
-        }
+        }*/
 
         // For version
         if (isOldVersion(device)) {
