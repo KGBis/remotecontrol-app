@@ -3,4 +3,6 @@ Due to Android security restrictions introduced in recent versions, it is no lon
 Device discovery is performed by multicast discovery service (_mDNS_) when **Remote PC Control Tray** is running on a computer.
 If not installed, the device can still be added manually.
 
-_Note: Make sure that your devices are turned on. Device discovery will only work for devices that are turned on._ 
+_Note: Make sure that your devices are turned on. Device discovery will only work for devices that are turned on._
+
+_Note 2: mDNS is not supported on Windows 7 due to its faulty TCP/IP stack implementation_

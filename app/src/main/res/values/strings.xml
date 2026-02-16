@@ -77,7 +77,7 @@
     <string name="about">About / Help</string>
     <string name="about_info_section">🧩 Information</string>
     <string name="about_bys_section">⚙️ Before you start</string>
-    <string name="about_discovery_section">📡 Network discovery &amp; requirements</string>
+    <string name="about_discovery_section">📡 Device discovery</string>
     <string name="about_status_section">📊 Device status</string>
     <string name="about_legal_section">🔐 Privacy and License 📜</string>
 

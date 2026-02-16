@@ -4,3 +4,5 @@ El servicio de descubrimiento de multidifusión (_mDNS_) realiza la detección d
 Si no está instalado, el dispositivo se puede agregar manualmente.
 
 _Nota: Asegúrese de que sus dispositivos estén encendidos. La detección de dispositivos solo funcionará con dispositivos encendidos._
+
+_Nota 2: mDNS no está soportado en Windows 7 debido a los problemas en su implementación de la pila TCP/IP_
