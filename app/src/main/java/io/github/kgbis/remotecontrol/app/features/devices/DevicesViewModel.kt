@@ -55,7 +55,7 @@ import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-class DevicesViewModel(
+open class DevicesViewModel(
     application: Application,
     val deviceRepository: DeviceRepository,
     val settingsRepository: SettingsRepository,
@@ -126,7 +126,7 @@ class DevicesViewModel(
         }.launchIn(viewModelScope)
     }
 
-    fun tickerFlow(period: Duration) = flow {
+    open fun tickerFlow(period: Duration) = flow {
         while (currentCoroutineContext().isActive) {
             delay(period)
             emit(Unit)
@@ -377,7 +377,7 @@ class DevicesViewModel(
     }
 
 
-    fun probeDevices() {
+    open fun probeDevices() {
         viewModelScope.launch(dispatcher) {
             probeDevicesInternal()
         }

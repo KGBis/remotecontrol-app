@@ -13,6 +13,7 @@ import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransfor
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDevice
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDeviceWarning
 import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang3.math.NumberUtils
 import java.util.UUID
 
 object DeviceTransformer {
@@ -59,7 +60,7 @@ object DeviceTransformer {
             DeviceInterface(it.ip, mac, it.port, type)
         }
 
-        // no interfaces section -> version is old
+        // no interfaces section -> version is ancient
         if (interfaces.isEmpty()) {
             return DeviceTransformResult.Invalid(
                 discovered,
@@ -109,17 +110,29 @@ object DeviceTransformer {
     }
 
     private fun isOldVersion(device: Device): Boolean {
-        val devVersionDots = StringUtils.countMatches(device.deviceInfo?.trayVersion, ".")
-        val minVersionDots = StringUtils.countMatches(MIN_VERSION, ".")
+        // is going to be [2, 4, 1]
+        val minVersion = StringUtils.split(MIN_VERSION, ".")
+            .map { if (NumberUtils.isParsable(it)) it.toInt() else 0 }
 
-        // newer versions are yyyy.mm.revision (two dots), old were yyyy.mm.dd.revision (three dots)
-        if (devVersionDots > minVersionDots) {
+        // can be [2026, 3, 24] or [2, 4, 1]
+        val currentVersion = StringUtils.split(device.deviceInfo?.trayVersion, ".")
+            .map { if (NumberUtils.isParsable(it)) it.toInt() else 0 }
+
+        // If it's in the format of 2026.03.24 is old version
+        if (currentVersion[0] > 2025) {
             return true
         }
 
-        val deviceVer = device.deviceInfo?.trayVersion?.replace(".", "")?.toLong() ?: 0
-        val minVer = MIN_VERSION.replace(".", "").toLong()
+        val length = maxOf(minVersion.size, currentVersion.size)
 
-        return (deviceVer < minVer)
+        for (i in 0 until length) {
+            val min = minVersion.getOrElse(i) { 0 }
+            val dev = currentVersion.getOrElse(i) { 0 }
+
+            if (dev > min) return false
+            if (dev < min) return true
+        }
+
+        return false
     }
 }

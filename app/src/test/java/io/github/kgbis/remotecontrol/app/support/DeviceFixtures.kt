@@ -1,4 +1,4 @@
-package io.github.kgbis.remotecontrol.app.utils
+package io.github.kgbis.remotecontrol.app.support
 
 import com.google.gson.JsonParser
 import io.github.kgbis.remotecontrol.app.core.model.Device

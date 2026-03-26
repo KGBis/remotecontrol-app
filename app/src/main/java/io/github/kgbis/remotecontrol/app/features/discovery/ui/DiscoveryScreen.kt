@@ -8,10 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
-import io.github.kgbis.remotecontrol.app.features.discovery.DeviceTransformer
 import io.github.kgbis.remotecontrol.app.features.discovery.DiscoveryViewModel
-import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
-import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDevice
 
 @Composable
 fun ColumnScope.MDNSDiscoveryScreen(
@@ -21,6 +18,8 @@ fun ColumnScope.MDNSDiscoveryScreen(
 ) {
     val discoveryVm: DiscoveryViewModel = viewModel()
 
+    val devices by discoveryVm.devices.collectAsState()
+
     // observable state
     val state by discoveryVm.state.collectAsState()
 
@@ -28,7 +27,7 @@ fun ColumnScope.MDNSDiscoveryScreen(
         modifier = modifier,
         isDiscovering = state.isDiscovering,
         state = state,
-        devices = transformDiscoveredToDevices(state.devices),
+        devices = devices, // transformDiscoveredToDevices(state.devices),
         navController = navController,
         devicesVm = devicesVm,
         discoveryVm = discoveryVm
@@ -39,13 +38,4 @@ fun ColumnScope.MDNSDiscoveryScreen(
         state = state,
         discoveryVm = discoveryVm
     )
-}
-
-
-private fun transformDiscoveredToDevices(
-    discoveredServices: List<DiscoveredDevice>
-): List<DeviceTransformResult> {
-    return discoveredServices.map { discovered ->
-        DeviceTransformer.transformToDevice(discovered)
-    }
 }

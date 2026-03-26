@@ -2,6 +2,7 @@ package io.github.kgbis.remotecontrol.app.features.settings
 
 import android.app.Application
 import io.github.kgbis.remotecontrol.app.features.devices.model.shutdownDelayOptions
+import io.github.kgbis.remotecontrol.app.support.FakeSettingsRepository
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -2,7 +2,7 @@ package io.github.kgbis.remotecontrol.app.features.devices.model
 
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
 import io.github.kgbis.remotecontrol.app.core.model.toFormState
-import io.github.kgbis.remotecontrol.app.utils.DeviceFixtures
+import io.github.kgbis.remotecontrol.app.support.DeviceFixtures
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

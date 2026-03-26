@@ -14,7 +14,7 @@ import io.github.kgbis.remotecontrol.app.ui.theme.RemotePcControlTheme
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
-const val MIN_VERSION = "2026.01.3"
+const val MIN_VERSION = "2.4.1"
 
 class MainActivity : ComponentActivity() {
 
