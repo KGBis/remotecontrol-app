@@ -6,12 +6,17 @@ import androidx.lifecycle.viewModelScope
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
 import io.github.kgbis.remotecontrol.app.features.discovery.mdns.DiscoveredServiceEntry
 import io.github.kgbis.remotecontrol.app.features.discovery.mdns.MDNSDiscovery
+import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDevice
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredEndpoint
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveringState
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveryState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -25,9 +30,25 @@ class DiscoveryViewModel(
 
     private val mdnsDiscovery = MDNSDiscovery(application.applicationContext)
 
+    val devices = state
+        .map { it.devices }
+        .distinctUntilChangedBy { list ->
+            list.mapNotNull { it.txtRecords["device-id"] }.toSet()
+        }
+        .map { transformDiscoveredToDevices(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
     init {
         initializeDiscovery()
         _state.update { it.copy(discoveringState = DiscoveringState.IDLE) }
+    }
+
+    private fun transformDiscoveredToDevices(
+        discoveredServices: List<DiscoveredDevice>
+    ): List<DeviceTransformResult> {
+        return discoveredServices.map { discovered ->
+            DeviceTransformer.transformToDevice(discovered)
+        }
     }
 
     private fun recomputeDevices(state: DiscoveryState): DiscoveryState {
@@ -76,20 +97,21 @@ class DiscoveryViewModel(
                     txtRecords = service.txtRecords
                 )
 
-                _state.update { current ->
+                _state.update { discoveryState ->
+                    val entries = (discoveryState.discoveredServices + entry).toSet()
                     recomputeDevices(
-                        current.copy(
-                            discoveredServices = current.discoveredServices + entry
+                        discoveryState.copy(
+                            discoveredServices = entries.toList()
                         )
                     )
                 }
             }
 
             override fun onServiceLost(serviceName: String) {
-                _state.update { current ->
+                _state.update { discoveryState ->
                     recomputeDevices(
-                        current.copy(
-                            discoveredServices = current.discoveredServices
+                        discoveryState.copy(
+                            discoveredServices = discoveryState.discoveredServices
                                 .filterNot { it.name == serviceName }
                         )
                     )
@@ -113,10 +135,7 @@ class DiscoveryViewModel(
     fun startDiscovery(serviceType: String = "_rpcctl._tcp") {
         viewModelScope.launch {
             _state.update {
-                it.copy(
-                    discoveredServices = emptyList(),
-                    discoveringState = DiscoveringState.DISCOVERING
-                )
+                it.copy(discoveringState = DiscoveringState.DISCOVERING)
             }
             mdnsDiscovery.startDiscovery(serviceType)
         }

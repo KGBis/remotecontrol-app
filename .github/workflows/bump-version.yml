@@ -1,0 +1,46 @@
+name: Bump Version by Label
+
+on:
+  pull_request:
+    types: [ labeled ]
+    branches: [ develop ]
+
+concurrency:
+  group: bump-version-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  bump-version:
+    # It only runs if the label is one of the following
+    if: contains(fromJSON('["major", "minor", "patch"]'), github.event.label.name)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Calculate and version increment
+        id: bump
+        run: |
+          ./gradlew incrementVersion -Pscope="${{ github.event.label.name }}"
+          
+          VERSION=$(grep '^VERSION_NAME=' gradle.properties | cut -d= -f2)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit and Push
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: bump version to ${{ steps.bump.outputs.VERSION }} [skip ci]"
+          file_pattern: 'gradle.properties'

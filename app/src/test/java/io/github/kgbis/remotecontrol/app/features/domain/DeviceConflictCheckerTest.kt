@@ -4,7 +4,7 @@ import android.util.Log
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.features.devices.model.DeviceFormState
 import io.github.kgbis.remotecontrol.app.features.devices.model.InterfaceFormState
-import io.github.kgbis.remotecontrol.app.utils.DeviceFixtures
+import io.github.kgbis.remotecontrol.app.support.DeviceFixtures
 import io.mockk.every
 import io.mockk.mockkStatic
 import org.junit.jupiter.api.Assertions.assertEquals

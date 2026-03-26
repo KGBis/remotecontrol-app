@@ -1,4 +1,4 @@
-package io.github.kgbis.remotecontrol.app.features.settings
+package io.github.kgbis.remotecontrol.app.support
 
 import io.github.kgbis.remotecontrol.app.core.repository.SettingsRepository
 import io.github.kgbis.remotecontrol.app.features.devices.model.shutdownDelayOptions
