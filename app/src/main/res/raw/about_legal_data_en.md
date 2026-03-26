@@ -13,13 +13,11 @@ The app does not connect to any external servers other than the devices you expl
 ---
 **License**
 
-This software is distributed under the **GNU General Public License (GPL)**
+This project is licensed under the GNU General Public License v3.0.
 
-You're free to:
-- Use the application free of charge.
-- Study and modify the source code.
-- Redistribute the software or modified versions under the same license
+You are free to use, modify and distribute this software under the terms of the GPLv3.  
+Any distributed modifications must also be released under the same license.
 
-Any redistribution must include proper attribution and the original license text.
+See the [LICENSE](LICENSE) file for details.
 
-The GPL ensures that this project remains free, open, and accessible to everyone.
+Source code available at [https://github.com/KGBis/remotecontrol-app](https://github.com/KGBis/remotecontrol-app).
