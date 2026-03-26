@@ -1,3 +1,20 @@
+/*
+ * Remote PC Control
+ * Copyright (C) 2026 Enrique García (https://github.com/KGBis)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
 package io.github.kgbis.remotecontrol.app.core.repository
 
 import android.content.Context
@@ -53,6 +70,7 @@ class DeviceRepositoryImpl(context: Context): DeviceRepository {
         val currentDeviceVersion = prefs.getInt(DEVICES_VERSION_NAME, 1)
         // to add breaking version changes, just add a new if() branch with version
         if (currentDeviceVersion == 1) {
+            Log.d("updateLoadedDevicesIfNeeded", "Current DEVICE_VERSION=1")
             return loadedDevices.map { device ->
                 device.copy(
                     status = DeviceStatus(
@@ -64,6 +82,9 @@ class DeviceRepositoryImpl(context: Context): DeviceRepository {
                 )
             }
         }
+
+        // -> Current DEVICE_VERSION=2 <-
+
         return loadedDevices
     }
 }

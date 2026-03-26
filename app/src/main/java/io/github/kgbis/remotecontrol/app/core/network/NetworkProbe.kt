@@ -1,3 +1,20 @@
+/*
+ * Remote PC Control
+ * Copyright (C) 2026 Enrique García (https://github.com/KGBis)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
 package io.github.kgbis.remotecontrol.app.core.network
 
 import android.util.Log
@@ -15,6 +32,7 @@ import java.net.InetSocketAddress
 import java.net.NoRouteToHostException
 import java.net.Socket
 import java.net.SocketTimeoutException
+import java.time.Instant
 
 data class ProbeResult(
     val ip: String,
@@ -114,25 +132,41 @@ private suspend fun fetchDeviceInfo(inDevice: Device, ipToSend: String): Device?
     )
 }
 
-
 fun computeDeviceStatus(
     previous: DeviceStatus,
     probeResult: ProbeResult,
     refreshInterval: Int,
     now: Long = System.currentTimeMillis()
 ): DeviceStatus {
+    // fix for overdue actions
+    val pendingAction = fixOverduePendingAction(previous.pendingAction)
+
     return when (probeResult.result) {
         // Connection to port 6800 was fine
         ConnectionResult.OK -> {
-            previous.copy(state = DeviceState.ONLINE, trayReachable = true, lastSeen = now)
+            previous.copy(
+                state = DeviceState.ONLINE,
+                trayReachable = true,
+                lastSeen = now,
+                pendingAction = pendingAction
+            )
         }
         // Connection to port 6800 was refused
         ConnectionResult.OK_FALLBACK, ConnectionResult.CONNECT_ERROR -> {
-            previous.copy(state = DeviceState.ONLINE, trayReachable = false, lastSeen = now)
+            previous.copy(
+                state = DeviceState.ONLINE,
+                trayReachable = false,
+                lastSeen = now,
+                pendingAction = pendingAction
+            )
         }
         // Host unreachable. 100% sure it's turned off
         ConnectionResult.HOST_UNREACHABLE -> {
-            previous.copy(state = DeviceState.OFFLINE, trayReachable = false)
+            previous.copy(
+                state = DeviceState.OFFLINE,
+                trayReachable = false,
+                pendingAction = pendingAction
+            )
         }
 
         // Connection timeout or unknown error. Status not reliable. Calculate!
@@ -163,10 +197,7 @@ fun computeDeviceStatus(
             previous.copy(
                 state = newState,
                 trayReachable = false,
-                pendingAction = if (newState == DeviceState.ONLINE)
-                    previous.pendingAction
-                else
-                    PendingAction.None
+                pendingAction = pendingAction
             )
         }
     }
@@ -209,6 +240,19 @@ fun tryConnect(
 
     }
 }
+
+private fun fixOverduePendingAction(pendingAction: PendingAction): PendingAction {
+    return when (pendingAction) {
+        is PendingAction.ShutdownScheduled -> {
+            val now = Instant.now()
+            if (pendingAction.executeAt.isBefore(now)) PendingAction.None else pendingAction
+        }
+
+        else -> PendingAction.None
+    }
+
+}
+
 
 enum class ConnectionResult(var value: Int) {
     OK(100),
