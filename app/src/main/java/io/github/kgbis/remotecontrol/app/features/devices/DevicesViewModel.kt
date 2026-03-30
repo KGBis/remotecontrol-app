@@ -141,6 +141,7 @@ open class DevicesViewModel(
                 tickerFlow(interval.seconds)
             }
         }.onEach {
+            Log.d("observeAutoRefresh", "launching auto-refresh")
             probeDevices()
         }.launchIn(viewModelScope)
     }
@@ -211,13 +212,11 @@ open class DevicesViewModel(
                 currentDevices.add(normalized)
                 _devices.value = currentDevices
 
-                // refresh
-                if (!autoRefreshEnable.value) {
-                    probeDevices()
-                }
-
                 // save new list in repository
                 deviceRepository.saveDevices(currentDevices)
+
+                // probe this new device
+                probeSingleDevice(normalized)
             } else {
                 // update
                 updateDevice(storedDevice, normalized)
@@ -391,20 +390,29 @@ open class DevicesViewModel(
 
         viewModelScope.launch(dispatcher) {
             _devices.value.forEach { device ->
-                val deviceId = device.id ?: return@forEach
-
-                if (!shouldLaunchProbe(deviceId)) {
-                    Log.d("probeDevicesInternal", "Probe in flight for $deviceId")
-                    return@forEach
-                }
-
-                probeMutex.withLock {
-                    inFlightProbes[deviceId] = launchProbeJob(device, subnet)
-                }
+                probeDevice(device, subnet)
             }
         }
     }
 
+    private suspend fun probeSingleDevice(device: Device) {
+        // if we're not in local network do nothing
+        val subnet = (networkMonitor.networkInfo.value as? NetworkInfo.Local)?.subnet ?: return
+        probeDevice(device, subnet)
+    }
+
+    private suspend fun probeDevice(device: Device, subnet: String) {
+        val deviceId = device.id ?: return
+
+        if (!shouldLaunchProbe(deviceId)) {
+            Log.d("probeDevicesInternal", "Probe in flight for $deviceId")
+            return
+        }
+
+        probeMutex.withLock {
+            inFlightProbes[deviceId] = launchProbeJob(device, subnet)
+        }
+    }
 
     /**
      * Returns true if at least one device in the [subnet] passed or there are no devices at all
