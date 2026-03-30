@@ -1,18 +1,37 @@
+/*
+ * Remote PC Control
+ * Copyright (C) 2026 Enrique García (https://github.com/KGBis)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 package io.github.kgbis.remotecontrol.app.features.discovery
 
-// DeviceTransformer.kt
 import io.github.kgbis.remotecontrol.app.MIN_VERSION
 import io.github.kgbis.remotecontrol.app.R
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInfo
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
-import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
+import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDevice
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDeviceWarning
 import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang3.math.NumberUtils
 import java.util.UUID
 
 object DeviceTransformer {
@@ -59,7 +78,7 @@ object DeviceTransformer {
             DeviceInterface(it.ip, mac, it.port, type)
         }
 
-        // no interfaces section -> version is old
+        // no interfaces section -> version is ancient
         if (interfaces.isEmpty()) {
             return DeviceTransformResult.Invalid(
                 discovered,
@@ -87,10 +106,9 @@ object DeviceTransformer {
                 trayReachable = true,
                 lastSeen = System.currentTimeMillis(),
                 pendingAction = PendingAction.None
-            )
-        ).also {
-            it.interfaces.addAll(interfaces)
-        }
+            ),
+            interfaces = interfaces
+        )
 
         // For version
         if (isOldVersion(device)) {
@@ -108,17 +126,29 @@ object DeviceTransformer {
     }
 
     private fun isOldVersion(device: Device): Boolean {
-        val devVersionDots = StringUtils.countMatches(device.deviceInfo?.trayVersion, ".")
-        val minVersionDots = StringUtils.countMatches(MIN_VERSION, ".")
+        // is going to be [2, 4, 1]
+        val minVersion = StringUtils.split(MIN_VERSION, ".")
+            .map { if (NumberUtils.isParsable(it)) it.toInt() else 0 }
 
-        // newer versions are yyyy.mm.revision (two dots), old were yyyy.mm.dd.revision (three dots)
-        if (devVersionDots > minVersionDots) {
+        // can be [2026, 3, 24] or [2, 4, 1]
+        val currentVersion = StringUtils.split(device.deviceInfo?.trayVersion, ".")
+            .map { if (NumberUtils.isParsable(it)) it.toInt() else 0 }
+
+        // If it's in the format of 2026.03.24 is old version
+        if (currentVersion[0] > 2025) {
             return true
         }
 
-        val deviceVer = device.deviceInfo?.trayVersion?.replace(".", "")?.toLong() ?: 0
-        val minVer = MIN_VERSION.replace(".", "").toLong()
+        val length = maxOf(minVersion.size, currentVersion.size)
 
-        return (deviceVer < minVer)
+        for (i in 0 until length) {
+            val min = minVersion.getOrElse(i) { 0 }
+            val dev = currentVersion.getOrElse(i) { 0 }
+
+            if (dev > min) return false
+            if (dev < min) return true
+        }
+
+        return false
     }
 }

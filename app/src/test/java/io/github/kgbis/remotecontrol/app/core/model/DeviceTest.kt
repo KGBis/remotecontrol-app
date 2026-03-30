@@ -1,3 +1,22 @@
+/*
+ * Remote PC Control
+ * Copyright (C) 2026 Enrique García (https://github.com/KGBis)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 package io.github.kgbis.remotecontrol.app.core.model
 
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -14,7 +33,7 @@ class DeviceTest {
             id = UUID.randomUUID(),
             hostname = "  My-PC  ",
             deviceInfo = null,
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = " 192.168.1.10 ",
                     mac = "91-75-1A-EC-9A-C7",
@@ -30,11 +49,11 @@ class DeviceTest {
             )
         )
 
-        device.normalize()
+        val normalized = device.normalize()
 
-        assertEquals("My-PC", device.hostname)
-        assertEquals("192.168.1.10", device.interfaces[0].ip)
-        assertEquals("91:75:1a:ec:9a:c7", device.interfaces[0].mac)
+        assertEquals("My-PC", normalized.hostname)
+        assertEquals("192.168.1.10", normalized.interfaces[0].ip)
+        assertEquals("91:75:1a:ec:9a:c7", normalized.interfaces[0].mac)
     }
 
     @Test
@@ -43,7 +62,7 @@ class DeviceTest {
             id = null,
             hostname = "pc",
             deviceInfo = null,
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "10.0.0.1",
                     mac = null,
@@ -74,7 +93,7 @@ class DeviceTest {
             id = null,
             hostname = "pc",
             deviceInfo = null,
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "10.0.0.1",
                     mac = null,
@@ -99,7 +118,7 @@ class DeviceTest {
             id = UUID.randomUUID(),
             hostname = "pc",
             deviceInfo = null,
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.20",
                     mac = null,
@@ -123,7 +142,7 @@ class DeviceTest {
             id = UUID.randomUUID(),
             hostname = "pc",
             deviceInfo = null,
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = null,
                     mac = "aa:bb",

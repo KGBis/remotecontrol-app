@@ -1,11 +1,27 @@
+/*
+ * Remote PC Control
+ * Copyright (C) 2026 Enrique García (https://github.com/KGBis)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 package io.github.kgbis.remotecontrol.app.core.network
 
 import android.util.Log
 import io.github.kgbis.remotecontrol.app.core.model.Device
 import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
-import io.github.kgbis.remotecontrol.app.core.model.DeviceStatus
-import io.github.kgbis.remotecontrol.app.core.model.DeviceState
-import io.github.kgbis.remotecontrol.app.core.model.PendingAction
 import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
 import io.github.kgbis.remotecontrol.app.core.network.NetworkActions.sendMessage
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +31,15 @@ import java.net.InetSocketAddress
 import java.net.NoRouteToHostException
 import java.net.Socket
 import java.net.SocketTimeoutException
+
+enum class ConnectionResult(var value: Int) {
+    OK(100),
+    OK_FALLBACK(50),
+    CONNECT_ERROR(0),
+    HOST_UNREACHABLE(0),
+    TIMEOUT_ERROR(0),
+    UNKNOWN_ERROR(0)
+}
 
 data class ProbeResult(
     val ip: String,
@@ -114,64 +139,6 @@ private suspend fun fetchDeviceInfo(inDevice: Device, ipToSend: String): Device?
     )
 }
 
-
-fun computeDeviceStatus(
-    previous: DeviceStatus,
-    probeResult: ProbeResult,
-    refreshInterval: Int,
-    now: Long = System.currentTimeMillis()
-): DeviceStatus {
-    return when (probeResult.result) {
-        // Connection to port 6800 was fine
-        ConnectionResult.OK -> {
-            previous.copy(state = DeviceState.ONLINE, trayReachable = true, lastSeen = now)
-        }
-        // Connection to port 6800 was refused
-        ConnectionResult.OK_FALLBACK, ConnectionResult.CONNECT_ERROR -> {
-            previous.copy(state = DeviceState.ONLINE, trayReachable = false, lastSeen = now)
-        }
-        // Host unreachable. 100% sure it's turned off
-        ConnectionResult.HOST_UNREACHABLE -> {
-            previous.copy(state = DeviceState.OFFLINE, trayReachable = false)
-        }
-
-        // Connection timeout or unknown error. Status not reliable. Calculate!
-        ConnectionResult.TIMEOUT_ERROR, ConnectionResult.UNKNOWN_ERROR -> {
-            val confidenceCycles = when {
-                refreshInterval <= 15 -> 1.5
-                refreshInterval <= 30 -> 1.0
-                else -> 0.5
-            }
-
-            val offlineThresholdMs = (confidenceCycles * refreshInterval * 1000).toLong()
-            val recentlySeen = now - previous.lastSeen <= offlineThresholdMs
-
-            Log.d(
-                "computeDeviceStatus",
-                "confidence=$confidenceCycles, threshold=$offlineThresholdMs"
-            )
-            Log.d(
-                "computeDeviceStatus",
-                "${now - previous.lastSeen} <= $offlineThresholdMs? $recentlySeen"
-            )
-
-            val newState = when {
-                recentlySeen -> previous.state
-                else -> DeviceState.OFFLINE
-            }
-
-            previous.copy(
-                state = newState,
-                trayReachable = false,
-                pendingAction = if (newState == DeviceState.ONLINE)
-                    previous.pendingAction
-                else
-                    PendingAction.None
-            )
-        }
-    }
-}
-
 fun tryConnect(
     ip: String,
     port: Int,
@@ -208,13 +175,4 @@ fun tryConnect(
         }
 
     }
-}
-
-enum class ConnectionResult(var value: Int) {
-    OK(100),
-    OK_FALLBACK(50),
-    CONNECT_ERROR(0),
-    HOST_UNREACHABLE(0),
-    TIMEOUT_ERROR(0),
-    UNKNOWN_ERROR(0)
 }

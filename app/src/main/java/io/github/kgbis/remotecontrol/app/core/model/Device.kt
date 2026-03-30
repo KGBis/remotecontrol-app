@@ -1,3 +1,22 @@
+/*
+ * Remote PC Control
+ * Copyright (C) 2026 Enrique García (https://github.com/KGBis)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 package io.github.kgbis.remotecontrol.app.core.model
 
 import io.github.kgbis.remotecontrol.app.core.util.Utils.ipAsInt
@@ -7,26 +26,11 @@ import java.util.UUID
 
 data class Device(
     val id: UUID?,
-    var hostname: String,
+    val hostname: String,
     val deviceInfo: DeviceInfo?,
-    val interfaces: MutableList<DeviceInterface> = mutableListOf(),
+    val interfaces: List<DeviceInterface> = listOf(),
     val status: DeviceStatus
 ) {
-    /**
-     * Trims fields and normalizes MAC address to colon separated & lowercase (i.e. 91:75:1a:ec:9a:c7)
-     */
-    fun normalize() {
-        hostname = hostname.trim()
-        val ifaces = interfaces.map {
-            val mac = it.mac?.trim()?.replace('-', ':')?.lowercase()
-            val ip = it.ip?.trim()
-            it.copy(mac = mac, ip = ip)
-        }.toList()
-
-        interfaces.clear()
-        interfaces.addAll(ifaces)
-    }
-
     fun hasMacAddress(): Boolean {
         return this.interfaces.any { !it.mac.isNullOrEmpty() }
     }
@@ -46,18 +50,33 @@ data class Device(
 }
 
 /**
- * Sorts interfaces IN PLACE and returns this for chaining.
+ * Trims fields and normalizes MAC address to colon separated & lowercase (i.e. 91:75:1a:ec:9a:c7)
  */
-fun Device.sortInterfaces(): Device {
-    val ifaces =
-        interfaces.toList()
-            .sortedWith(compareBy({ it.type.ordinal }, { it.ip?.ipAsInt() ?: Int.MAX_VALUE }))
+fun Device.normalize(): Device =
+    copy(
+        hostname = hostname.trim(),
+        interfaces = interfaces.map {
+            it.copy(
+                mac = it.mac?.trim()?.replace('-', ':')?.lowercase(),
+                ip = it.ip?.trim()
+            )
+        }
+    )
 
-    interfaces.clear()
-    interfaces.addAll(ifaces)
 
-    return this
-}
+/**
+ * Sorts interfaces by type and IP (if more than one of same type exists)
+ */
+fun Device.sortInterfaces(): Device =
+    copy(
+        interfaces = interfaces.sortedWith(
+            compareBy(
+                { it.type.ordinal },
+                { it.ip?.ipAsInt() ?: Int.MAX_VALUE }
+            )
+        )
+    )
+
 
 @Suppress("UselessCallOnNotNull")
 fun Device.isRenderable(): Boolean =
@@ -70,7 +89,7 @@ fun Device.toFormState(): DeviceFormState =
     DeviceFormState(
         id = id,
         hostname = hostname,
-        osName = deviceInfo?.osName.orEmpty(),
+        osName = normalizeOsFamily(deviceInfo?.osName),
         osVersion = deviceInfo?.osVersion.orEmpty(),
         trayVersion = deviceInfo?.trayVersion.orEmpty(),
         interfaces = interfaces.map {
@@ -82,6 +101,15 @@ fun Device.toFormState(): DeviceFormState =
             )
         }
     )
+
+private fun normalizeOsFamily(osName: String?): String =
+    when {
+        osName == null -> ""
+        osName.startsWith("Windows", true) -> "Windows"
+        osName.startsWith("Linux", true) -> "Linux"
+        osName.startsWith("mac", true) -> "macOS"
+        else -> osName
+    }
 
 data class DeviceInfo(
     val osName: String,

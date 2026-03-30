@@ -1,0 +1,116 @@
+name: Build and Release Android APK
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  APP_DIR: app
+  OUTPUT_APK: app/build/outputs/apk/release/app-release.apk
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # -----------------------------
+      # Checkout repo (full history for changelog)
+      # -----------------------------
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # -----------------------------
+      # Setup Java
+      # -----------------------------
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      # -----------------------------
+      # Read config from gradle.properties
+      # -----------------------------
+      - name: Read app config
+        id: config
+        run: |
+          VERSION=$(grep '^VERSION_NAME=' gradle.properties | cut -d= -f2)
+          APP_NAME=$(grep '^APP_NAME=' gradle.properties | cut -d= -f2)
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
+
+      # -----------------------------
+      # Generate changelog
+      # -----------------------------
+      - name: Generate changelog
+        id: changelog
+        run: |
+          LAST_TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$LAST_TAG" ]; then
+            LOG=$(git log --pretty=format:"- %s")
+          else
+            LOG=$(git log $LAST_TAG..HEAD --pretty=format:"- %s")
+          fi
+
+          echo "$LOG" > CHANGELOG.txt
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # -----------------------------
+      # Build signed APK
+      # -----------------------------
+      - name: Build signed APK
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
+
+          ./gradlew clean assembleRelease \
+            -Pandroid.injected.signing.store.file=keystore.jks \
+            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$KEY_PASSWORD
+
+      # -----------------------------
+      # Prepare artifacts
+      # -----------------------------
+      - name: Prepare release artifacts
+        run: |
+          APP=${{ steps.config.outputs.app_name }}
+          VERSION=${{ steps.config.outputs.version }}
+
+          mkdir release
+
+          FINAL_APK="${APP}-${VERSION}.apk"
+
+          cp $OUTPUT_APK "release/$FINAL_APK"
+
+          cd release
+          sha256sum "$FINAL_APK" > "$FINAL_APK.sha256"
+
+      # -----------------------------
+      # Create / update GitHub release
+      # -----------------------------
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.config.outputs.version }}
+          name: "${{ steps.config.outputs.app_name }} v${{ steps.config.outputs.version }}"
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: |
+            release/*.apk
+            release/*.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

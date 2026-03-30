@@ -1,3 +1,22 @@
+/*
+ * Remote PC Control
+ * Copyright (C) 2026 Enrique García (https://github.com/KGBis)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 package io.github.kgbis.remotecontrol.app.features.domain
 
 import io.github.kgbis.remotecontrol.app.core.model.Device
@@ -23,7 +42,7 @@ class DeviceMatcherTest {
                 osVersion = "6.1",
                 trayVersion = "2026.01.1"
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "aa:aa:aa:aa:aa:aa",
@@ -47,7 +66,7 @@ class DeviceMatcherTest {
                 osVersion = "6.1",
                 trayVersion = "2026.01.1"
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "bb:bb:bb:cc:dd:ee",
@@ -78,7 +97,7 @@ class DeviceMatcherTest {
                 osVersion = "6.1",
                 trayVersion = "2026.01.1"
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "aa:aa:aa:aa:aa:aa",
@@ -102,7 +121,7 @@ class DeviceMatcherTest {
                 osVersion = "6.1",
                 trayVersion = "2026.01.1"
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.20",
                     mac = "aa:aa:aa:aa:aa:aa",
@@ -134,7 +153,7 @@ class DeviceMatcherTest {
                 osVersion = "",
                 trayVersion = ""
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = null,
@@ -158,7 +177,7 @@ class DeviceMatcherTest {
                 osVersion = "6.1",
                 trayVersion = "2026.01.1"
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "00:11:22:33:44:55",
@@ -190,7 +209,7 @@ class DeviceMatcherTest {
                 osVersion = "",
                 trayVersion = ""
             ),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "",
@@ -210,7 +229,7 @@ class DeviceMatcherTest {
         val incoming = Device(
             hostname = "Incoming PC",
             deviceInfo = DeviceInfo(osName = "", osVersion = "", trayVersion = ""),
-            interfaces = mutableListOf(
+            interfaces = listOf(
                 DeviceInterface(
                     ip = "192.168.1.10",
                     mac = "",

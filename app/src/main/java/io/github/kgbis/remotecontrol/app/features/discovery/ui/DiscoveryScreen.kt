@@ -1,3 +1,22 @@
+/*
+ * Remote PC Control
+ * Copyright (C) 2026 Enrique García (https://github.com/KGBis)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 package io.github.kgbis.remotecontrol.app.features.discovery.ui
 
 import androidx.compose.foundation.layout.ColumnScope
@@ -8,10 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import io.github.kgbis.remotecontrol.app.features.devices.DevicesViewModel
-import io.github.kgbis.remotecontrol.app.features.discovery.DeviceTransformer
 import io.github.kgbis.remotecontrol.app.features.discovery.DiscoveryViewModel
-import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
-import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDevice
 
 @Composable
 fun ColumnScope.MDNSDiscoveryScreen(
@@ -21,6 +37,8 @@ fun ColumnScope.MDNSDiscoveryScreen(
 ) {
     val discoveryVm: DiscoveryViewModel = viewModel()
 
+    val devices by discoveryVm.devices.collectAsState()
+
     // observable state
     val state by discoveryVm.state.collectAsState()
 
@@ -28,7 +46,7 @@ fun ColumnScope.MDNSDiscoveryScreen(
         modifier = modifier,
         isDiscovering = state.isDiscovering,
         state = state,
-        devices = transformDiscoveredToDevices(state.devices),
+        devices = devices,
         navController = navController,
         devicesVm = devicesVm,
         discoveryVm = discoveryVm
@@ -39,13 +57,4 @@ fun ColumnScope.MDNSDiscoveryScreen(
         state = state,
         discoveryVm = discoveryVm
     )
-}
-
-
-private fun transformDiscoveredToDevices(
-    discoveredServices: List<DiscoveredDevice>
-): List<DeviceTransformResult> {
-    return discoveredServices.map { discovered ->
-        DeviceTransformer.transformToDevice(discovered)
-    }
 }
