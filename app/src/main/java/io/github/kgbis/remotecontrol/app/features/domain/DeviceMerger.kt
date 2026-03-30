@@ -20,10 +20,27 @@
 package io.github.kgbis.remotecontrol.app.features.domain
 
 import io.github.kgbis.remotecontrol.app.core.model.Device
+import io.github.kgbis.remotecontrol.app.features.devices.DeviceSupport.mergeInterfaces
 
-sealed class ConflictResult {
-    object None : ConflictResult()
-    data class MacConflict(val device: Device, val macs: String?) : ConflictResult()
-    data class IpConflict(val device: Device, val ips: String?) : ConflictResult()
-    data class PossibleDuplicate(val device: Device) : ConflictResult()
+object DeviceMerger {
+
+    fun mergeFromDiscovery(stored: Device, discovered: Device): Device {
+        return baseMerge(stored, discovered)
+    }
+
+    fun mergeFromProbe(stored: Device, probed: Device): Device {
+        val mergedInterfaces = mergeInterfaces(stored.interfaces, probed.interfaces)
+        return stored.copy(
+            interfaces = mergedInterfaces,
+            deviceInfo = probed.deviceInfo,
+            status = probed.status
+        )
+    }
+
+    private fun baseMerge(stored: Device, incoming: Device): Device {
+        return incoming.copy(
+            id = stored.id,
+            hostname = stored.hostname // 👈 centralized rule
+        )
+    }
 }

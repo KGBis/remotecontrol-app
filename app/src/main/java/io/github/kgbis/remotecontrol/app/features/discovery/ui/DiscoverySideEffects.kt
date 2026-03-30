@@ -14,6 +14,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 package io.github.kgbis.remotecontrol.app.features.discovery.ui
 
@@ -47,10 +49,15 @@ fun DiscoverySideEffects(
         }
     }
 
-    // Debug logging
+    // Debug logging:
+    // Every service found is a mDNS exposed service for a particular network interface.
+    // With one PC exposing two interfaces (Wi-Fi and cable), two services will be found.
     LaunchedEffect(state.discoveredServices.size) {
         if (state.discoveredServices.isNotEmpty()) {
-            Log.d("Discovery", "Found ${state.discoveredServices.size} services")
+            Log.d(
+                "Discovery",
+                "Found ${state.discoveredServices.size} services: ${state.discoveredServices.map { it.name }}"
+            )
         }
     }
 }

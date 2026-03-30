@@ -14,6 +14,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 package io.github.kgbis.remotecontrol.app.core.repository
 
@@ -34,7 +36,7 @@ private const val DEVICES_VERSION = 2
 private const val DEVICES_REPO_NAME = "devices"
 private const val DEVICES_VERSION_NAME = "device_version"
 
-class DeviceRepositoryImpl(context: Context): DeviceRepository {
+class DeviceRepositoryImpl(context: Context) : DeviceRepository {
 
     private val deviceListType = object : TypeToken<List<Device>>() {}.type
 
@@ -51,12 +53,13 @@ class DeviceRepositoryImpl(context: Context): DeviceRepository {
         Log.d("loadDevices", "json=$json")
         val loadedDevices = DeviceJson.gson.fromJson<List<Device>>(json, deviceListType)
         val devices = updateLoadedDevicesIfNeeded(loadedDevices)
-        return devices.map { device -> device.sortInterfaces() }.toList().sortedBy { it.id }
+        return devices.map { device -> device.sortInterfaces() }.toList()
     }
 
     override suspend fun saveDevices(devices: List<Device>) {
         mutex.withLock {
-            val toJson = DeviceJson.gson.toJson(devices.sortedBy { it.id }
+            val toJson = DeviceJson.gson.toJson(
+                devices
                 .map { device -> device.sortInterfaces() }
                 .toList())
             prefs.edit {
