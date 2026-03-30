@@ -78,7 +78,11 @@ jobs:
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
 
-          ./gradlew clean assembleRelease
+          ./gradlew clean assembleRelease \
+            -PKEYSTORE_FILE=keystore.jks \
+            -PKEYSTORE_PASSWORD=$KEYSTORE_PASSWORD \
+            -PKEY_ALIAS=$KEY_ALIAS \
+            -PKEY_PASSWORD=$KEY_PASSWORD
 
       # -----------------------------
       # Prepare artifacts
