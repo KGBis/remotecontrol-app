@@ -14,6 +14,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 package io.github.kgbis.remotecontrol.app.features.devices
 
@@ -24,22 +26,23 @@ import androidx.lifecycle.viewModelScope
 import io.github.kgbis.remotecontrol.app.core.AppLifecycleObserver
 import io.github.kgbis.remotecontrol.app.core.AppVisibilityEvent
 import io.github.kgbis.remotecontrol.app.core.model.Device
-import io.github.kgbis.remotecontrol.app.core.model.DeviceInterface
 import io.github.kgbis.remotecontrol.app.core.model.DeviceState
 import io.github.kgbis.remotecontrol.app.core.model.PendingAction
-import io.github.kgbis.remotecontrol.app.core.model.matches // NOSONAR
-import io.github.kgbis.remotecontrol.app.core.model.normalize // NOSONAR
+import io.github.kgbis.remotecontrol.app.core.model.normalize
 import io.github.kgbis.remotecontrol.app.core.model.refreshKey
 import io.github.kgbis.remotecontrol.app.core.model.sortInterfaces
 import io.github.kgbis.remotecontrol.app.core.network.NetworkActions
 import io.github.kgbis.remotecontrol.app.core.network.NetworkInfo
 import io.github.kgbis.remotecontrol.app.core.network.NetworkMonitor
 import io.github.kgbis.remotecontrol.app.core.network.ProbeResult
-import io.github.kgbis.remotecontrol.app.core.network.computeDeviceStatus
 import io.github.kgbis.remotecontrol.app.core.network.probeDeviceBestResult
 import io.github.kgbis.remotecontrol.app.core.repository.DeviceRepository
 import io.github.kgbis.remotecontrol.app.core.repository.SettingsRepository
+import io.github.kgbis.remotecontrol.app.features.devices.DeviceSupport.computeDeviceStatus
+import io.github.kgbis.remotecontrol.app.features.devices.DeviceSupport.mergeProbeDeviceWithStoredDevice
 import io.github.kgbis.remotecontrol.app.features.domain.DeviceMatcher
+import io.github.kgbis.remotecontrol.app.features.domain.DeviceMerger.mergeFromDiscovery
+import io.github.kgbis.remotecontrol.app.features.domain.DeviceMerger.mergeFromProbe
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -111,8 +114,8 @@ open class DevicesViewModel(
 
     val isInLocalNetwork: StateFlow<Boolean> =
         networkMonitor.networkInfo.map { it is NetworkInfo.Local }.distinctUntilChanged().stateIn(
-                scope = viewModelScope, started = SharingStarted.Eagerly, initialValue = false
-            )
+            scope = viewModelScope, started = SharingStarted.Eagerly, initialValue = false
+        )
 
     val networkState = networkMonitor.networkInfo
 
@@ -138,7 +141,6 @@ open class DevicesViewModel(
                 tickerFlow(interval.seconds)
             }
         }.onEach {
-            Log.d("observeAutoRefresh", "Running probeDevices()")
             probeDevices()
         }.launchIn(viewModelScope)
     }
@@ -156,11 +158,11 @@ open class DevicesViewModel(
 
     private fun observeAppVisibility() {
         appLifecycleObserver.visibilityEvents.onEach { event ->
-                when (event) {
-                    AppVisibilityEvent.Foreground -> onAppForegrounded()
-                    AppVisibilityEvent.Background -> onAppBackgrounded()
-                }
-            }.launchIn(viewModelScope)
+            when (event) {
+                AppVisibilityEvent.Foreground -> onAppForegrounded()
+                AppVisibilityEvent.Background -> onAppBackgrounded()
+            }
+        }.launchIn(viewModelScope)
     }
 
 
@@ -225,103 +227,77 @@ open class DevicesViewModel(
 
     fun addDiscoveredDevices(detected: List<Device>) {
         viewModelScope.launch(dispatcher) {
-            val toUpdate = mutableListOf<Pair<Device, Device>>()
-            val toSave = mutableListOf<Device>()
-
-            for (device in detected) {
-                val storedDevice = DeviceMatcher(stored = _devices.value).findDeviceToAdd(device)
-                // Not found -> new
-                if (storedDevice == null) {
-                    toSave.add(device)
-                } else {
-                    // If a discovered device matches an existing one, we treat it as the same
-                    // logical device and force the stored ID to avoid duplicates (e.g. dual-boot PCs)
-                    val merged = device.copy(id = storedDevice.id)
-                    toUpdate.add(storedDevice to merged)
-                }
-            }
+            // clasify new/to update
+            val (toSave, toUpdate) = classifyDevices(detected)
 
             // normalize all
             val normalizedToSave = toSave.map { it.normalize() }
-            val normalizedToUpdate = toUpdate.map { (orig, toUpdate) ->
-                val normDevice = toUpdate.normalize()
+            val normalizedToUpdate = toUpdate.map { (orig, merged) ->
+                val normDevice = merged.normalize()
                 orig to normDevice
             }
 
-            // remove any in-flight probe for updated
-            normalizedToUpdate.forEach {
-                inFlightProbes.remove(it.first.id)?.cancel()
-            }
-
-            // get all current devices
-            val list = _devices.value.toMutableList()
-
-            // add new devices to list
-            list.addAll(normalizedToSave)
-
-            // update in the list
-            val updatesById = normalizedToUpdate.associateBy { it.second.id }
-            val updatedList = list.map { item ->
-                updatesById[item.id]?.second ?: item
-            }
-
-            // Application order:
-            // 1. Update devices list (UI source of truth)
-            _devices.value = updatedList
-
-            // 2. Update status map for discovered devices
-            val uuids =
-                normalizedToSave.mapNotNull { it.id } + normalizedToUpdate.mapNotNull { it.second.id }
-            setStatusOnline(uuids)
-
-            // 3. Persist updated device list
-            deviceRepository.saveDevices(_devices.value)
+            // apply changes
+            applyDeviceChanges(normalizedToSave, normalizedToUpdate)
         }
     }
 
-    fun updateDeviceFromProbe(deviceId: UUID, probe: ProbeResult) {
-        val storedDevice = getDeviceById(deviceId)
-        val mergedInterfaces = mergeInterfaces(storedDevice!!.interfaces, probe.device!!.interfaces)
-        val updated = storedDevice.copy(
-            interfaces = mergedInterfaces,
-            deviceInfo = probe.device.deviceInfo,
-            status = probe.device.status
-        )
+    private fun classifyDevices(
+        detected: List<Device>
+    ): Pair<List<Device>, List<Pair<Device, Device>>> {
 
-        _devices.update { current ->
-            current.map { if (it.id == deviceId) updated else it }
-        }
-    }
+        val toSave = mutableListOf<Device>()
+        val toUpdate = mutableListOf<Pair<Device, Device>>()
 
-    fun mergeInterfaces(
-        original: List<DeviceInterface>, probed: List<DeviceInterface>
-    ): List<DeviceInterface> {
+        for (incoming in detected) {
+            val storedDevice = DeviceMatcher(stored = _devices.value).findDeviceToAdd(incoming)
 
-        val result = mutableListOf<DeviceInterface>()
-        val usedOriginals = mutableSetOf<DeviceInterface>()
-
-        for (p in probed) {
-            val match = original.firstOrNull { it.matches(p) }
-
-            if (match != null) {
-                usedOriginals += match
-
-                result += match.copy(
-                    ip = p.ip, port = p.port, type = p.type, mac = p.mac ?: match.mac
-                    // flags manuales se conservan aquí
-                )
+            // if not found -> to save
+            // If a discovered device matches an existing one -> we treat it as the same
+            // logical device and force the stored ID to avoid duplicates (e.g. dual-boot PCs)
+            if (storedDevice == null) {
+                toSave.add(incoming)
             } else {
-                // Nueva interfaz descubierta
-                result += p
+                toUpdate.add(storedDevice to mergeFromDiscovery(storedDevice, incoming))
             }
         }
 
-        // Interfaces manuales que no aparecieron en el probe
-        result += original.filter { it !in usedOriginals }
-
-        return result
+        return toSave to toUpdate
     }
 
+    private suspend fun applyDeviceChanges(
+        normalizedToSave: List<Device>,
+        normalizedToUpdate: List<Pair<Device, Device>>
+    ) {
+        // remove any in-flight probe for updated
+        normalizedToUpdate.forEach {
+            inFlightProbes.remove(it.first.id)?.cancel()
+        }
+
+        // get all current devices
+        val list = _devices.value.toMutableList()
+
+        // add new devices to list
+        list.addAll(normalizedToSave)
+
+        // update in the list
+        val updatesById = normalizedToUpdate.associateBy { it.second.id }
+        val updatedList = list.map { item ->
+            updatesById[item.id]?.second ?: item
+        }
+
+        // Application order:
+        // 1. Update devices list (UI source of truth)
+        _devices.value = updatedList
+
+        // 2. Update status map for discovered devices
+        val uuids =
+            normalizedToSave.mapNotNull { it.id } + normalizedToUpdate.mapNotNull { it.second.id }
+        setStatusOnline(uuids)
+
+        // 3. Persist updated device list
+        deviceRepository.saveDevices(_devices.value)
+    }
 
     private fun setStatusOnline(uuids: List<UUID>) {
         _devices.update { list ->
@@ -341,6 +317,14 @@ open class DevicesViewModel(
         }
     }
 
+    fun updateDeviceFromProbe(deviceId: UUID, probe: ProbeResult) {
+        val storedDevice = getDeviceById(deviceId)
+        val merged = mergeFromProbe(stored = storedDevice!!, probed = probe.device!!)
+
+        _devices.update { current ->
+            current.map { if (it.id == deviceId) merged else it }
+        }
+    }
 
     fun updateDevice(original: Device, updated: Device) {
         val normalized = updated.normalize()
@@ -364,6 +348,19 @@ open class DevicesViewModel(
         }
     }
 
+    fun removeDevice(device: Device) {
+        viewModelScope.launch(dispatcher) {
+            // remove any in-flight probe for device id
+            inFlightProbes.remove(device.id)?.cancel()
+
+            // remove status and device in view model
+            _devices.value = _devices.value.filter { dev -> dev.id != device.id }
+
+            // save new list in repository
+            deviceRepository.saveDevices(_devices.value)
+        }
+    }
+
     private fun shouldRefresh(
         original: Device, updated: Device
     ): Boolean {
@@ -380,19 +377,7 @@ open class DevicesViewModel(
         return originalProbeKeys != updatedProbeKeys
     }
 
-    fun removeDevice(device: Device) {
-        viewModelScope.launch(dispatcher) {
-            // remove any in-flight probe for device id
-            inFlightProbes.remove(device.id)?.cancel()
-
-            // remove status and device in view model
-            _devices.value = _devices.value.filter { dev -> dev.id != device.id }
-
-            // save new list in repository
-            deviceRepository.saveDevices(_devices.value)
-        }
-    }
-
+    /* Probe */
 
     open fun probeDevices() {
         viewModelScope.launch(dispatcher) {
@@ -461,7 +446,6 @@ open class DevicesViewModel(
         }
     }
 
-
     @Suppress("RedundantIf")
     private suspend fun shouldLaunchProbe(deviceId: UUID): Boolean = probeMutex.withLock {
         if (inFlightProbes.containsKey(deviceId)) {
@@ -478,11 +462,7 @@ open class DevicesViewModel(
         val deviceId = device.id ?: return@launch
 
         try {
-            handleProbeResult(
-                device,
-                deviceId,
-                probeDeviceBestResult(device, subnet),
-            )
+            handleProbeResult(device, probeDeviceBestResult(device, subnet))
         } finally {
             probeMutex.withLock {
                 inFlightProbes.remove(deviceId)
@@ -491,10 +471,10 @@ open class DevicesViewModel(
     }
 
     private fun handleProbeResult(
-        device: Device, deviceId: UUID, probe: ProbeResult
+        device: Device, probe: ProbeResult
     ) {
         val previousStatus = device.status
-        val effectiveProbeResult = mergeProbeWithStoredDevice(device, probe)
+        val effectiveProbeResult = mergeProbeDeviceWithStoredDevice(device, probe)
         val updatedStatus = computeDeviceStatus(
             previous = previousStatus,
             probeResult = effectiveProbeResult,
@@ -503,31 +483,19 @@ open class DevicesViewModel(
 
         // add/update in view model
         effectiveProbeResult.device?.let {
-            updateDeviceFromProbe(
-                deviceId, probe.copy(device = probe.device?.copy(status = updatedStatus))
-            )
+            updateDeviceFromProbe(device.id!!, probe.copy(device = it.copy(status = updatedStatus)))
         }
     }
-
-    private fun mergeProbeWithStoredDevice(
-        stored: Device, probe: ProbeResult
-    ): ProbeResult {
-        val probedDevice = probe.device ?: return probe
-
-        val mergedDevice = probedDevice.copy(hostname = stored.hostname, status = stored.status)
-        return probe.copy(device = mergedDevice)
-    }
-
 
     private fun observeNetwork() {
         viewModelScope.launch(dispatcher) {
             sameNetworkFlow.distinctUntilChanged().collect { sameNetwork ->
-                    if (!sameNetwork) {
-                        handleNotInSameNetwork()
-                    } else {
-                        scheduleProbeRefresh()
-                    }
+                if (!sameNetwork) {
+                    handleNotInSameNetwork()
+                } else {
+                    scheduleProbeRefresh()
                 }
+            }
         }
     }
 

@@ -14,6 +14,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 package io.github.kgbis.remotecontrol.app.features.discovery
 
@@ -21,7 +23,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.kgbis.remotecontrol.app.core.model.InterfaceType
-import io.github.kgbis.remotecontrol.app.features.discovery.mdns.DiscoveredServiceEntry
+import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredServiceEntry
 import io.github.kgbis.remotecontrol.app.features.discovery.mdns.MDNSDiscovery
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DeviceTransformResult
 import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredDevice
