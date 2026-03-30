@@ -51,18 +51,30 @@ jobs:
       # -----------------------------
       # Generate changelog
       # -----------------------------
-      - name: Generate changelog
+      - name: Generate categorized changelog
         id: changelog
         run: |
           LAST_TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || echo "")
 
           if [ -z "$LAST_TAG" ]; then
-            LOG=$(git log --pretty=format:"- %s")
+            COMMITS=$(git log --pretty=format:"%s" --no-merges)
           else
-            LOG=$(git log $LAST_TAG..HEAD --pretty=format:"- %s")
+            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s" --no-merges)
           fi
 
-          echo "$LOG" > CHANGELOG.txt
+          # Separar commits por tipo
+          FEAT=$(echo "$COMMITS" | grep '^feat:' | sed 's/^feat: /- /')
+          FIX=$(echo "$COMMITS" | grep '^fix:' | sed 's/^fix: /- /')
+          DOCS=$(echo "$COMMITS" | grep '^docs:' | sed 's/^docs: /- /')
+          CHORE=$(echo "$COMMITS" | grep '^chore:' | sed 's/^chore: /- /')
+
+          # Generar el changelog final
+          {
+            [ -n "$FEAT" ] && echo "### Features\n$FEAT\n"
+            [ -n "$FIX" ] && echo "### Fixes\n$FIX\n"
+            [ -n "$DOCS" ] && echo "### Documentation\n$DOCS\n"
+            [ -n "$CHORE" ] && echo "### Chores\n$CHORE\n"
+          } > CHANGELOG.txt
 
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           cat CHANGELOG.txt >> $GITHUB_OUTPUT
