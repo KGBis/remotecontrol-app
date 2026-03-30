@@ -76,13 +76,9 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
+          echo "$KEYSTORE_BASE64" | base64 --decode > app/keystore.jks
 
-          ./gradlew clean assembleRelease \
-            -PKEYSTORE_FILE=keystore.jks \
-            -PKEYSTORE_PASSWORD=$KEYSTORE_PASSWORD \
-            -PKEY_ALIAS=$KEY_ALIAS \
-            -PKEY_PASSWORD=$KEY_PASSWORD
+          ./gradlew clean assembleRelease
 
       # -----------------------------
       # Prepare artifacts
