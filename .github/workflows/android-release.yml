@@ -49,38 +49,6 @@ jobs:
           echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
 
       # -----------------------------
-      # Generate changelog
-      # -----------------------------
-      - name: Generate categorized changelog
-        id: changelog
-        run: |
-          LAST_TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || echo "")
-
-          if [ -z "$LAST_TAG" ]; then
-            COMMITS=$(git log --pretty=format:"%s" --no-merges)
-          else
-            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s" --no-merges)
-          fi
-
-          # Separar commits por tipo
-          FEAT=$(echo "$COMMITS" | grep '^feat:' | sed 's/^feat: /- /')
-          FIX=$(echo "$COMMITS" | grep '^fix:' | sed 's/^fix: /- /')
-          DOCS=$(echo "$COMMITS" | grep '^docs:' | sed 's/^docs: /- /')
-          CHORE=$(echo "$COMMITS" | grep '^chore:' | sed 's/^chore: /- /')
-
-          # Generar el changelog final
-          {
-            [ -n "$FEAT" ] && echo "### Features\n$FEAT\n"
-            [ -n "$FIX" ] && echo "### Fixes\n$FIX\n"
-            [ -n "$DOCS" ] && echo "### Documentation\n$DOCS\n"
-            [ -n "$CHORE" ] && echo "### Chores\n$CHORE\n"
-          } > CHANGELOG.txt
-
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat CHANGELOG.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      # -----------------------------
       # Build signed APK
       # -----------------------------
       - name: Build signed APK
@@ -120,7 +88,7 @@ jobs:
         with:
           tag_name: v${{ steps.config.outputs.version }}
           name: "${{ steps.config.outputs.app_name }} v${{ steps.config.outputs.version }}"
-          body: ${{ steps.changelog.outputs.changelog }}
+          body: "Release of Remote PC Control App version ${{ steps.version.outputs.version }}"
           files: |
             release/*.apk
             release/*.sha256

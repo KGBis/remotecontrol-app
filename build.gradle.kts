@@ -31,7 +31,7 @@ tasks.register("incrementVersion") {
 
         // some checks:
         // a) In case major is in the old format of year
-        if (currentVersionParts[0] >= 2025) currentVersionParts[0] = 2
+        if (currentVersionParts[0] >= 2025) currentVersionParts[0] = 1
         // b) List size is not as expected
         while (currentVersionParts.size < 3) {
             currentVersionParts.add(0)
