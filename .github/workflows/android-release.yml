@@ -89,6 +89,6 @@ jobs:
             release/*.apk \
             release/*.sha256 \
             --title "${{ steps.config.outputs.app_name }} v${{ steps.config.outputs.version }}" \
-            --notes "Release of Remote PC Control App version ${{ steps.version.outputs.version }}"
+            --notes "Release of Remote PC Control App version ${{ steps.config.outputs.version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
