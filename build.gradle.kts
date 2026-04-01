@@ -22,7 +22,7 @@ tasks.register("incrementVersion") {
         logger.lifecycle("[incrementVersion] updating 'VERSION_CODE' from $currentVersionCode to $newVersionCode")
 
         // current version in major.minor.path format
-        val currentVersionName = props.getProperty("VERSION_NAME", "2.3.6")
+        val currentVersionName = props.getProperty("VERSION_NAME", "1.0.0")
 
         val currentVersionParts = currentVersionName
             .split('.')

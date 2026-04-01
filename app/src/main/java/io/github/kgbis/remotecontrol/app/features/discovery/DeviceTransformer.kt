@@ -36,49 +36,62 @@ import java.util.UUID
 
 object DeviceTransformer {
 
+    /**
+     * Use this function if mDNS payload changes, and you want to still using (migrate) older format(s).
+     * UI is prepared to show them all correctly.
+     *
+     * - For invalid payloads return [DeviceTransformResult.Invalid]
+     * - For outdated payloads return [DeviceTransformResult.Outdated]
+     * - For up-to-date payloads return [DeviceTransformResult.Ok]
+     *
+     * #### Code examples:
+     * ```kotlin
+     * // No device.id = invalid
+     * val uuid = runCatching { UUID.fromString(deviceId) }.getOrNull()
+     *   ?: return DeviceTransformResult.Invalid(
+     *       discovered,
+     *       warning = DiscoveredDeviceWarning.Outdated(R.string.discover_error_id_format,"INVALID_ID")
+     *      )
+     *
+     * val outdated =
+     *
+     *
+     * // No host-name or hostname = outdated but usable
+     * val hostname =
+     *   discovered.txtRecords["host-name"] ?: discovered.txtRecords["hostname"]
+     *     ?: return DeviceTransformResult.Outdated(
+     *         discovered,
+     *         null,
+     *         DiscoveredDeviceWarning.Outdated(R.string.discover_warn_old_version, MIN_VERSION)
+     *       )
+     * ```
+     */
     fun transformToDevice(
         discovered: DiscoveredDevice
     ): DeviceTransformResult {
 
         val deviceId = discovered.deviceId
+        val outdated =
+            DiscoveredDeviceWarning.Outdated(R.string.discover_warn_old_version, MIN_VERSION)
 
-        val uuid = runCatching { UUID.fromString(deviceId) }.getOrNull()
-            ?: return DeviceTransformResult.Invalid(
-                discovered,
-                warning = DiscoveredDeviceWarning.Outdated(
-                    R.string.discover_error_id_format,
-                    "INVALID_ID"
-                )
-            )
+        // current mDNS payload includes uuid (device-id), anyway DiscoveryViewModel's onServiceFound generates one
+        val uuid = UUID.fromString(deviceId)
 
-        // host-name or hostname as fallback
-        val hostname =
-            discovered.txtRecords["host-name"]
-                ?: discovered.txtRecords["hostname"]
-                ?: return DeviceTransformResult.Outdated(
-                    discovered,
-                    null,
-                    warning = DiscoveredDeviceWarning.Outdated(
-                        R.string.discover_warn_old_version,
-                        "NO_HOSTNAME"
-                    )
-                )
+        // current mDNS payload uses "host-name"
+        val hostname = discovered.txtRecords["host-name"] ?: return DeviceTransformResult.Outdated(
+            discovered,
+            null,
+            outdated
+        )
 
+        // current mDNS payload includes interface data (ip, mac, port and type)
         val interfaces = discovered.endpoints.mapNotNull {
-            val type = it.interfaceType ?: return@mapNotNull null
+            val type = it.interfaceType ?: return@mapNotNull null // UNKNOWN
             val mac = it.interfaceMac
-                ?: return DeviceTransformResult.Outdated(
-                    discovered,
-                    null,
-                    warning = DiscoveredDeviceWarning.Outdated(
-                        R.string.discover_warn_old_version,
-                        "NO_MAC_ADDRESS"
-                    )
-                )
             DeviceInterface(it.ip, mac, it.port, type)
         }
 
-        // no interfaces section -> version is ancient
+        // no interfaces => invalid (should never happen)
         if (interfaces.isEmpty()) {
             return DeviceTransformResult.Invalid(
                 discovered,
@@ -89,16 +102,20 @@ object DeviceTransformer {
             )
         }
 
-        val osName = discovered.txtRecords["os-name"] ?: discovered.txtRecords["os"].orEmpty()
+        // current mDNS payload uses "os-name" and "os-version"
+        val osName = discovered.txtRecords["os-name"].orEmpty()
+        val osVersion = discovered.txtRecords["os-version"].orEmpty()
+
+        // current mDNS payload uses "tray-version"
         val tray =
-            discovered.txtRecords["tray-version"] ?: discovered.txtRecords["version"].orEmpty()
+            discovered.txtRecords["tray-version"].orEmpty()
 
         val device = Device(
             id = uuid,
             hostname = hostname,
             deviceInfo = DeviceInfo(
                 osName = osName,
-                osVersion = discovered.txtRecords["os-version"].orEmpty(),
+                osVersion = osVersion,
                 trayVersion = tray
             ),
             status = DeviceStatus(
@@ -110,32 +127,32 @@ object DeviceTransformer {
             interfaces = interfaces
         )
 
-        // For version
+        // We'll warn about needed update
         if (isOldVersion(device)) {
-            return DeviceTransformResult.Outdated(
-                discovered,
-                device = device,
-                warning = DiscoveredDeviceWarning.Outdated(
-                    R.string.discover_warn_old_version,
-                    MIN_VERSION
-                )
-            )
+            return DeviceTransformResult.Outdated(discovered, device, outdated)
         }
 
         return DeviceTransformResult.Ok(device)
     }
 
+    /**
+     * Version numbering can be `[major, minor, patch]` for current release.
+     * It could be also `[year, month, patch]` or even `[year, month, day, patch]` for old
+     * development versioning.
+     *
+     * @return `true` if version is up to date or `false` if not
+     */
     private fun isOldVersion(device: Device): Boolean {
-        // is going to be [2, 4, 1]
+        // is going to be in [major, minor, patch] format
         val minVersion = StringUtils.split(MIN_VERSION, ".")
             .map { if (NumberUtils.isParsable(it)) it.toInt() else 0 }
 
-        // can be [2026, 3, 24] or [2, 4, 1]
+        // can be [2026, 3, 24] or [1, 0, 1]
         val currentVersion = StringUtils.split(device.deviceInfo?.trayVersion, ".")
             .map { if (NumberUtils.isParsable(it)) it.toInt() else 0 }
 
-        // If it's in the format of 2026.03.24 is old version
-        if (currentVersion[0] > 2025) {
+        // If it's in the format of 202x.yy.zz is old version
+        if (currentVersion[0] >= 2025) {
             return true
         }
 
