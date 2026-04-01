@@ -36,26 +36,17 @@ A lightweight application running on the target machine that:
 * Exposes basic system information
 * Provides a **system tray icon** for quick access
 
+**Download it from [https://github.com/KGBis/remotecontrol-tray/releases/latest](https://github.com/KGBis/remotecontrol-tray/releases/latest)**
+
 ---
 
 ## 📡 Supported Commands
 
 | Command           | Description                                 |
-| ----------------- | ------------------------------------------- |
+|-------------------|---------------------------------------------|
 | `INFO`            | Retrieve hostname, OS, IP and MAC addresses |
 | `SHUTDOWN`        | Shut down the remote machine                |
 | `CANCEL_SHUTDOWN` | Cancel a pending shutdown                   |
-
----
-
-## 🖥️ Desktop Companion
-
-The companion app includes a minimal **system tray interface** that allows you to:
-
-* View detected network interfaces (type, IP, MAC)
-* Exit the application
-
-No additional configuration is required beyond running the application.
 
 ---
 

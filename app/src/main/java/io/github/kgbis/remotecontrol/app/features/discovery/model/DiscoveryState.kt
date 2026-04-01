@@ -19,8 +19,6 @@
  */
 package io.github.kgbis.remotecontrol.app.features.discovery.model
 
-import io.github.kgbis.remotecontrol.app.features.discovery.model.DiscoveredServiceEntry
-
 data class DiscoveryState(
     val isDiscovering: Boolean = false,
     val discoveringState: DiscoveringState = DiscoveringState.IDLE,

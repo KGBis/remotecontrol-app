@@ -20,7 +20,7 @@ jobs:
       # -----------------------------
       # Checkout repo (full history for changelog)
       # -----------------------------
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -28,7 +28,7 @@ jobs:
       # Setup Java
       # -----------------------------
       - name: Setup JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -84,13 +84,11 @@ jobs:
       # Create / update GitHub release
       # -----------------------------
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.config.outputs.version }}
-          name: "${{ steps.config.outputs.app_name }} v${{ steps.config.outputs.version }}"
-          body: "Release of Remote PC Control App version ${{ steps.version.outputs.version }}"
-          files: |
-            release/*.apk
-            release/*.sha256
+        run: |
+          gh release create v${{ steps.config.outputs.version }} \
+            release/*.apk \
+            release/*.sha256 \
+            --title "${{ steps.config.outputs.app_name }} v${{ steps.config.outputs.version }}" \
+            --body "Release of Remote PC Control App version ${{ steps.version.outputs.version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
